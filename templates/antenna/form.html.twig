@@ -6,74 +6,78 @@
 <a href="{{ path('app_antennas') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Mes antennes</a>
 <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] mb-6">{{ is_new ? 'Nouvelle antenne' : 'Modifier antenne' }}</h1>
 
-<form method="post" class="card max-w-xl p-6 space-y-5">
-    <label class="block">
-        <span class="form-label">Nom de l'antenne <span class="text-[var(--color-destructive)]">*</span></span>
-        <span class="relative mt-1.5 flex">
-            <input type="text" name="name" value="{{ is_new ? '' : antenna.name }}" required
-                placeholder="Ex. Siège Paris"
-                class="form-input peer pl-9 {{ errors.name is defined ? '!border-[var(--color-destructive)]' : '' }}">
-            <span class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-[var(--color-secondary)] peer-focus:text-[var(--color-primary)]">
-                <svg class="h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z"/></svg>
-            </span>
-        </span>
-        {% if errors.name is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.name }}</span>{% endif %}
-    </label>
+<form method="post" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {# Col 1 : Antenne #}
+        <section class="card p-6">
+            <div class="flex items-center gap-2 mb-5">
+                <div class="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-primary-light)] text-[var(--color-primary)]">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                </div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Antenne</h2>
+            </div>
 
-    <label class="block">
-        <span class="form-label">Adresse <span class="text-[var(--color-destructive)]">*</span></span>
-        <span class="relative mt-1.5 flex">
-            <input type="text" name="address_line" value="{{ is_new ? '' : antenna.addressLine }}" required
-                placeholder="Ex. 12 rue de Rivoli"
-                class="form-input peer pl-9 {{ errors.address_line is defined ? '!border-[var(--color-destructive)]' : '' }}">
-            <span class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-[var(--color-secondary)] peer-focus:text-[var(--color-primary)]">
-                <svg class="h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-            </span>
-        </span>
-        {% if errors.address_line is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.address_line }}</span>{% endif %}
-    </label>
+            <div class="space-y-4">
+                <label class="block">
+                    <span class="form-label">Nom <span class="text-[var(--color-destructive)]">*</span></span>
+                    <input type="text" name="name" value="{{ is_new ? '' : antenna.name }}" required
+                        placeholder="Ex. Siège Paris"
+                        class="form-input mt-1.5 {{ errors.name is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    {% if errors.name is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.name }}</span>{% endif %}
+                </label>
 
-    <div class="grid grid-cols-3 gap-3">
-        <label class="block col-span-1">
-            <span class="form-label">Code postal <span class="text-[var(--color-destructive)]">*</span></span>
-            <input type="text" name="postal_code" value="{{ is_new ? '' : antenna.postalCode }}" required
-                placeholder="75001"
-                class="form-input mt-1.5 {{ errors.postal_code is defined ? '!border-[var(--color-destructive)]' : '' }}">
-            {% if errors.postal_code is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.postal_code }}</span>{% endif %}
-        </label>
-        <label class="block col-span-2">
-            <span class="form-label">Ville <span class="text-[var(--color-destructive)]">*</span></span>
-            <input type="text" name="city" value="{{ is_new ? '' : antenna.city }}" required
-                placeholder="Paris"
-                class="form-input mt-1.5 {{ errors.city is defined ? '!border-[var(--color-destructive)]' : '' }}">
-            {% if errors.city is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.city }}</span>{% endif %}
-        </label>
-    </div>
+                <label class="block">
+                    <span class="form-label">Adresse <span class="text-[var(--color-destructive)]">*</span></span>
+                    <input type="text" name="address_line" value="{{ is_new ? '' : antenna.addressLine }}" required
+                        placeholder="Ex. 12 rue de Rivoli"
+                        class="form-input mt-1.5 {{ errors.address_line is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    {% if errors.address_line is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.address_line }}</span>{% endif %}
+                </label>
 
-    <label class="block">
-        <span class="form-label">Téléphone (antenne)</span>
-        <span class="relative mt-1.5 flex">
-            <input type="tel" name="phone" value="{{ is_new ? '' : (antenna.phone ?? '') }}"
-                placeholder="01 23 45 67 89"
-                class="form-input peer pl-9">
-            <span class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-[var(--color-secondary)] peer-focus:text-[var(--color-primary)]">
-                <svg class="h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
-            </span>
-        </span>
-    </label>
+                <div class="grid grid-cols-3 gap-3">
+                    <label class="block col-span-1">
+                        <span class="form-label">Code postal <span class="text-[var(--color-destructive)]">*</span></span>
+                        <input type="text" name="postal_code" value="{{ is_new ? '' : antenna.postalCode }}" required
+                            placeholder="75001"
+                            class="form-input mt-1.5 {{ errors.postal_code is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                        {% if errors.postal_code is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.postal_code }}</span>{% endif %}
+                    </label>
+                    <label class="block col-span-2">
+                        <span class="form-label">Ville <span class="text-[var(--color-destructive)]">*</span></span>
+                        <input type="text" name="city" value="{{ is_new ? '' : antenna.city }}" required
+                            placeholder="Paris"
+                            class="form-input mt-1.5 {{ errors.city is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                        {% if errors.city is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.city }}</span>{% endif %}
+                    </label>
+                </div>
 
-    <div class="pt-4 border-t border-[var(--color-border-soft)]">
-        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">Contact responsable</h2>
-        <p class="text-xs text-[var(--color-secondary)] mb-4">Personne physique à contacter pour la livraison (optionnel).</p>
+                <label class="block">
+                    <span class="form-label">Téléphone antenne</span>
+                    <input type="tel" name="phone" value="{{ is_new ? '' : (antenna.phone ?? '') }}"
+                        placeholder="01 23 45 67 89"
+                        class="form-input mt-1.5">
+                </label>
+            </div>
+        </section>
 
-        <div class="space-y-4">
-            <label class="block">
-                <span class="form-label">Nom</span>
-                <input type="text" name="contact_name" value="{{ is_new ? '' : (antenna.contactName ?? '') }}"
-                    placeholder="Prénom Nom"
-                    class="form-input mt-1.5">
-            </label>
-            <div class="grid grid-cols-2 gap-3">
+        {# Col 2 : Contact responsable #}
+        <section class="card p-6">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-accent-light)] text-[var(--color-accent)]">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                </div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Contact responsable</h2>
+            </div>
+            <p class="text-xs text-[var(--color-secondary)] mb-5">Personne à contacter pour la livraison (optionnel).</p>
+
+            <div class="space-y-4">
+                <label class="block">
+                    <span class="form-label">Nom</span>
+                    <input type="text" name="contact_name" value="{{ is_new ? '' : (antenna.contactName ?? '') }}"
+                        placeholder="Prénom Nom"
+                        class="form-input mt-1.5">
+                </label>
+
                 <label class="block">
                     <span class="form-label">Email</span>
                     <input type="email" name="contact_email" value="{{ is_new ? '' : (antenna.contactEmail ?? '') }}"
@@ -81,6 +85,7 @@
                         class="form-input mt-1.5 {{ errors.contact_email is defined ? '!border-[var(--color-destructive)]' : '' }}">
                     {% if errors.contact_email is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.contact_email }}</span>{% endif %}
                 </label>
+
                 <label class="block">
                     <span class="form-label">Téléphone direct</span>
                     <input type="tel" name="contact_phone" value="{{ is_new ? '' : (antenna.contactPhone ?? '') }}"
@@ -88,19 +93,26 @@
                         class="form-input mt-1.5">
                 </label>
             </div>
-        </div>
+        </section>
+
+        {# Col 3 : Notes internes #}
+        <section class="card p-6">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-muted)] text-[var(--color-secondary)]">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487 18.549 2.799a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                </div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Notes internes</h2>
+            </div>
+            <p class="text-xs text-[var(--color-secondary)] mb-5">Code d'accès, horaires livraison, instructions… Visible uniquement par votre entreprise.</p>
+
+            <label class="block">
+                <textarea name="notes" rows="10" placeholder="Ex.&#10;Livraison entre 9h et 17h&#10;Code porte 1234&#10;Demander M. Martin à la réception"
+                    class="form-input resize-none">{{ is_new ? '' : (antenna.notes ?? '') }}</textarea>
+            </label>
+        </section>
     </div>
 
-    <div class="pt-4 border-t border-[var(--color-border-soft)]">
-        <label class="block">
-            <span class="form-label">Notes internes</span>
-            <p class="text-xs text-[var(--color-secondary)] mb-2">Code d'accès, horaires livraison, instructions… Visible uniquement par votre entreprise.</p>
-            <textarea name="notes" rows="3" placeholder="Ex. Livraison entre 9h et 17h. Code porte 1234."
-                class="form-input">{{ is_new ? '' : (antenna.notes ?? '') }}</textarea>
-        </label>
-    </div>
-
-    <div class="flex gap-3 pt-2">
+    <div class="flex gap-3">
         <button type="submit" class="btn btn-primary">
             {{ is_new ? 'Créer l\'antenne' : 'Enregistrer' }}
         </button>
