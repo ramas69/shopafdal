@@ -23,10 +23,10 @@
     </div>
 
     {# Mode switcher #}
-    <div class="card p-6">
+    <div class="card p-6" data-controller="mode-switch">
         <div class="form-label mb-3">Entreprise <span class="text-[var(--color-destructive)]">*</span></div>
 
-        <div class="grid grid-cols-2 gap-2 mb-5 p-1 rounded-md bg-[var(--color-muted)]" data-controller="mode-switch">
+        <div class="grid grid-cols-2 gap-2 mb-5 p-1 rounded-md bg-[var(--color-muted)]">
             <label class="cursor-pointer">
                 <input type="radio" name="company_mode" value="existing" {{ mode != 'new' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
                 <div class="px-3 py-2 rounded text-sm text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
