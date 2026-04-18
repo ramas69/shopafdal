@@ -208,7 +208,7 @@ final class AntennaController extends AbstractController
                 }
                 $em->flush();
                 $this->addFlash('success', $isNew ? 'Antenne créée.' : 'Antenne mise à jour.');
-                return $this->redirectToRoute('app_antennas');
+                return $this->redirectToRoute('app_antenna_detail', ['id' => $antenna->getId()]);
             }
         }
 
