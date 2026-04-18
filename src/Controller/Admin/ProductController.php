@@ -61,6 +61,20 @@ final class ProductController extends AbstractController
         return $this->handleForm(new Product(), $request, $em, $slugger);
     }
 
+    #[Route('/{id}', name: 'app_admin_product_detail', requirements: ['id' => '\d+'])]
+    public function detail(Product $product): Response
+    {
+        $variantsByColor = [];
+        foreach ($product->getVariants() as $v) {
+            $variantsByColor[$v->getColor()] ??= ['color' => $v->getColor(), 'hex' => $v->getColorHex(), 'sizes' => []];
+            $variantsByColor[$v->getColor()]['sizes'][] = ['size' => $v->getSize(), 'sku' => $v->getSku()];
+        }
+        return $this->render('admin/product/detail.html.twig', [
+            'product' => $product,
+            'variants_by_color' => array_values($variantsByColor),
+        ]);
+    }
+
     #[Route('/{id}/edit', name: 'app_admin_product_edit', requirements: ['id' => '\d+'])]
     public function edit(Product $product, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
     {
@@ -77,7 +91,7 @@ final class ProductController extends AbstractController
         $product->publish();
         $em->flush();
         $this->addFlash('success', sprintf('« %s » publié et visible par les clients.', $product->getName()));
-        return $this->redirectToRoute('app_admin_product_edit', ['id' => $product->getId()]);
+        return $this->redirectToRoute('app_admin_product_detail', ['id' => $product->getId()]);
     }
 
     #[Route('/{id}/unpublish', name: 'app_admin_product_unpublish', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -86,7 +100,7 @@ final class ProductController extends AbstractController
         $product->unpublish();
         $em->flush();
         $this->addFlash('success', sprintf('« %s » repassé en brouillon. Plus visible par les clients.', $product->getName()));
-        return $this->redirectToRoute('app_admin_product_edit', ['id' => $product->getId()]);
+        return $this->redirectToRoute('app_admin_product_detail', ['id' => $product->getId()]);
     }
 
     #[Route('/{id}/delete', name: 'app_admin_product_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -141,7 +155,7 @@ final class ProductController extends AbstractController
 
                 $em->flush();
                 $this->addFlash('success', $isNew ? 'Produit créé en brouillon.' : 'Produit mis à jour.');
-                return $this->redirectToRoute('app_admin_product_edit', ['id' => $product->getId()]);
+                return $this->redirectToRoute('app_admin_product_detail', ['id' => $product->getId()]);
             }
         }
 

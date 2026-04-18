@@ -1,0 +1,165 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ product.name }} — Admin{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_admin_products') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Tous les produits</a>
+
+<div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Produit</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ product.name }}</h1>
+        <div class="mt-2 flex items-center gap-3 flex-wrap">
+            {% if product.status.value == 'published' %}
+                <span class="badge border bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Publié · visible par les clients
+                </span>
+                {% if product.publishedAt %}<span class="text-xs text-[var(--color-secondary)]">depuis le {{ product.publishedAt|date('d/m/Y') }}</span>{% endif %}
+            {% else %}
+                <span class="badge border bg-slate-50 text-slate-700 border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                    Brouillon · invisible pour les clients
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Modifier
+        </a>
+        {% if product.status.value == 'published' %}
+            <a href="{{ path('app_catalogue_detail', {slug: product.slug}) }}" target="_blank" class="btn btn-outline">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                Vue client
+            </a>
+            <form method="post" action="{{ path('app_admin_product_unpublish', {id: product.id}) }}"
+                  data-controller="confirm"
+                  data-confirm-title-value="Dépublier {{ product.name }} ?"
+                  data-confirm-message-value="Le produit ne sera plus visible par les clients."
+                  data-confirm-label-value="Dépublier"
+                  data-action="submit->confirm#gate">
+                <button type="submit" class="btn btn-outline">Dépublier</button>
+            </form>
+        {% else %}
+            <form method="post" action="{{ path('app_admin_product_publish', {id: product.id}) }}">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                    Publier
+                </button>
+            </form>
+            <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}"
+                  data-controller="confirm"
+                  data-confirm-title-value="Supprimer {{ product.name }} ?"
+                  data-confirm-message-value="Le produit et ses variantes seront définitivement supprimés."
+                  data-confirm-label-value="Supprimer"
+                  data-action="submit->confirm#gate">
+                <button type="submit" class="btn btn-error">Supprimer</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        {% if product.images|length > 0 %}
+            <section class="card p-6" data-controller="gallery">
+                <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-4">Images ({{ product.images|length }})</h2>
+                <div class="aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 mb-3">
+                    <img data-gallery-target="main" src="{{ product.images|first }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                </div>
+                {% if product.images|length > 1 %}
+                    <div class="grid grid-cols-6 gap-2">
+                        {% for img in product.images %}
+                            <button type="button"
+                                    data-action="click->gallery#select"
+                                    data-gallery-target="thumb"
+                                    data-src="{{ img }}"
+                                    class="aspect-square rounded-lg overflow-hidden border-2 {{ loop.first ? 'border-[var(--color-primary)]' : 'border-transparent' }} hover:border-[var(--color-primary)] transition-colors cursor-pointer">
+                                <img src="{{ img }}" alt="" class="w-full h-full object-cover">
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+        {% else %}
+            <section class="card p-12 text-center">
+                <div class="w-16 h-16 rounded-full bg-[var(--color-muted)] flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-8 h-8 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+                </div>
+                <p class="text-[var(--color-foreground)] font-medium mb-1">Aucune image</p>
+                <p class="text-sm text-[var(--color-secondary)]">Ajoutez des images pour illustrer ce produit.</p>
+                <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="btn btn-outline mt-4 inline-flex">Ajouter des images</a>
+            </section>
+        {% endif %}
+
+        {% if product.description %}
+            <section class="card p-6">
+                <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-2">Description</h2>
+                <p class="text-[var(--color-body)] whitespace-pre-line">{{ product.description }}</p>
+            </section>
+        {% endif %}
+
+        <section class="card p-6">
+            <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-4">Variantes ({{ product.variants|length }})</h2>
+            {% if variants_by_color is empty %}
+                <p class="text-sm text-[var(--color-secondary)]">Aucune variante. <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="link">Ajouter</a> avant de publier.</p>
+            {% else %}
+                <div class="space-y-4">
+                    {% for group in variants_by_color %}
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-4 h-4 rounded-full border border-[var(--color-border)]" style="background-color: {{ group.hex }}"></span>
+                                <span class="font-medium text-[var(--color-foreground)]">{{ group.color }}</span>
+                                <span class="text-xs text-[var(--color-secondary)]">({{ group.sizes|length }})</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                {% for s in group.sizes %}
+                                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[var(--color-muted)] text-sm">
+                                        <span class="font-semibold text-[var(--color-foreground)]">{{ s.size }}</span>
+                                        <span class="text-xs font-mono text-[var(--color-secondary)]">{{ s.sku }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <aside class="space-y-4">
+        <section class="card p-5">
+            <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Prix HT unitaire</div>
+            <div class="font-display text-3xl font-semibold text-[var(--color-primary)]">{{ product.basePriceCents|price }}</div>
+        </section>
+
+        <section class="card p-5">
+            <h3 class="font-display text-sm font-semibold text-[var(--color-foreground)] mb-3">Détails</h3>
+            <dl class="text-sm space-y-2">
+                {% if product.category %}
+                    <div class="flex justify-between">
+                        <dt class="text-[var(--color-secondary)]">Catégorie</dt>
+                        <dd class="text-[var(--color-foreground)]">{{ product.category }}</dd>
+                    </div>
+                {% endif %}
+                {% if product.material %}
+                    <div class="flex justify-between">
+                        <dt class="text-[var(--color-secondary)]">Matière</dt>
+                        <dd class="text-[var(--color-foreground)] text-right">{{ product.material }}</dd>
+                    </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <dt class="text-[var(--color-secondary)]">Slug</dt>
+                    <dd class="font-mono text-xs text-[var(--color-foreground)]">{{ product.slug }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-[var(--color-secondary)]">Créé le</dt>
+                    <dd class="text-[var(--color-foreground)]">{{ product.createdAt|date('d/m/Y') }}</dd>
+                </div>
+            </dl>
+        </section>
+    </aside>
+</div>
+{% endblock %}
