@@ -11,12 +11,14 @@
     <p class="text-sm text-[var(--color-secondary)] mt-1">Vous pouvez ajuster les quantités, retirer des lignes, changer l'antenne ou les notes tant qu'Afdal n'a pas confirmé.</p>
 </div>
 
-<form method="post" class="space-y-6">
+<form method="post" class="space-y-6" data-controller="order-edit">
     <section class="card overflow-hidden">
         <h2 class="text-sm font-semibold text-[var(--color-foreground)] px-6 py-4 border-b border-[var(--color-border-soft)]">Articles</h2>
         <div class="divide-y divide-[var(--color-border-soft)]">
             {% for item in order.items %}
-                <div class="flex items-center justify-between gap-4 p-4">
+                <div class="flex items-center justify-between gap-4 p-4 transition-opacity"
+                     data-order-edit-target="row"
+                     data-unit-price="{{ item.unitPriceCents }}">
                     <div class="min-w-0 flex-1">
                         <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
                         <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1 flex-wrap">
@@ -32,11 +34,16 @@
                         <label class="text-xs text-[var(--color-secondary)]">
                             Qté
                             <input type="number" name="quantity[{{ item.id }}]" min="0" value="{{ item.quantity }}"
+                                data-action="input->order-edit#recompute"
                                 class="form-input !w-20 text-right mt-1">
                         </label>
                         <span class="text-sm text-[var(--color-secondary)] whitespace-nowrap">×&nbsp;{{ item.unitPriceCents|price }}</span>
+                        <span class="font-semibold text-[var(--color-foreground)] w-24 text-right text-sm"
+                              data-order-edit-target="lineTotal">{{ (item.quantity * item.unitPriceCents)|price }}</span>
                         <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-[var(--color-destructive)] px-2 py-1 rounded hover:bg-[var(--color-accent-light)]">
-                            <input type="checkbox" name="remove[{{ item.id }}]" value="1" class="form-checkbox !w-4 !h-4">
+                            <input type="checkbox" name="remove[{{ item.id }}]" value="1"
+                                data-action="change->order-edit#recompute"
+                                class="form-checkbox !w-4 !h-4">
                             Retirer
                         </label>
                     </div>
@@ -44,8 +51,8 @@
             {% endfor %}
         </div>
         <div class="flex justify-between items-center p-4 bg-[var(--color-muted)] border-t border-[var(--color-border-soft)]">
-            <span class="text-[var(--color-secondary)]">Total HT actuel</span>
-            <span class="text-xl font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
+            <span class="text-[var(--color-secondary)]">Total HT</span>
+            <span class="text-xl font-semibold text-[var(--color-primary)]" data-order-edit-target="total">{{ order.totalCents|price }}</span>
         </div>
     </section>
 
