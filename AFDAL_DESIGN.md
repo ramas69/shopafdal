@@ -11,23 +11,36 @@ Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
 - Light ✓ Full · Dark ✓ Full
 - Performance : excellent
 
-### Couleurs (refresh moderne 2026-04-18)
+### Couleurs — Palette Afdal réelle (2026-04-18)
 
-| Rôle | Hex | Variable CSS | Note |
-|------|-----|--------------|------|
-| Primary | `#0A0A0A` | `--color-primary` | true near-black (ex slate-900) |
-| On Primary | `#FAFAFA` | `--color-on-primary` | off-white pour contraste doux |
-| Secondary | `#525252` | `--color-secondary` | neutral-600 |
-| Accent / CTA | `#0369A1` | `--color-accent` | sky-700 (validé client) |
-| Accent soft | `#E0F2FE` | `--color-accent-soft` | backgrounds légers |
-| Background | `#FAFAFA` | `--color-background` | neutral-50 |
-| Surface | `#FFFFFF` | `--color-surface` | cards / panneaux |
-| Foreground | `#0A0A0A` | `--color-foreground` | |
-| Muted | `#F5F5F5` | `--color-muted` | neutral-100 (plus doux) |
-| Border | `#E5E5E5` | `--color-border` | neutral-200 (hover/focus) |
-| Border soft | `#F0F0F0` | `--color-border-soft` | bordures par défaut (très subtiles) |
-| Destructive | `#DC2626` | `--color-destructive` | |
-| Ring | `#0A0A0A` | `--color-ring` | focus noir (plus contrasté) |
+**Source** : extraites du HTML de [atelier-afdal.fr](https://www.atelier-afdal.fr/) (95 occurrences du bleu primary, 31 du rouge accent).
+
+| Rôle | Hex | Variable CSS | Usage |
+|------|-----|--------------|-------|
+| **Primary** | `#175CD3` | `--color-primary` | Bleu Afdal · CTA principal, liens, nav active, logo |
+| Primary focus | `#194185` | `--color-primary-focus` | Hover/active |
+| Primary light | `#E0EAFC` | `--color-primary-light` | Backgrounds légers |
+| On primary | `#FFFFFF` | `--color-on-primary` | Texte sur primary |
+| **Accent** | `#E82538` | `--color-accent` | Rouge Afdal · Highlights, badges "Nouveau", CTA critique |
+| Accent focus | `#C0172B` | `--color-accent-focus` | Hover accent |
+| Accent light | `#FEE4E6` | `--color-accent-light` | Backgrounds légers destructive/accent |
+| **Foreground** | `#181D27` | `--color-foreground` | Titres h1-h6 |
+| Body | `#414651` | `--color-body` | Texte courant |
+| **Secondary** | `#535862` | `--color-secondary` | Texte muet (labels, captions) — gardé comme muted-text |
+| Background | `#FAFAFA` | `--color-background` | Fond page |
+| Surface | `#FFFFFF` | `--color-surface` | Cards, panneaux, inputs |
+| Muted | `#E9EAEB` | `--color-muted` | Backgrounds secondaires (badges, hover) |
+| Border | `#D5D7DA` | `--color-border` | Bordures interactives |
+| Success | `#12B76A` | `--color-success` | Statut livré, confirmations |
+| Warning | `#DC6803` | `--color-warning` | Statut en production |
+| Destructive | `#E82538` | `--color-destructive` | = accent (cohérent avec la marque) |
+
+**Règle primary vs accent** :
+- **Primary (bleu)** = omniprésent : tous les CTA "normaux", liens, éléments de nav, badges "Placée", icônes principales
+- **Accent (rouge)** = sparse : uniquement là où on veut de la friction visuelle positive/négative (badge "Nouveau", erreurs, CTA destructifs, éléments "attention")
+
+### Navy scale (pour granularité du shell)
+`--color-navy-50` à `--color-navy-900` — dérivée de la palette Afdal pour avoir des teintes neutres cohérentes (sidebar, borders subtiles, text micro).
 
 ### Typographie
 - **Titres** : Lexend (400–700) — inchangé, tracking serré (`-0.015em` → `-0.025em` sur h1)

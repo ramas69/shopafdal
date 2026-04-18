@@ -1,55 +1,65 @@
 @import "tailwindcss";
 
 @theme {
-  /* Lineone navy scale */
-  --color-navy-50: #E7E9EF;
-  --color-navy-100: #C2C9D6;
-  --color-navy-200: #A3ADC2;
-  --color-navy-300: #697A9B;
-  --color-navy-400: #5C6B8A;
-  --color-navy-450: #465675;
-  --color-navy-500: #384766;
-  --color-navy-600: #313E59;
-  --color-navy-700: #26334D;
-  --color-navy-750: #222E45;
-  --color-navy-800: #202B40;
-  --color-navy-900: #192132;
+  /*
+   * Afdal brand palette (extraite de atelier-afdal.fr)
+   * Primary = bleu signature · Accent = rouge highlight
+   */
 
-  /* Semantic tokens */
-  --color-primary: #4F46E5;
-  --color-primary-focus: #4338CA;
-  --color-secondary: #F000B9;
-  --color-secondary-focus: #BD0090;
-  --color-accent: #5F5AF6;
-  --color-accent-focus: #4D47F5;
-  --color-accent-light: #8B83FA;
-
-  --color-info: #0EA5E9;
-  --color-success: #10B981;
-  --color-success-focus: #059669;
-  --color-warning: #FF9800;
-  --color-error: #FF5724;
-
+  /* Brand */
+  --color-primary: #175CD3;
+  --color-primary-focus: #194185;
+  --color-primary-light: #E0EAFC;
   --color-on-primary: #FFFFFF;
-  --color-background: #F8FAFC;
+
+  --color-accent: #E82538;
+  --color-accent-focus: #C0172B;
+  --color-accent-light: #FEE4E6;
+
+  /* Neutrals Afdal */
+  --color-foreground: #181D27;
+  --color-body: #414651;
+  --color-secondary: #535862;
+  --color-background: #FAFAFA;
   --color-surface: #FFFFFF;
-  --color-foreground: #1E293B;
-  --color-muted: #F1F5F9;
-  --color-slate-150: #E9EEF5;
-  --color-border: #E2E8F0;
-  --color-border-soft: #F1F5F9;
-  --color-destructive: #FF5724;
-  --color-ring: #4F46E5;
+  --color-muted: #E9EAEB;
+  --color-border: #D5D7DA;
+  --color-border-soft: #E9EAEB;
+  --color-slate-150: #E9EAEB;
 
+  /* Semantic */
+  --color-info: #175CD3;
+  --color-success: #12B76A;
+  --color-warning: #DC6803;
+  --color-destructive: #E82538;
+  --color-ring: #175CD3;
+
+  /* Navy scale (legacy, used par shell / composants Lineone) */
+  --color-navy-50: #F8F9FB;
+  --color-navy-100: #E9EAEB;
+  --color-navy-200: #D5D7DA;
+  --color-navy-300: #94979C;
+  --color-navy-400: #85888E;
+  --color-navy-450: #6C6F75;
+  --color-navy-500: #535862;
+  --color-navy-600: #414651;
+  --color-navy-700: #252B37;
+  --color-navy-750: #1F2430;
+  --color-navy-800: #181D27;
+  --color-navy-900: #13161B;
+
+  /* Typography */
   --font-sans: "Poppins", system-ui, -apple-system, sans-serif;
-  --font-inter: "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Poppins", system-ui, -apple-system, sans-serif;
+  --font-inter: "Inter", system-ui, -apple-system, sans-serif;
 
+  /* Shadows (Lineone-inspired) */
   --shadow-soft: 0 3px 10px 0 rgb(48 46 56 / 6%);
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06);
   --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08);
 
+  /* Radii */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -59,7 +69,7 @@
 @layer base {
   html {
     font-family: var(--font-sans);
-    color: var(--color-foreground);
+    color: var(--color-body);
     background-color: var(--color-background);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -68,18 +78,15 @@
     line-height: 1.5;
   }
 
-  body {
-    color: var(--color-navy-500);
-  }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 600;
-    color: var(--color-navy-700);
+    color: var(--color-foreground);
+    letter-spacing: -0.01em;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
@@ -102,7 +109,7 @@
     background-color: var(--color-surface);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-soft);
-    color: var(--color-navy-700);
+    color: var(--color-body);
   }
 
   /* ----- Buttons ----- */
@@ -130,31 +137,38 @@
   .btn-primary:hover,
   .btn-primary:focus { background-color: var(--color-primary-focus); }
 
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: var(--color-on-primary);
+  }
+  .btn-accent:hover,
+  .btn-accent:focus { background-color: var(--color-accent-focus); }
+
   .btn-outline {
     background-color: transparent;
-    color: var(--color-navy-700);
+    color: var(--color-foreground);
     border: 1px solid var(--color-border);
   }
   .btn-outline:hover {
-    background-color: var(--color-slate-150);
-    border-color: var(--color-navy-300);
+    background-color: var(--color-muted);
+    border-color: var(--color-foreground);
   }
 
   .btn-ghost {
     background-color: transparent;
-    color: var(--color-navy-500);
+    color: var(--color-body);
   }
   .btn-ghost:hover {
-    background-color: var(--color-slate-150);
-    color: var(--color-navy-700);
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
   }
 
   .btn-error {
     background-color: transparent;
-    color: var(--color-error);
-    border: 1px solid var(--color-error);
+    color: var(--color-destructive);
+    border: 1px solid var(--color-destructive);
   }
-  .btn-error:hover { background-color: rgb(255 87 36 / 0.08); }
+  .btn-error:hover { background-color: var(--color-accent-light); }
 
   /* ----- Form inputs ----- */
   .form-input {
@@ -162,25 +176,26 @@
     width: 100%;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
-    background-color: transparent;
+    background-color: var(--color-surface);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.5;
+    color: var(--color-foreground);
     transition: border-color 200ms, box-shadow 200ms;
-    color: var(--color-navy-700);
   }
   .form-input::placeholder { color: rgb(148 163 184 / 0.7); }
-  .form-input:hover { border-color: var(--color-navy-300); }
+  .form-input:hover { border-color: var(--color-navy-400); }
   .form-input:focus {
     border-color: var(--color-primary);
     outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px rgb(23 92 211 / 0.12);
   }
 
   .form-label {
     display: block;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--color-navy-700);
+    color: var(--color-foreground);
     margin-bottom: 0.375rem;
   }
 
@@ -188,7 +203,7 @@
     width: 1.125rem;
     height: 1.125rem;
     border-radius: 0.25rem;
-    border: 1.5px solid var(--color-navy-300);
+    border: 1.5px solid var(--color-navy-400);
     cursor: pointer;
     transition: all 200ms;
   }
@@ -209,15 +224,15 @@
     line-height: 1.25rem;
   }
 
-  /* ----- Tag (like filter chip) ----- */
+  /* ----- Filter tag chip ----- */
   .tag {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius-md);
-    background-color: var(--color-slate-150);
-    color: var(--color-navy-700);
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
     font-size: 0.75rem;
     font-weight: 500;
   }
