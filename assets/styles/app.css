@@ -243,4 +243,45 @@
     transition: color 150ms;
   }
   .link:hover { color: var(--color-primary-focus); text-decoration: underline; }
+
+  /* ----- Timeline (Lineone-style) ----- */
+  .timeline {
+    --line: 1px;
+    --size: 1.75rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-item {
+    display: flex;
+    flex: 1 1 0%;
+    padding-bottom: 2rem;
+    position: relative;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item-point {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    height: var(--size);
+    justify-content: center;
+    width: var(--size);
+    position: relative;
+    z-index: 1;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    top: var(--size);
+    bottom: 0;
+    left: calc(var(--size) / 2 - var(--line) / 2);
+    width: var(--line);
+    background-color: var(--color-border);
+  }
+  .timeline-item:last-child::before {
+    background-image: linear-gradient(to bottom, var(--color-border), transparent);
+  }
+  .timeline-item-content {
+    flex: 1;
+    padding-left: 1rem;
+  }
 }

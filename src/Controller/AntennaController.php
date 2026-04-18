@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Antenna;
 use App\Entity\User;
 use App\Repository\AntennaRepository;
+use App\Repository\OrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -31,6 +32,35 @@ final class AntennaController extends AbstractController
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         return $this->handleForm(new Antenna(), $request, $em);
+    }
+
+    #[Route('/{id}', name: 'app_antenna_detail', requirements: ['id' => '\d+'])]
+    public function detail(Antenna $antenna, OrderRepository $orders): Response
+    {
+        $this->assertOwns($antenna);
+        $antennaOrders = $orders->createQueryBuilder('o')
+            ->andWhere('o.antenna = :antenna')
+            ->setParameter('antenna', $antenna)
+            ->orderBy('o.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $totalQty = 0;
+        $totalCents = 0;
+        foreach ($antennaOrders as $o) {
+            $totalQty += $o->getTotalQuantity();
+            $totalCents += $o->getTotalCents();
+        }
+
+        return $this->render('antenna/detail.html.twig', [
+            'antenna' => $antenna,
+            'orders' => $antennaOrders,
+            'stats' => [
+                'orders' => count($antennaOrders),
+                'total_qty' => $totalQty,
+                'total_cents' => $totalCents,
+            ],
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'app_antenna_edit')]
@@ -64,10 +94,18 @@ final class AntennaController extends AbstractController
             $city = trim((string) $request->request->get('city', ''));
             $phone = trim((string) $request->request->get('phone', ''));
 
-            if ($name === '') $errors['name'] = 'Nom requis.';
-            if ($address === '') $errors['address_line'] = 'Adresse requise.';
-            if ($postalCode === '') $errors['postal_code'] = 'Code postal requis.';
-            if ($city === '') $errors['city'] = 'Ville requise.';
+            if ($name === '') {
+                $errors['name'] = 'Nom requis.';
+            }
+            if ($address === '') {
+                $errors['address_line'] = 'Adresse requise.';
+            }
+            if ($postalCode === '') {
+                $errors['postal_code'] = 'Code postal requis.';
+            }
+            if ($city === '') {
+                $errors['city'] = 'Ville requise.';
+            }
 
             if (empty($errors)) {
                 $antenna
