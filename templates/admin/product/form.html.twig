@@ -136,37 +136,25 @@
         {% if not is_new and product.images|length > 0 %}
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
                 {% for img in product.images %}
-                    <div data-controller="image-remove"
-                         class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square">
+                    <div data-controller="image-remove" class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square group">
                         <input type="hidden" name="remove_images[]" value="{{ img }}" data-image-remove-target="input" disabled>
+                        <img src="{{ img }}" alt="" class="w-full h-full object-cover">
+
                         <button type="button"
-                                data-action="click->image-remove#toggle"
-                                title="Cliquer pour basculer « à retirer »"
+                                data-action="click->image-remove#remove"
+                                title="Retirer l'image"
                                 aria-label="Retirer l'image"
-                                class="absolute inset-0 z-10 block w-full h-full p-0 border-0 bg-transparent cursor-pointer">
-                            <img src="{{ img }}" alt="" class="w-full h-full object-cover pointer-events-none">
-
-                            <span data-image-remove-target="overlay"
-                                  class="absolute inset-0 bg-[#E82538]/85 opacity-0 transition-opacity flex items-center justify-center text-white pointer-events-none">
-                                <span class="text-center">
-                                    <svg class="w-8 h-8 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397"/></svg>
-                                    <span class="block text-xs font-semibold">À retirer</span>
-                                    <span class="block text-[10px] mt-1 opacity-80">Cliquer pour annuler</span>
-                                </span>
-                            </span>
-
-                            <span class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/95 shadow-md flex items-center justify-center text-[var(--color-destructive)] pointer-events-none">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                            </span>
-
-                            {% if loop.first %}
-                                <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide pointer-events-none">Principal</span>
-                            {% endif %}
+                                class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center cursor-pointer hover:bg-[var(--color-destructive)] hover:text-white text-[var(--color-destructive)] transition-colors">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                         </button>
+
+                        {% if loop.first %}
+                            <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide pointer-events-none">Principal</span>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
-            <p class="text-xs text-[var(--color-secondary)] mb-3">Cliquez sur la croix en haut à droite d'une image pour la marquer « À retirer ». Elle sera supprimée à l'enregistrement.</p>
+            <p class="text-xs text-[var(--color-secondary)] mb-3">Cliquez sur la croix pour retirer une image. La suppression devient effective à l'enregistrement.</p>
         {% endif %}
 
         <div data-controller="image-preview">
