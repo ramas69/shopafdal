@@ -57,10 +57,11 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
-        <div{% if order.status.value not in ['delivered', 'cancelled'] %}
+        <div id="order-timeline-frame-{{ order.id }}"
+             {% if order.status.value not in ['delivered', 'cancelled'] %}
              data-controller="poll"
              data-poll-url-value="{{ path('app_order_detail', {reference: order.reference}) }}"
-             data-poll-interval-value="15000"
+             data-poll-interval-value="10000"
              {% endif %}>
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">

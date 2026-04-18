@@ -15,14 +15,18 @@ export default class extends Controller {
     }
 
     async _refresh() {
-        if (document.hidden) return;
+        if (document.hidden || !this.element.id) return;
         try {
-            const res = await fetch(this.urlValue, { headers: { 'Accept': 'text/html' } });
+            const res = await fetch(this.urlValue, {
+                headers: { 'Accept': 'text/html' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
             if (!res.ok) return;
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
-            const fresh = doc.querySelector(`[data-controller~="poll"][data-poll-url-value="${this.urlValue}"]`);
-            if (fresh && fresh.innerHTML !== this.element.innerHTML) {
+            const fresh = doc.getElementById(this.element.id);
+            if (fresh && fresh.innerHTML.trim() !== this.element.innerHTML.trim()) {
                 this.element.innerHTML = fresh.innerHTML;
             }
         } catch (_) {
