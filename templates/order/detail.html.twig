@@ -172,6 +172,80 @@
             {% if order.antenna.phone %}<div class="text-sm text-[var(--color-secondary)] mt-1">{{ order.antenna.phone }}</div>{% endif %}
         </section>
 
+        <section id="order-history-client-{{ order.id }}"
+                 class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6"
+                 data-controller="poll"
+                 data-poll-url-value="{{ path('app_order_detail', {reference: order.reference}) }}"
+                 data-poll-interval-value="5000">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-[var(--color-primary)]">Historique</h2>
+                <span class="inline-flex items-center gap-1.5 text-xs text-[var(--color-secondary)]">
+                    <span class="relative flex w-1.5 h-1.5">
+                        <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-60 animate-ping"></span>
+                        <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500"></span>
+                    </span>
+                    Live
+                </span>
+            </div>
+            {% if events|default([]) is empty %}
+                <p class="text-sm text-[var(--color-secondary)]">Aucun événement enregistré.</p>
+            {% else %}
+                <ol class="space-y-4">
+                    {% for event in events %}
+                        {% set is_admin_evt = event.adminEvent() %}
+                        {% set is_cancelled = event.type == 'cancelled' %}
+                        {% set dot_bg = is_cancelled ? 'bg-red-100 text-red-600'
+                            : is_admin_evt ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]'
+                            : 'bg-amber-50 text-amber-600' %}
+                        <li class="flex gap-3 relative">
+                            {% if not loop.last %}
+                                <div class="absolute left-3.5 top-7 bottom-[-1rem] w-px bg-[var(--color-border-soft)]"></div>
+                            {% endif %}
+                            <div class="relative z-10 w-7 h-7 rounded-full {{ dot_bg }} flex items-center justify-center shrink-0">
+                                {% if event.type == 'created' %}
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                {% elseif event.type == 'status_changed' %}
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                {% elseif event.type == 'items_edited' %}
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"/></svg>
+                                {% elseif is_cancelled %}
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                                {% else %}
+                                    <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0 pt-0.5">
+                                <div class="text-sm text-[var(--color-foreground)]">{{ event.summary }}</div>
+                                <div class="text-xs text-[var(--color-secondary)] mt-0.5 flex items-center gap-2 flex-wrap">
+                                    <span>{{ event.createdAt|date('d/m/Y à H:i') }}</span>
+                                    <span>·</span>
+                                    <span class="{{ is_admin_evt ? 'text-[var(--color-primary)] font-medium' : '' }}">
+                                        {{ is_admin_evt ? 'Afdal' : 'Vous' }}
+                                    </span>
+                                </div>
+                                {% if event.type == 'items_edited' and event.data %}
+                                    <details class="mt-2">
+                                        <summary class="text-xs text-[var(--color-primary)] hover:underline cursor-pointer">Voir le détail</summary>
+                                        <div class="mt-2 space-y-1 text-xs text-[var(--color-secondary)] pl-2 border-l-2 border-[var(--color-border-soft)]">
+                                            {% for item in event.data.removed|default([]) %}
+                                                <div><span class="text-[var(--color-destructive)]">−</span> {{ item.label }} (était {{ item.qty }})</div>
+                                            {% endfor %}
+                                            {% for item in event.data.changed|default([]) %}
+                                                <div>{{ item.label }} : {{ item.from }} → <strong>{{ item.to }}</strong></div>
+                                            {% endfor %}
+                                            {% for item in event.data.added|default([]) %}
+                                                <div><span class="text-emerald-600">+</span> {{ item.label }} ({{ item.qty }})</div>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </section>
+
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
             <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-3">Informations</h2>
             <dl class="text-sm space-y-2">
