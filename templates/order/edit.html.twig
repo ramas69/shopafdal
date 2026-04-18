@@ -84,57 +84,79 @@
     </div>
 </form>
 
-{# === Ajouter un article (form dédié, action séparée) === #}
-<form method="post" action="{{ path('app_order_add_item', {reference: order.reference}) }}" class="card p-6 mt-6 space-y-4">
-    <div>
-        <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Ajouter un article</h2>
-        <p class="text-xs text-[var(--color-secondary)] mt-0.5">Sélectionne un produit, une taille/couleur et une quantité. L'article sera ajouté à cette commande (Afdal sera notifié).</p>
-    </div>
+{# === Bouton + modal Ajouter un article === #}
+<div class="mt-6" data-controller="add-article"
+     data-add-article-action-url-value="{{ path('app_order_add_item', {reference: order.reference}) }}">
+    <button type="button" data-action="click->add-article#open" class="btn btn-primary">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Ajouter un article
+    </button>
 
-    <label class="block">
-        <span class="form-label">Produit & variante <span class="text-[var(--color-destructive)]">*</span></span>
-        <select name="variant_id" required data-controller="tom-select" class="form-input mt-1.5">
-            <option value="">— Choisir un produit —</option>
-            {% for product in available_products %}
-                <optgroup label="{{ product.name }} · {{ product.basePriceCents|price }}">
-                    {% for variant in product.variants %}
-                        <option value="{{ variant.id }}">{{ variant.color }} · Taille {{ variant.size }} · {{ variant.sku }}</option>
-                    {% endfor %}
-                </optgroup>
-            {% endfor %}
-        </select>
-    </label>
+    {# Products data (JSON for the Stimulus controller) #}
+    <script type="application/json" data-add-article-target="data">
+    {{ available_products|map(p => {
+        id: p.id,
+        name: p.name,
+        category: p.category ?? '',
+        price: p.basePriceCents,
+        image: p.images|length > 0 ? p.images|first : null,
+        variants: p.variants|map(v => {
+            id: v.id,
+            size: v.size,
+            color: v.color,
+            hex: v.colorHex,
+            sku: v.sku
+        })|values
+    })|json_encode|raw }}
+    </script>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <label class="block">
-            <span class="form-label">Quantité <span class="text-[var(--color-destructive)]">*</span></span>
-            <input type="number" name="quantity" min="1" value="1" required class="form-input mt-1.5 text-center font-semibold">
-        </label>
-        <label class="block">
-            <span class="form-label">Marquage (zone)</span>
-            <select name="marking_zone" data-controller="tom-select" class="form-input mt-1.5">
-                <option value="">Aucun</option>
-                <option value="poitrine">Poitrine</option>
-                <option value="dos">Dos</option>
-                <option value="manche">Manche</option>
-            </select>
-        </label>
-        <label class="block">
-            <span class="form-label">Taille marquage</span>
-            <select name="marking_size" data-controller="tom-select" class="form-input mt-1.5">
-                <option value="A6">A6</option>
-                <option value="A5">A5</option>
-                <option value="A4" selected>A4</option>
-                <option value="A3">A3</option>
-            </select>
-        </label>
-    </div>
+    {# Modal skeleton #}
+    <div data-add-article-target="backdrop"
+         data-action="click->add-article#backdropClick"
+         class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] items-center justify-center p-4"
+         style="display:none">
+        <div class="card w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" data-add-article-target="dialog">
+            <div class="flex items-center gap-3 p-5 border-b border-[var(--color-border-soft)]">
+                <button type="button" data-action="click->add-article#showList"
+                        data-add-article-target="backBtn"
+                        class="hidden w-9 h-9 items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
+                        aria-label="Retour">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                </button>
+                <h2 data-add-article-target="title" class="font-display text-lg font-semibold text-[var(--color-foreground)]">Ajouter un article</h2>
+                <button type="button" data-action="click->add-article#close"
+                        class="ml-auto w-9 h-9 inline-flex items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
+                        aria-label="Fermer">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
 
-    <div class="flex flex-wrap gap-3 pt-2">
-        <button type="submit" class="btn btn-primary">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            Ajouter à la commande
-        </button>
+            {# LIST view #}
+            <div data-add-article-target="listPanel" class="flex-1 overflow-y-auto p-5">
+                <div class="relative mb-4">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                    <input type="search" placeholder="Rechercher un produit..."
+                           data-action="input->add-article#filter"
+                           data-add-article-target="search"
+                           class="form-input pl-9">
+                </div>
+                <div data-add-article-target="grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                <div data-add-article-target="empty" class="hidden text-center text-sm text-[var(--color-secondary)] py-8">Aucun produit trouvé.</div>
+            </div>
+
+            {# DETAIL view (filled dynamically) #}
+            <form data-add-article-target="detailPanel"
+                  method="post"
+                  action="{{ path('app_order_add_item', {reference: order.reference}) }}"
+                  class="hidden flex-1 overflow-y-auto p-5 space-y-4">
+                <input type="hidden" name="variant_id" data-add-article-target="variantInput">
+                <div data-add-article-target="detailContent"></div>
+                <div class="flex justify-end gap-3 pt-2 border-t border-[var(--color-border-soft)]">
+                    <button type="button" data-action="click->add-article#showList" class="btn btn-outline">Retour</button>
+                    <button type="submit" class="btn btn-primary">Ajouter à la commande</button>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
 {% endblock %}
