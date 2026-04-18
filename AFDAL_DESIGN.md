@@ -325,6 +325,46 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 
 **Templates créés** (9) : `catalogue/list`, `catalogue/detail`, `cart/index`, `checkout/form`, `checkout/confirmation`, `order/list`, `order/detail` + shell updaté.
 
+### Phase 3b — Finition client (2026-04-18)
+
+**Shell v3** :
+- **Mobile drawer** : sidebar cachée par défaut < 1024px, bouton burger dans topbar, drawer slide-in + backdrop, fermeture via ESC ou click backdrop (Stimulus `drawer_controller.js`)
+- **Icône panier dans topbar** (plus dans sidebar) avec badge compteur — accessible depuis toutes les pages sans scroll
+- **Bouton logout** avec icône SVG + libellé masqué en mobile
+- Nav client : `Catalogue · Mes commandes · Mes antennes · Paramètres`
+
+**Gestion antennes** (`/antennes`) :
+- Liste en cartes (2 colonnes desktop) + CTA "Ajouter"
+- CRUD complet : `/antennes/new`, `/antennes/{id}/edit`, `POST /antennes/{id}/delete`
+- Suppression avec `confirm()` natif (pas de modal custom pour l'instant)
+- Voter-style check : le client ne peut éditer/supprimer que les antennes de sa propre `Company` (méthode `assertOwns`)
+
+**Timeline commande** (`templates/order/detail.html.twig`) :
+- Parcours linéaire : PLACED → CONFIRMED → IN_PRODUCTION → SHIPPED → DELIVERED
+- États visuels : `done` (cercle vert + checkmark), `current` (cercle accent + ring), `upcoming` (cercle muted)
+- Ligne verticale verte entre étapes terminées, grise sinon
+- Statut `CANCELLED` affiché en bloc séparé rouge (remplace la timeline)
+- Logique dans `OrderController::buildTimeline()` (fonction privée, pas besoin de service)
+
+**Annulation commande** :
+- `POST /commandes/{reference}/cancel` — bouton "Annuler la commande" visible uniquement si statut `DRAFT` ou `PLACED`
+- Transition côté client uniquement (admin peut aussi annuler, en Phase 4)
+- `confirm()` natif avant submit
+
+**Filtres liste commandes** :
+- `?status=` (enum values) · `?antenna=` (id) — build via QueryBuilder
+- Select antennes visible uniquement si >1 antenne pour l'entreprise
+- Bouton "Réinitialiser" affiché si filtre actif
+
+**Paramètres** (`/parametres`) :
+- Profil : nom complet éditable, email + entreprise read-only (pas modifiable par le client)
+- Mot de passe : current + new + confirm, validation min 8 chars, check current via `UserPasswordHasherInterface::isPasswordValid()`
+- 2 forms séparés avec endpoints dédiés (`app_settings_profile`, `app_settings_password`) — pas de gestion de token 2FA pour l'instant
+
+**Fix accessibilité** : liste commandes utilise des `<a>` sur la référence (pas `onclick` sur `<tr>` — navigable clavier, right-click, copy link).
+
+**Composants ajoutés** : Stimulus `drawer_controller.js`.
+
 ---
 
 ## Patterns Tailwind partagés

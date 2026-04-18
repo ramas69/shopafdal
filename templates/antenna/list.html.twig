@@ -1,0 +1,40 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Mes antennes — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Mes antennes</h1>
+        <p class="text-[var(--color-secondary)]">Adresses de livraison pour {{ app.user.company.name }}.</p>
+    </div>
+    <a href="{{ path('app_antenna_new') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+        Ajouter une antenne
+    </a>
+</div>
+
+{% if antennas is empty %}
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
+        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Aucune antenne</h2>
+        <p class="text-sm text-[var(--color-secondary)] mb-6">Ajoutez au moins une antenne avant de commander.</p>
+        <a href="{{ path('app_antenna_new') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">Ajouter une antenne</a>
+    </div>
+{% else %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for antenna in antennas %}
+            <article class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6 flex flex-col">
+                <h2 class="font-semibold text-[var(--color-primary)] text-lg mb-1">{{ antenna.name }}</h2>
+                <div class="text-sm text-[var(--color-secondary)] mb-1">{{ antenna.addressLine }}</div>
+                <div class="text-sm text-[var(--color-secondary)] mb-1">{{ antenna.postalCode }} {{ antenna.city }}</div>
+                {% if antenna.phone %}<div class="text-sm text-[var(--color-secondary)] mb-1">{{ antenna.phone }}</div>{% endif %}
+                <div class="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center gap-3">
+                    <a href="{{ path('app_antenna_edit', {id: antenna.id}) }}" class="text-sm text-[var(--color-accent)] hover:underline">Modifier</a>
+                    <form method="post" action="{{ path('app_antenna_delete', {id: antenna.id}) }}" onsubmit="return confirm('Supprimer cette antenne ?');" class="ml-auto">
+                        <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Supprimer</button>
+                    </form>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

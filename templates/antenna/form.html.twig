@@ -1,0 +1,52 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ is_new ? 'Nouvelle antenne' : 'Modifier antenne' }} — Afdal{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_antennas') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] mb-4 inline-block">&larr; Mes antennes</a>
+<h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-6">{{ is_new ? 'Nouvelle antenne' : 'Modifier antenne' }}</h1>
+
+<form method="post" class="max-w-xl bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
+    <label class="block">
+        <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Nom de l'antenne <span class="text-[var(--color-destructive)]">*</span></span>
+        <input type="text" name="name" value="{{ antenna.name ?? '' }}" required
+            class="w-full px-3 py-2 rounded-md border {{ errors.name is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+        {% if errors.name is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.name }}</span>{% endif %}
+    </label>
+
+    <label class="block">
+        <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Adresse <span class="text-[var(--color-destructive)]">*</span></span>
+        <input type="text" name="address_line" value="{{ antenna.addressLine ?? '' }}" required
+            class="w-full px-3 py-2 rounded-md border {{ errors.address_line is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+        {% if errors.address_line is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.address_line }}</span>{% endif %}
+    </label>
+
+    <div class="grid grid-cols-3 gap-3">
+        <label class="block col-span-1">
+            <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Code postal <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="text" name="postal_code" value="{{ antenna.postalCode ?? '' }}" required
+                class="w-full px-3 py-2 rounded-md border {{ errors.postal_code is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+            {% if errors.postal_code is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.postal_code }}</span>{% endif %}
+        </label>
+        <label class="block col-span-2">
+            <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Ville <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="text" name="city" value="{{ antenna.city ?? '' }}" required
+                class="w-full px-3 py-2 rounded-md border {{ errors.city is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+            {% if errors.city is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.city }}</span>{% endif %}
+        </label>
+    </div>
+
+    <label class="block">
+        <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Téléphone</span>
+        <input type="tel" name="phone" value="{{ antenna.phone ?? '' }}"
+            class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+    </label>
+
+    <div class="flex gap-3 pt-2">
+        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+            {{ is_new ? 'Créer' : 'Enregistrer' }}
+        </button>
+        <a href="{{ path('app_antennas') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-[var(--color-border)] text-[var(--color-foreground)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">Annuler</a>
+    </div>
+</form>
+{% endblock %}

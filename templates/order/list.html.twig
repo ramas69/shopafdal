@@ -8,6 +8,35 @@
     <p class="text-[var(--color-secondary)]">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }} pour {{ app.user.company.name }}.</p>
 </div>
 
+<form method="get" class="mb-6 flex flex-wrap items-end gap-3 bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Statut</span>
+        <select name="status" class="px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+            <option value="">Tous</option>
+            {% for s in statuses %}
+                <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% if antennas|length > 1 %}
+        <label>
+            <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Antenne</span>
+            <select name="antenna" class="px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                <option value="">Toutes</option>
+                {% for a in antennas %}
+                    <option value="{{ a.id }}" {{ current_antenna == a.id ? 'selected' }}>{{ a.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    {% endif %}
+    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+        Filtrer
+    </button>
+    {% if current_status or current_antenna %}
+        <a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)]">Réinitialiser</a>
+    {% endif %}
+</form>
+
 {% if orders is empty %}
     <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
         <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Aucune commande</h2>
@@ -30,8 +59,10 @@
                 </thead>
                 <tbody class="divide-y divide-[var(--color-border)]">
                     {% for order in orders %}
-                        <tr class="hover:bg-[var(--color-muted)] cursor-pointer" onclick="window.location='{{ path('app_order_detail', {reference: order.reference}) }}'">
-                            <td class="px-4 py-3 font-mono font-medium text-[var(--color-primary)]">{{ order.reference }}</td>
+                        <tr class="hover:bg-[var(--color-muted)]">
+                            <td class="px-4 py-3 font-mono font-medium">
+                                <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="text-[var(--color-primary)] hover:text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">{{ order.reference }}</a>
+                            </td>
                             <td class="px-4 py-3 text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</td>
                             <td class="px-4 py-3">{{ order.antenna.name }}</td>
                             <td class="px-4 py-3 text-[var(--color-secondary)]">{{ order.totalQuantity }} pc</td>
