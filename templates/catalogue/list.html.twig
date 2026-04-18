@@ -10,22 +10,23 @@
     </div>
 </div>
 
-<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3">
+<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3" data-controller="autosubmit" data-turbo-action="replace">
     <div class="relative flex-1 min-w-[240px]">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-navy-400)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
         <input type="search" name="q" value="{{ q }}" placeholder="Rechercher un produit..."
+            data-action="input->autosubmit#submit"
             class="form-input pl-9">
     </div>
-    <select name="category" class="form-input !w-auto min-w-[180px]">
+    <select name="category" data-action="change->autosubmit#submitNow" class="form-input !w-auto min-w-[180px]">
         <option value="">Toutes catégories</option>
         {% for c in categories %}
             <option value="{{ c }}" {{ current_category == c ? 'selected' }}>{{ c }}</option>
         {% endfor %}
     </select>
-    <button type="submit" class="btn btn-primary">Filtrer</button>
     {% if q or current_category %}
-        <a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-navy-400)] hover:text-[var(--color-navy-700)] px-2">Réinitialiser</a>
+        <a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
     {% endif %}
+    <noscript><button type="submit" class="btn btn-primary">Filtrer</button></noscript>
 </form>
 
 {% if products is empty %}
