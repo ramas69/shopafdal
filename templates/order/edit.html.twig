@@ -1,0 +1,79 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Modifier {{ order.reference }} — Mes commandes{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Retour au détail</a>
+
+<div class="mb-8">
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Modification</div>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] font-mono">{{ order.reference }}</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Vous pouvez ajuster les quantités, retirer des lignes, changer l'antenne ou les notes tant qu'Afdal n'a pas confirmé.</p>
+</div>
+
+<form method="post" class="space-y-6">
+    <section class="card overflow-hidden">
+        <h2 class="text-sm font-semibold text-[var(--color-foreground)] px-6 py-4 border-b border-[var(--color-border-soft)]">Articles</h2>
+        <div class="divide-y divide-[var(--color-border-soft)]">
+            {% for item in order.items %}
+                <div class="flex items-center justify-between gap-4 p-4">
+                    <div class="min-w-0 flex-1">
+                        <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
+                        <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1 flex-wrap">
+                            <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ item.variant.colorHex }}"></span>
+                            {{ item.variant.color }} · {{ item.variant.size }}
+                            <span class="font-mono text-xs">{{ item.variant.sku }}</span>
+                        </div>
+                        {% if item.marking %}
+                            <div class="text-xs text-[var(--color-secondary)] mt-1">Marquage : {{ item.marking.zone|capitalize }} ({{ item.marking.size }})</div>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs text-[var(--color-secondary)]">
+                            Qté
+                            <input type="number" name="quantity[{{ item.id }}]" min="0" value="{{ item.quantity }}"
+                                class="form-input !w-20 text-right mt-1">
+                        </label>
+                        <span class="text-sm text-[var(--color-secondary)] whitespace-nowrap">×&nbsp;{{ item.unitPriceCents|price }}</span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-[var(--color-destructive)] px-2 py-1 rounded hover:bg-[var(--color-accent-light)]">
+                            <input type="checkbox" name="remove[{{ item.id }}]" value="1" class="form-checkbox !w-4 !h-4">
+                            Retirer
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between items-center p-4 bg-[var(--color-muted)] border-t border-[var(--color-border-soft)]">
+            <span class="text-[var(--color-secondary)]">Total HT actuel</span>
+            <span class="text-xl font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
+        </div>
+    </section>
+
+    <section class="card p-6">
+        <h2 class="text-sm font-semibold text-[var(--color-foreground)] mb-4">Antenne de livraison</h2>
+        <div class="space-y-2" role="radiogroup" aria-label="Antenne">
+            {% for antenna in antennas %}
+                <label class="flex items-start gap-3 p-4 rounded-md border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-muted)] transition-colors duration-200 has-[:checked]:border-[var(--color-primary)] has-[:checked]:bg-[var(--color-primary-light)]">
+                    <input type="radio" name="antenna_id" value="{{ antenna.id }}" {{ order.antenna.id == antenna.id ? 'checked' }} class="mt-1">
+                    <div class="flex-1">
+                        <div class="font-medium text-[var(--color-foreground)]">{{ antenna.name }}</div>
+                        <div class="text-sm text-[var(--color-secondary)]">{{ antenna.fullAddress }}</div>
+                    </div>
+                </label>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card p-6">
+        <h2 class="text-sm font-semibold text-[var(--color-foreground)] mb-2">Notes</h2>
+        <textarea name="notes" rows="3" placeholder="Instructions particulières…" class="form-input">{{ order.notes }}</textarea>
+    </section>
+
+    <div class="flex flex-wrap gap-3">
+        <button type="submit" class="btn btn-primary">
+            Enregistrer les modifications
+        </button>
+        <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="btn btn-outline">Annuler</a>
+    </div>
+</form>
+{% endblock %}

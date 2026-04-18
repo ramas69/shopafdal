@@ -106,6 +106,70 @@ final class OrderController extends AbstractController
         return $exporter->toCsv([$order], $order->getReference() . '.csv');
     }
 
+    #[Route('/{reference}/edit', name: 'app_order_edit', requirements: ['reference' => self::REF_PATTERN])]
+    public function edit(
+        #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
+        Request $request,
+        AntennaRepository $antennas,
+        EntityManagerInterface $em,
+    ): Response {
+        $this->assertOwns($order);
+        if ($order->getStatus() !== OrderStatus::PLACED) {
+            $this->addFlash('error', 'Cette commande ne peut plus être modifiée (Afdal l\'a déjà confirmée ou traitée).');
+            return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $companyAntennas = $antennas->findBy(['company' => $user->getCompany()], ['name' => 'ASC']);
+
+        if ($request->isMethod('POST')) {
+            $quantities = $request->request->all('quantity'); // keyed by item id
+            $removed = $request->request->all('remove');
+            $antennaId = (int) $request->request->get('antenna_id', 0);
+            $notes = trim((string) $request->request->get('notes', ''));
+
+            $antenna = $antennaId > 0 ? $antennas->find($antennaId) : null;
+            if (!$antenna || $antenna->getCompany()->getId() !== $user->getCompany()?->getId()) {
+                $this->addFlash('error', 'Antenne invalide.');
+                return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
+            }
+
+            foreach ($order->getItems() as $item) {
+                $itemId = (string) $item->getId();
+                if (isset($removed[$itemId])) {
+                    $em->remove($item);
+                    continue;
+                }
+                $qty = (int) ($quantities[$itemId] ?? $item->getQuantity());
+                if ($qty < 1) {
+                    $em->remove($item);
+                } elseif ($qty !== $item->getQuantity()) {
+                    $item->setQuantity($qty);
+                }
+            }
+
+            if ($order->getItems()->filter(fn($i) => !$em->getUnitOfWork()->isScheduledForDelete($i))->isEmpty()) {
+                $this->addFlash('error', 'La commande doit contenir au moins un article.');
+                return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
+            }
+
+            $order->setAntenna($antenna);
+            $order->setNotes($notes ?: null);
+            $order->setStatus(OrderStatus::PLACED); // trigger updatedAt via setter
+
+            $em->flush();
+
+            $this->addFlash('success', 'Commande mise à jour.');
+            return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+        }
+
+        return $this->render('order/edit.html.twig', [
+            'order' => $order,
+            'antennas' => $companyAntennas,
+        ]);
+    }
+
     #[Route('/{reference}/reorder', name: 'app_order_reorder', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]
     public function reorder(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, Cart $cart): RedirectResponse
     {
