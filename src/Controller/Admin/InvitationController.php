@@ -84,13 +84,11 @@ final class InvitationController extends AbstractController
                 $em->persist($invitation);
                 $em->flush();
 
-                $url = $this->generateUrl('app_register', ['token' => $invitation->getToken()], 0);
                 $createdPrefix = $mode === 'new' ? sprintf('Entreprise « %s » créée. ', $company->getName()) : '';
                 $this->addFlash('success', sprintf(
-                    '%sInvitation créée. Lien à transmettre : %s%s',
+                    '%sInvitation envoyée à %s. Utilise « Copier le lien » pour le transmettre.',
                     $createdPrefix,
-                    $request->getSchemeAndHttpHost(),
-                    $url
+                    $email
                 ));
 
                 return $this->redirectToRoute('app_admin_invitations');
