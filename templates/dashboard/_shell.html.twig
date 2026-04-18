@@ -1,23 +1,32 @@
 {% extends 'base.html.twig' %}
 
+{% set is_admin = app.user.isAdmin() %}
+
+{% set nav_items = is_admin ? [
+    { route: 'app_admin', label: 'Dashboard' },
+    { route: 'app_admin_invitations', label: 'Invitations' },
+] : [
+    { route: 'app_catalogue', label: 'Catalogue' },
+    { route: 'app_orders', label: 'Mes commandes' },
+    { route: 'app_cart', label: 'Panier', badge: cart.count },
+] %}
+
 {% block body %}
 <div class="min-h-screen flex flex-col">
-    <header class="h-16 border-b border-[var(--color-border)] bg-white">
-        <div class="h-full max-w-7xl mx-auto px-6 flex items-center justify-between">
-            <a href="{{ path('app_dashboard') }}" class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] flex items-center justify-center font-display font-bold">A</div>
-                <span class="font-display font-semibold text-[var(--color-foreground)]">Afdal</span>
-            </a>
+    <header class="h-16 border-b border-[var(--color-border)] bg-white sticky top-0 z-30">
+        <div class="h-full px-4 md:px-6 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-6">
+                <a href="{{ path('app_dashboard') }}" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] flex items-center justify-center font-display font-bold">A</div>
+                    <span class="font-display font-semibold text-[var(--color-foreground)] hidden sm:inline">Afdal</span>
+                </a>
+            </div>
 
             <div class="flex items-center gap-4">
                 <div class="text-right hidden sm:block">
                     <div class="text-sm font-medium text-[var(--color-foreground)]">{{ app.user.fullName }}</div>
                     <div class="text-xs text-[var(--color-secondary)]">
-                        {% if app.user.isAdmin() %}
-                            Admin Afdal
-                        {% else %}
-                            {{ app.user.company.name }}
-                        {% endif %}
+                        {% if is_admin %}Admin Afdal{% else %}{{ app.user.company.name }}{% endif %}
                     </div>
                 </div>
                 <a href="{{ path('app_logout') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-[var(--color-border)] text-sm text-[var(--color-foreground)] cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">
@@ -27,8 +36,32 @@
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="flex-1 flex">
+        <aside class="hidden lg:block w-60 border-r border-[var(--color-border)] bg-white">
+            <nav class="p-4 space-y-1">
+                {% for item in nav_items %}
+                    {% set is_active = app.request.attributes.get('_route') == item.route or app.request.attributes.get('_route') starts with item.route %}
+                    <a href="{{ path(item.route) }}" class="flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors duration-200 {{ is_active ? 'bg-[var(--color-muted)] text-[var(--color-primary)] border-l-2 border-[var(--color-accent)] -ml-[2px] pl-[calc(0.75rem-2px+2px)]' : 'text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-primary)]' }}">
+                        <span>{{ item.label }}</span>
+                        {% if item.badge is defined and item.badge > 0 %}
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-[var(--color-accent)] text-white">{{ item.badge }}</span>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </nav>
+        </aside>
+
+        <main class="flex-1 min-w-0 px-4 md:px-8 py-6 md:py-8">
+            {% for type, messages in app.flashes(['success', 'error']) %}
+                {% for message in messages %}
+                    <div class="mb-4 p-3 rounded-md text-sm {{ type == 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-[var(--color-destructive)]' }} break-all" role="status">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </div>
 {% endblock %}

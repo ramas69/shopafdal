@@ -1,0 +1,52 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Mes commandes — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Mes commandes</h1>
+    <p class="text-[var(--color-secondary)]">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }} pour {{ app.user.company.name }}.</p>
+</div>
+
+{% if orders is empty %}
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
+        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Aucune commande</h2>
+        <p class="text-sm text-[var(--color-secondary)] mb-6">Passez votre première commande depuis le catalogue.</p>
+        <a href="{{ path('app_catalogue') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">Voir le catalogue</a>
+    </div>
+{% else %}
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-[var(--color-muted)] text-left text-xs uppercase tracking-wide text-[var(--color-secondary)]">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Référence</th>
+                        <th class="px-4 py-3 font-medium">Date</th>
+                        <th class="px-4 py-3 font-medium">Antenne</th>
+                        <th class="px-4 py-3 font-medium">Articles</th>
+                        <th class="px-4 py-3 font-medium">Total HT</th>
+                        <th class="px-4 py-3 font-medium">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--color-border)]">
+                    {% for order in orders %}
+                        <tr class="hover:bg-[var(--color-muted)] cursor-pointer" onclick="window.location='{{ path('app_order_detail', {reference: order.reference}) }}'">
+                            <td class="px-4 py-3 font-mono font-medium text-[var(--color-primary)]">{{ order.reference }}</td>
+                            <td class="px-4 py-3 text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</td>
+                            <td class="px-4 py-3">{{ order.antenna.name }}</td>
+                            <td class="px-4 py-3 text-[var(--color-secondary)]">{{ order.totalQuantity }} pc</td>
+                            <td class="px-4 py-3 font-medium">{{ order.totalCents|price }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border {{ status_badge_class(order.status) }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
+                                    {{ order.status.label() }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

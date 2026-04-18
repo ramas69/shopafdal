@@ -284,6 +284,47 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 - `/catalogue` : 3 stat cards (antennes · commandes · statut) pour le client
 - `/admin` : 4 stat cards (clients · produits actifs · commandes · à traiter) + lien invitations
 
+### Phase 3 — Catalogue + Panier + Checkout (2026-04-18)
+
+**Shell v2** (`templates/dashboard/_shell.html.twig`) :
+- Topbar sticky + sidebar desktop (lg+) avec nav conditionnelle par rôle
+- Active state : `bg-muted` + `border-l-2 border-accent`
+- Badge quantité panier dans nav client (via service Cart injecté en twig global)
+- Flash messages `success`/`error` affichés en tête de `content`
+
+**Service `App\Service\Cart`** :
+- Panier en session (clé `afdal_cart`), pas de DB (le panier est volatil, pas besoin de persistance cross-device)
+- Chaque ajout crée une "ligne" avec `line_id` unique (bin2hex 8) + `variant_id` + `quantity` + `marking` optionnel
+- API : `add`, `updateQuantity`, `remove`, `clear`, `lines`, `count`, `totalCents`, `isEmpty`
+- Injecté en global Twig (`{{ cart.count }}`)
+
+**Twig extension `App\Twig\AppExtension`** (PHP attributes, pas de `AbstractExtension`) :
+- Filtre `|price` : centimes → `1 234,56 €`
+- Fonctions `status_badge_class(status)` + `status_dot_class(status)` : classes Tailwind par statut
+
+**Routes** :
+- `GET /catalogue` : liste + filtres (`?q=` recherche, `?category=` filtre catégorie)
+- `GET /catalogue/{slug}` : fiche produit (variantes groupées par couleur, tailles × quantités, marquage optionnel)
+- `POST /catalogue/{slug}/add` : ajoute au panier (1 ligne par taille avec qty>0, marquage commun)
+- `GET /panier` · `POST /panier/update/{lineId}` · `POST /panier/remove/{lineId}` · `POST /panier/clear`
+- `GET|POST /commander` : choix antenne + notes → crée `Order` en `PLACED`, vide le panier, redirect vers confirmation
+- `GET /commander/{reference}/confirmation` : page succès
+- `GET /commandes` · `GET /commandes/{reference}` : liste + détail commandes du client
+
+**Stimulus** `assets/controllers/quantities_controller.js` :
+- Sur fiche produit : changement de couleur cache/montre panneaux de tailles, recalcule total HT live
+- Reset des quantités des couleurs masquées (évite de submit des variantes d'une couleur non sélectionnée)
+
+**Décisions UX** :
+- 1 ajout panier = N lignes (1 par taille remplie) — le marquage est appliqué aux N lignes d'un même ajout
+- Pas de paiement en ligne (comme spécifié) — checkout = simple "Passer commande" → `PLACED`
+- Référence commande auto : `CMD-{YYYY}-{NNNN}` (compteur annuel via COUNT SQL)
+- Clic sur ligne de table `/commandes` → redirige vers détail (comportement JS `onclick`)
+- Utilisation de `MapEntity(mapping: ['reference' => 'reference'])` pour routes par référence métier
+- Fiche produit : placeholder visuel basé sur première lettre du nom (uploads images = Phase 4)
+
+**Templates créés** (9) : `catalogue/list`, `catalogue/detail`, `cart/index`, `checkout/form`, `checkout/confirmation`, `order/list`, `order/detail` + shell updaté.
+
 ---
 
 ## Patterns Tailwind partagés

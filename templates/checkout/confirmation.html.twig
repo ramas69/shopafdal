@@ -1,0 +1,46 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Commande {{ order.reference }} — Afdal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto text-center py-8">
+    <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+        </svg>
+    </div>
+
+    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Commande envoyée</h1>
+    <p class="text-[var(--color-secondary)] mb-6">Afdal a reçu votre demande et vous contactera rapidement.</p>
+
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6 text-left mb-6">
+        <div class="flex items-center justify-between mb-4 pb-4 border-b border-[var(--color-border)]">
+            <div>
+                <div class="text-xs text-[var(--color-secondary)] uppercase tracking-wide">Référence</div>
+                <div class="font-mono font-semibold text-[var(--color-primary)]">{{ order.reference }}</div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border {{ status_badge_class(order.status) }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
+                {{ order.status.label() }}
+            </span>
+        </div>
+        <div class="text-sm text-[var(--color-secondary)] mb-1">Livrée à</div>
+        <div class="font-medium">{{ order.antenna.name }}</div>
+        <div class="text-sm text-[var(--color-secondary)]">{{ order.antenna.fullAddress }}</div>
+
+        <div class="mt-4 pt-4 border-t border-[var(--color-border)] flex justify-between">
+            <span class="text-[var(--color-secondary)]">{{ order.items|length }} ligne(s) · {{ order.totalQuantity }} pièce(s)</span>
+            <span class="font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 justify-center">
+        <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+            Voir la commande
+        </a>
+        <a href="{{ path('app_catalogue') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-[var(--color-border)] text-[var(--color-foreground)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">
+            Retour au catalogue
+        </a>
+    </div>
+</div>
+{% endblock %}

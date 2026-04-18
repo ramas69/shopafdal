@@ -23,13 +23,6 @@ final class DashboardController extends AbstractController
         return $this->redirectToRoute($user->isAdmin() ? 'app_admin' : 'app_catalogue');
     }
 
-    #[Route('/catalogue', name: 'app_catalogue')]
-    #[IsGranted('ROLE_CLIENT_MANAGER')]
-    public function catalogue(): Response
-    {
-        return $this->render('dashboard/catalogue_stub.html.twig');
-    }
-
     #[Route('/admin', name: 'app_admin')]
     #[IsGranted('ROLE_ADMIN')]
     public function admin(

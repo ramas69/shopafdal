@@ -1,0 +1,77 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Panier — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-center justify-between">
+    <div>
+        <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Panier</h1>
+        <p class="text-[var(--color-secondary)]">{{ lines|length }} ligne{{ lines|length > 1 ? 's' : '' }} · {{ cart.count }} pièce{{ cart.count > 1 ? 's' : '' }}</p>
+    </div>
+    {% if lines is not empty %}
+        <form method="post" action="{{ path('app_cart_clear') }}">
+            <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Vider le panier</button>
+        </form>
+    {% endif %}
+</div>
+
+{% if lines is empty %}
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
+        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Votre panier est vide</h2>
+        <p class="text-sm text-[var(--color-secondary)] mb-6">Parcourez le catalogue pour ajouter des produits.</p>
+        <a href="{{ path('app_catalogue') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">Voir le catalogue</a>
+    </div>
+{% else %}
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden mb-6">
+        <div class="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-[var(--color-muted)] text-xs uppercase tracking-wide text-[var(--color-secondary)] font-medium">
+            <div class="col-span-5">Produit</div>
+            <div class="col-span-2">Marquage</div>
+            <div class="col-span-2 text-right">Quantité</div>
+            <div class="col-span-2 text-right">Total HT</div>
+            <div class="col-span-1"></div>
+        </div>
+        <div class="divide-y divide-[var(--color-border)]">
+            {% for line in lines %}
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center">
+                    <div class="md:col-span-5">
+                        <div class="font-medium text-[var(--color-foreground)]">{{ line.variant.product.name }}</div>
+                        <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1">
+                            <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ line.variant.colorHex }}"></span>
+                            {{ line.variant.color }} · {{ line.variant.size }}
+                            <span class="font-mono text-xs">{{ line.variant.sku }}</span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 text-sm text-[var(--color-secondary)]">
+                        {% if line.marking %}{{ line.marking.zone|capitalize }} ({{ line.marking.size }}){% else %}<span class="text-[var(--color-secondary)]">—</span>{% endif %}
+                    </div>
+                    <div class="md:col-span-2 md:text-right">
+                        <form method="post" action="{{ path('app_cart_update', {lineId: line.line_id}) }}" class="inline-flex items-center gap-1">
+                            <input type="number" name="quantity" min="1" value="{{ line.quantity }}" class="w-20 px-2 py-1 rounded-md border border-[var(--color-border)] text-right">
+                            <button type="submit" class="text-xs text-[var(--color-accent)] hover:underline cursor-pointer">OK</button>
+                        </form>
+                    </div>
+                    <div class="md:col-span-2 md:text-right font-semibold">{{ line.subtotal_cents|price }}</div>
+                    <div class="md:col-span-1 md:text-right">
+                        <form method="post" action="{{ path('app_cart_remove', {lineId: line.line_id}) }}">
+                            <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Retirer</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+        <a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)]">&larr; Continuer mes achats</a>
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <div class="text-xs text-[var(--color-secondary)] uppercase tracking-wide">Total HT</div>
+                <div class="text-2xl font-semibold text-[var(--color-primary)]">{{ total_cents|price }}</div>
+            </div>
+            <a href="{{ path('app_checkout') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+                Passer commande
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

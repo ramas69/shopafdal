@@ -1,0 +1,88 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ order.reference }} — Mes commandes{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] mb-4 inline-block">&larr; Mes commandes</a>
+
+<div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+    <div>
+        <div class="text-xs text-[var(--color-secondary)] uppercase tracking-wide">Commande</div>
+        <h1 class="text-3xl font-mono font-semibold text-[var(--color-primary)]">{{ order.reference }}</h1>
+        <p class="text-[var(--color-secondary)] mt-1">Passée le {{ (order.placedAt ?? order.createdAt)|date('d/m/Y à H:i') }}</p>
+    </div>
+    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border {{ status_badge_class(order.status) }}">
+        <span class="w-2 h-2 rounded-full {{ status_dot_class(order.status) }}"></span>
+        {{ order.status.label() }}
+    </span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+            <h2 class="text-sm font-semibold text-[var(--color-primary)] px-6 py-4 border-b border-[var(--color-border)]">Articles</h2>
+            <div class="divide-y divide-[var(--color-border)]">
+                {% for item in order.items %}
+                    <div class="flex items-center justify-between gap-4 p-4">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
+                            <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1">
+                                <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ item.variant.colorHex }}"></span>
+                                {{ item.variant.color }} · {{ item.variant.size }}
+                                <span class="font-mono text-xs">{{ item.variant.sku }}</span>
+                            </div>
+                            {% if item.marking %}
+                                <div class="text-xs text-[var(--color-secondary)] mt-1">Marquage : {{ item.marking.zone|capitalize }} ({{ item.marking.size }})</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-[var(--color-secondary)]">{{ item.quantity }} × {{ item.unitPriceCents|price }}</div>
+                            <div class="font-semibold">{{ (item.quantity * item.unitPriceCents)|price }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="flex justify-between items-center p-4 bg-[var(--color-muted)] border-t border-[var(--color-border)]">
+                <span class="text-[var(--color-secondary)]">Total HT</span>
+                <span class="text-xl font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
+            </div>
+        </section>
+
+        {% if order.notes %}
+            <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+                <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-2">Vos notes</h2>
+                <p class="text-[var(--color-foreground)] whitespace-pre-line">{{ order.notes }}</p>
+            </section>
+        {% endif %}
+    </div>
+
+    <aside class="space-y-6">
+        <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+            <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-3">Livraison</h2>
+            <div class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</div>
+            <div class="text-sm text-[var(--color-secondary)]">{{ order.antenna.fullAddress }}</div>
+            {% if order.antenna.phone %}<div class="text-sm text-[var(--color-secondary)] mt-1">{{ order.antenna.phone }}</div>{% endif %}
+        </section>
+
+        <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+            <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-3">Informations</h2>
+            <dl class="text-sm space-y-2">
+                <div class="flex justify-between">
+                    <dt class="text-[var(--color-secondary)]">Commandée par</dt>
+                    <dd class="text-[var(--color-foreground)]">{{ order.createdBy.fullName }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-[var(--color-secondary)]">Articles</dt>
+                    <dd class="text-[var(--color-foreground)]">{{ order.totalQuantity }} pièces</dd>
+                </div>
+                {% if order.updatedAt %}
+                    <div class="flex justify-between">
+                        <dt class="text-[var(--color-secondary)]">Dernier MAJ</dt>
+                        <dd class="text-[var(--color-foreground)]">{{ order.updatedAt|date('d/m/Y') }}</dd>
+                    </div>
+                {% endif %}
+            </dl>
+        </section>
+    </aside>
+</div>
+{% endblock %}
