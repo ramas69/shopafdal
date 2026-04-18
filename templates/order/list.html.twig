@@ -38,7 +38,7 @@
 <form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3">
     <label>
         <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Statut</span>
-        <select name="status" class="form-input !w-auto min-w-[160px]">
+        <select name="status" class="form-input !w-auto min-w-[160px]" data-controller="tom-select">
             <option value="">Tous</option>
             {% for s in statuses %}
                 <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
@@ -48,7 +48,7 @@
     {% if antennas|length > 1 %}
         <label>
             <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Antenne</span>
-            <select name="antenna" class="form-input !w-auto min-w-[180px]">
+            <select name="antenna" class="form-input !w-auto min-w-[180px]" data-controller="tom-select">
                 <option value="">Toutes</option>
                 {% for a in antennas %}
                     <option value="{{ a.id }}" {{ current_antenna == a.id ? 'selected' }}>{{ a.name }}</option>

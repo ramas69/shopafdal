@@ -197,7 +197,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)]">Historique des commandes</h2>
         <form method="get" class="flex flex-wrap items-center gap-2" data-controller="autosubmit">
-            <select name="status" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
+            <select name="status" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[160px]">
                 <option value="">Tous statuts</option>
                 {% for s in statuses %}
                     <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>

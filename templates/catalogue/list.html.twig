@@ -17,7 +17,7 @@
             data-action="input->autosubmit#submit"
             class="form-input pl-9">
     </div>
-    <select name="category" data-action="change->autosubmit#submitNow" class="form-input !w-auto min-w-[180px]">
+    <select name="category" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[180px]">
         <option value="">Toutes catégories</option>
         {% for c in categories %}
             <option value="{{ c }}" {{ current_category == c ? 'selected' }}>{{ c }}</option>
