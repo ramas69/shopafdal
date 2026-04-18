@@ -59,9 +59,13 @@
                 </thead>
                 <tbody class="divide-y divide-[var(--color-border)]">
                     {% for order in orders %}
-                        <tr class="hover:bg-[var(--color-muted)]">
-                            <td class="px-4 py-3 font-mono font-medium">
-                                <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="text-[var(--color-primary)] hover:text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">{{ order.reference }}</a>
+                        <tr class="relative hover:bg-[var(--color-muted)] focus-within:bg-[var(--color-muted)]">
+                            <td class="px-4 py-3 font-mono font-medium text-[var(--color-primary)]">
+                                <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
+                                   class="before:absolute before:inset-0 before:content-[''] focus-visible:outline-none focus-visible:before:outline-2 focus-visible:before:outline-[var(--color-ring)] focus-visible:before:outline-offset-[-2px]"
+                                   aria-label="Voir la commande {{ order.reference }}">
+                                    {{ order.reference }}
+                                </a>
                             </td>
                             <td class="px-4 py-3 text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</td>
                             <td class="px-4 py-3">{{ order.antenna.name }}</td>
