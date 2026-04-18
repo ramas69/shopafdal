@@ -20,8 +20,8 @@ final class DashboardController extends AbstractController
 {
     private const SQL_DATE_FORMAT = 'Y-m-d H:i:s';
     private const COUNT_ORDERS = 'COUNT(o.id)';
-    private const WHERE_STATUS = self::WHERE_STATUS;
-    private const WHERE_PLACED_BEFORE = self::WHERE_PLACED_BEFORE;
+    private const WHERE_STATUS = 'o.status = :status';
+    private const WHERE_PLACED_BEFORE = 'o.placedAt < :cutoff';
 
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(): Response
