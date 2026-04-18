@@ -57,12 +57,11 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
-        <turbo-frame id="order-timeline-{{ order.reference }}"
-                     src="{{ path('app_order_detail', {reference: order.reference}) }}"
-                     {% if order.status.value not in ['delivered', 'cancelled'] %}
-                     data-controller="poll"
-                     data-poll-interval-value="15000"
-                     {% endif %}>
+        <div{% if order.status.value not in ['delivered', 'cancelled'] %}
+             data-controller="poll"
+             data-poll-url-value="{{ path('app_order_detail', {reference: order.reference}) }}"
+             data-poll-interval-value="15000"
+             {% endif %}>
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-[var(--color-primary)]">Suivi</h2>
@@ -112,7 +111,7 @@
                 </ol>
             {% endif %}
         </section>
-        </turbo-frame>
+        </div>
 
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
             <h2 class="text-sm font-semibold text-[var(--color-primary)] px-6 py-4 border-b border-[var(--color-border)]">Articles</h2>
