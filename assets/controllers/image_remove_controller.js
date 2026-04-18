@@ -4,7 +4,6 @@ export default class extends Controller {
     static targets = ['input', 'overlay'];
 
     connect() {
-        console.log('[image-remove] connected', this.element, 'overlay:', this.overlayTarget);
         this.element.dataset.marked = 'false';
     }
 
@@ -15,18 +14,11 @@ export default class extends Controller {
         const marked = this.element.dataset.marked === 'true';
         const next = !marked;
 
-        console.log('[image-remove] toggle', { marked, next, overlay: this.overlayTarget });
-
         this.element.dataset.marked = next ? 'true' : 'false';
         this.inputTarget.disabled = !next;
 
         this.overlayTarget.style.setProperty('opacity', next ? '1' : '0', 'important');
-        this.overlayTarget.style.setProperty('pointer-events', next ? 'auto' : 'none', 'important');
-
         this.element.style.setProperty('outline', next ? '3px solid #E82538' : 'none', 'important');
         this.element.style.setProperty('outline-offset', next ? '2px' : '0', 'important');
-
-        console.log('[image-remove] after toggle, overlay computed opacity:',
-            window.getComputedStyle(this.overlayTarget).opacity);
     }
 }
