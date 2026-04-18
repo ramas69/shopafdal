@@ -196,19 +196,19 @@
 <div class="card p-6">
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)]">Historique des commandes</h2>
-        <form method="get" class="flex flex-wrap items-end gap-2" data-controller="autosubmit">
-            <select name="status" data-action="change->autosubmit#submitNow" class="form-input !w-auto text-xs py-1.5">
+        <form method="get" class="flex flex-wrap items-center gap-2" data-controller="autosubmit">
+            <select name="status" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
                 <option value="">Tous statuts</option>
                 {% for s in statuses %}
                     <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
                 {% endfor %}
             </select>
             <input type="date" name="from" value="{{ current_from }}" data-action="change->autosubmit#submitNow"
-                class="form-input !w-auto text-xs py-1.5" title="Du">
+                class="form-input !w-auto" title="Du" aria-label="Date de début">
             <input type="date" name="to" value="{{ current_to }}" data-action="change->autosubmit#submitNow"
-                class="form-input !w-auto text-xs py-1.5" title="Au">
+                class="form-input !w-auto" title="Au" aria-label="Date de fin">
             {% if current_status or current_from or current_to %}
-                <a href="{{ path('app_antenna_detail', {id: antenna.id}) }}" class="text-xs text-[var(--color-secondary)] hover:text-[var(--color-foreground)] pb-2">Réinit.</a>
+                <a href="{{ path('app_antenna_detail', {id: antenna.id}) }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinit.</a>
             {% endif %}
         </form>
     </div>
