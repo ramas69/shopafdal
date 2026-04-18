@@ -41,7 +41,12 @@
             Exporter CSV
         </a>
         {% if can_cancel %}
-            <form method="post" action="{{ path('app_order_cancel', {reference: order.reference}) }}" onsubmit="return confirm('Annuler définitivement cette commande ?');">
+            <form method="post" action="{{ path('app_order_cancel', {reference: order.reference}) }}"
+                  data-controller="confirm"
+                  data-confirm-title-value="Annuler la commande {{ order.reference }} ?"
+                  data-confirm-message-value="La commande sera marquée comme annulée et ne sera pas traitée par Afdal. Cette action est irréversible."
+                  data-confirm-label-value="Annuler la commande"
+                  data-action="submit->confirm#gate">
                 <button type="submit" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-[var(--color-destructive)] text-[var(--color-destructive)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-red-50">
                     Annuler la commande
                 </button>

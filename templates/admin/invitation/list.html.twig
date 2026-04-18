@@ -55,7 +55,13 @@
                             <td class="px-4 py-3 text-[var(--color-secondary)]">{{ invitation.expiresAt|date('d/m/Y H:i') }}</td>
                             <td class="px-4 py-3 text-right">
                                 {% if invitation.isPending() %}
-                                    <form method="post" action="{{ path('app_admin_invitation_revoke', {id: invitation.id}) }}" class="inline">
+                                    <form method="post" action="{{ path('app_admin_invitation_revoke', {id: invitation.id}) }}"
+                                          class="inline"
+                                          data-controller="confirm"
+                                          data-confirm-title-value="Révoquer l'invitation ?"
+                                          data-confirm-message-value="Le lien sera invalidé et {{ invitation.email }} ne pourra plus créer de compte avec cette invitation."
+                                          data-confirm-label-value="Révoquer"
+                                          data-action="submit->confirm#gate">
                                         <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Révoquer</button>
                                     </form>
                                 {% endif %}

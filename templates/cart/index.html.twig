@@ -9,7 +9,12 @@
         <p class="text-[var(--color-secondary)]">{{ lines|length }} ligne{{ lines|length > 1 ? 's' : '' }} · {{ cart.count }} pièce{{ cart.count > 1 ? 's' : '' }}</p>
     </div>
     {% if lines is not empty %}
-        <form method="post" action="{{ path('app_cart_clear') }}">
+        <form method="post" action="{{ path('app_cart_clear') }}"
+              data-controller="confirm"
+              data-confirm-title-value="Vider le panier ?"
+              data-confirm-message-value="Toutes les lignes du panier seront retirées."
+              data-confirm-label-value="Vider le panier"
+              data-action="submit->confirm#gate">
             <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Vider le panier</button>
         </form>
     {% endif %}
