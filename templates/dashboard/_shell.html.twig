@@ -18,29 +18,58 @@
 
 {% macro nav_icon(name) %}
     {% if name == 'grid' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+        {# Dashboard — Lineone duotone house+flag #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M5 14.059c0-1.01 0-1.514.222-1.945.221-.43.632-.724 1.453-1.31l4.163-2.974c.56-.4.842-.601 1.162-.601.32 0 .601.2 1.162.601l4.163 2.974c.821.586 1.232.88 1.453 1.31.222.43.222.935.222 1.945V19c0 .943 0 1.414-.293 1.707C18.414 21 17.943 21 17 21H7c-.943 0-1.414 0-1.707-.293C5 20.414 5 19.943 5 19v-4.94Z"/>
+            <path fill="currentColor" d="M3 12.387c0 .267 0 .4.084.441.084.041.19-.04.4-.204l7.288-5.669c.59-.459.885-.688 1.228-.688.343 0 .638.23 1.228.688l7.288 5.669c.21.163.316.245.4.204.084-.04.084-.174.084-.441v-.409c0-.48 0-.72-.102-.928-.101-.208-.291-.355-.67-.65l-7-5.445c-.59-.459-.885-.688-1.228-.688-.343 0-.638.23-1.228.688l-7 5.445c-.379.295-.569.442-.67.65-.102.208-.102.448-.102.928v.409Z"/>
+            <path fill="currentColor" d="M11.5 15.5h1A1.5 1.5 0 0 1 14 17v3.5h-4V17a1.5 1.5 0 0 1 1.5-1.5Z"/>
+        </svg>
     {% elseif name == 'list' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/></svg>
+        {# Commandes — Lineone apps/box duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M5 8H19V16C19 17.8856 19 18.8284 18.4142 19.4142C17.8284 20 16.8856 20 15 20H9C7.11438 20 6.17157 20 5.58579 19.4142C5 18.8284 5 17.8856 5 16V8Z"/>
+            <path stroke="currentColor" stroke-linecap="round" stroke-width="1.4" d="M12 8L11.7608 5.84709C11.6123 4.51089 10.4672 3.5 9.12282 3.5C7.68381 3.5 6.5 4.66655 6.5 6.10555C6.5 6.97673 6.93539 7.79026 7.66025 8.2735L9.5 9.5"/>
+            <path stroke="currentColor" stroke-linecap="round" stroke-width="1.4" d="M12 8L12.2392 5.84709C12.3877 4.51089 13.5328 3.5 14.8772 3.5C16.3162 3.5 17.5 4.66655 17.5 6.10555C17.5 6.97673 17.0646 7.79026 16.3397 8.2735L14.5 9.5"/>
+            <rect x="4" y="8" width="16" height="3" rx="1" fill="currentColor"/>
+            <path stroke="currentColor" stroke-linecap="round" stroke-width="1.4" d="M12 11V15"/>
+        </svg>
     {% elseif name == 'pin' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+        {# Antennes — duotone pin #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M12 2a8 8 0 0 0-8 8c0 4.2 4.5 9.4 7 11.7.6.5 1.4.5 2 0 2.5-2.3 7-7.5 7-11.7a8 8 0 0 0-8-8Z"/>
+            <circle cx="12" cy="10" r="3" fill="currentColor"/>
+        </svg>
     {% elseif name == 'cog' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        {# Paramètres — Lineone settings duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M2 12.947v-1.771c0-1.047.85-1.913 1.899-1.913 1.81 0 2.549-1.288 1.64-2.868a1.919 1.919 0 0 1 .699-2.607l1.729-.996c.79-.474 1.81-.192 2.279.603l.11.192c.9 1.58 2.379 1.58 3.288 0l.11-.192c.47-.795 1.49-1.077 2.279-.603l1.73.996a1.92 1.92 0 0 1 .699 2.607c-.91 1.58-.17 2.868 1.639 2.868 1.04 0 1.899.856 1.899 1.912v1.772c0 1.047-.85 1.912-1.9 1.912-1.808 0-2.548 1.288-1.638 2.869.52.915.21 2.083-.7 2.606l-1.729.997c-.79.473-1.81.191-2.279-.604l-.11-.191c-.9-1.58-2.379-1.58-3.288 0l-.11.19c-.47.796-1.49 1.078-2.279.605l-1.73-.997a1.919 1.919 0 0 1-.699-2.606c.91-1.58.17-2.869-1.639-2.869A1.911 1.911 0 0 1 2 12.947Z"/>
+            <path fill="currentColor" d="M11.995 15.332c1.794 0 3.248-1.464 3.248-3.27 0-1.807-1.454-3.272-3.248-3.272-1.794 0-3.248 1.465-3.248 3.271 0 1.807 1.454 3.271 3.248 3.271Z"/>
+        </svg>
     {% elseif name == 'mail' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+        {# Invitations — envelope duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M2 7.5A2.5 2.5 0 0 1 4.5 5h15A2.5 2.5 0 0 1 22 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 16.5v-9Z"/>
+            <path fill="currentColor" d="m2 7.5 8.9 5.6c.7.4 1.5.4 2.2 0L22 7.5c0-.7-.4-1.3-1-1.8L13.2 11c-.7.4-1.7.4-2.4 0L3 5.7c-.6.5-1 1.1-1 1.8Z"/>
+        </svg>
     {% elseif name == 'package' %}
-        <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 14.25 5.25 5.25 5.25-5.25M7.5 9h10.5V5.25A2.25 2.25 0 0 0 15.75 3H8.25A2.25 2.25 0 0 0 6 5.25V9h1.5Z M3.375 7.5h17.25c.621 0 1.125.504 1.125 1.125v10.5c0 .621-.504 1.125-1.125 1.125H3.375A1.125 1.125 0 0 1 2.25 19.125v-10.5c0-.621.504-1.125 1.125-1.125Z"/></svg>
+        {# Produits — box duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M4 8.5v9c0 .6.4 1.1.9 1.4l6 3c.4.2.8.2 1.2 0l6-3c.5-.3.9-.8.9-1.4v-9l-7.3 3.7a2 2 0 0 1-1.8 0L4 8.5Z"/>
+            <path fill="currentColor" d="m12.6 3.2 7 3.5c.6.3.6 1.1 0 1.4l-7 3.5a1.4 1.4 0 0 1-1.2 0l-7-3.5a.8.8 0 0 1 0-1.4l7-3.5c.4-.2.8-.2 1.2 0Z"/>
+            <path fill="currentColor" d="M8 9.8 14.5 13v3.5L8 13.3V9.8Z"/>
+        </svg>
     {% endif %}
 {% endmacro %}
 
 {% macro nav_link(item, current_route, macros) %}
     {% set is_active = current_route == item.route %}
-    <a href="{{ path(item.route) }}" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-[15px] font-medium cursor-pointer transition-all duration-150 {{ is_active ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-soft)]' : 'text-[var(--color-body)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]' }}">
+    <a href="{{ path(item.route) }}" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-[15px] font-medium cursor-pointer transition-colors duration-200 {{ is_active ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-[var(--color-body)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]' }}">
         <span class="flex items-center gap-3.5">
             {{ _self.nav_icon(item.icon) }}
             <span>{{ item.label }}</span>
         </span>
         {% if item.badge is defined and item.badge > 0 %}
-            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full {{ is_active ? 'bg-white text-[var(--color-primary)]' : 'bg-[var(--color-primary)] text-white' }}">{{ item.badge }}</span>
+            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full bg-[var(--color-primary)] text-white">{{ item.badge }}</span>
         {% endif %}
     </a>
 {% endmacro %}
