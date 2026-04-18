@@ -6,7 +6,8 @@
       "Bash(php bin/console lint:twig templates/admin/company)",
       "Bash(php bin/console lint:twig templates/admin/invitation)",
       "Bash(php bin/console lint:twig templates/admin/order)",
-      "Bash(php bin/console lint:twig templates/order/edit.html.twig)"
+      "Bash(php bin/console lint:twig templates/order/edit.html.twig)",
+      "Bash(php bin/console lint:twig templates/order/detail.html.twig)"
     ]
   }
 }

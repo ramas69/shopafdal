@@ -9,6 +9,7 @@ use App\Repository\AntennaRepository;
 use App\Repository\OrderRepository;
 use App\Entity\Notification;
 use App\Entity\OrderItem;
+use App\Repository\OrderEventRepository;
 use App\Repository\ProductRepository;
 use App\Repository\ProductVariantRepository;
 use App\Service\Cart;
@@ -63,13 +64,21 @@ final class OrderController extends AbstractController
     }
 
     #[Route('/{reference}', name: 'app_order_detail', requirements: ['reference' => self::REF_PATTERN])]
-    public function detail(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order): Response
-    {
+    public function detail(
+        #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
+        OrderEventRepository $eventsRepo,
+    ): Response {
         $this->assertOwns($order);
+        // Hide admin internal notes from clients
+        $events = array_values(array_filter(
+            $eventsRepo->findForOrder($order),
+            fn($e) => $e->getType() !== \App\Entity\OrderEvent::TYPE_ADMIN_NOTE
+        ));
         return $this->render('order/detail.html.twig', [
             'order' => $order,
             'timeline' => $this->buildTimeline($order),
             'can_cancel' => in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true),
+            'events' => $events,
         ]);
     }
 
