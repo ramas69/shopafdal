@@ -222,6 +222,37 @@
     -moz-appearance: textfield;
   }
 
+  /* Custom select: remove native chevron, add SVG */
+  select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%23535862'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3e%3c/svg%3e");
+    background-position: right 0.6rem center;
+    background-repeat: no-repeat;
+    background-size: 1.1em;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+  select.form-input:focus {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%23175CD3'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3e%3c/svg%3e");
+  }
+
+  /* Date inputs: unified height + spacing with other form-inputs */
+  input[type="date"].form-input {
+    min-width: 10rem;
+    cursor: pointer;
+  }
+  input[type="date"].form-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.4);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 150ms;
+  }
+  input[type="date"].form-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
   /* ----- Badges ----- */
   .badge {
     display: inline-flex;
