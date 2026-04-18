@@ -393,7 +393,43 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 - Sécurité : `assertOwns()` côté single + filtre `company = user.company` côté multi (impossible d'exporter des commandes d'une autre entreprise même en manipulant les IDs)
 - **Route conflict fix** : `{reference}` contraint par regex `CMD-[0-9]{4}-[0-9]+` (extrait en constante `REF_PATTERN`) pour ne pas intercepter `/commandes/export.csv`
 
-### Refresh moderne (2026-04-18)
+### Refresh Lineone (2026-04-18) — Option A
+
+Intégration ciblée du template admin **Lineone** (référence locale dans `/lineone-html/`, gitignoré).
+
+**Tokens adoptés** :
+- **Font** : Poppins (body + display) — remplace Inter+Lexend
+- **Navy scale** : palette Lineone 50→900 (`--color-navy-50` à `--color-navy-900`)
+- **Primary** : `#4F46E5` (indigo-600) — remplace slate-900 comme action principale
+- **Accent** : `#5F5AF6` (violet Lineone)
+- **Success** : `#10B981` · **Warning** : `#FF9800` · **Error** : `#FF5724`
+- **Slate-150** : `#E9EEF5` (muted spécifique Lineone, entre muted et border)
+- **Shadow-soft** : `0 3px 10px 0 rgb(48 46 56 / 6%)` (signature Lineone)
+
+**Classes composants** dans `@layer components` (`app.css`) :
+- `.card` : surface + shadow-soft + rounded-lg
+- `.btn` + variants `.btn-primary` / `.btn-outline` / `.btn-ghost` / `.btn-error`
+- `.form-input` : border navy-300, hover + focus primary
+- `.form-label` : label text-sm 500
+- `.form-checkbox` : custom checkbox indigo
+- `.tag` : chip filtre background slate-150
+- `.link` : link primary avec hover underline
+- `.badge` : pill badge uniform
+
+**Pages reskinnées** :
+- **Login** : layout Lineone (logo 2xl centré, card + inputs avec icônes peer, checkbox remember-me, séparateur "OR" skipped)
+- **Admin dashboard** : metric cards avec icône colorée (primary/info/success/warning), barre de couleur sous le chiffre, hover -translate-y-0.5
+- **Catalogue stub (espace client)** : même pattern metric cards + badges d'état
+- **Catalogue liste** : filtres en card blanche, product cards avec tag catégorie en backdrop blur, initiale 6xl avec outline
+- **Shell** : sidebar claire (fond blanc, active state indigo), header avec backdrop-blur
+
+**Non adopté** (volontairement) :
+- Alpine.js — on garde Stimulus
+- Dark mode — prévu en Option B si demandé
+- FontAwesome — on continue avec Heroicons inline
+- Les 132 pages du template — on adopte le **visual language** pas la base de pages
+
+Le dossier `lineone-html/` reste dans le projet comme référence visuelle (gitignoré).
 
 **Direction** : Linear/Vercel — près-noir, typographie tendue, bordures très douces, whitespace généreux, shadows diffuses.
 

@@ -3,43 +3,62 @@
 {% block title %}Catalogue — Afdal{% endblock %}
 
 {% block content %}
-<div class="mb-10">
-    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Bonjour</div>
-    <h1 class="font-display text-4xl md:text-5xl font-semibold tracking-tight bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary)] to-[var(--color-primary)]/60 bg-clip-text text-transparent">{{ app.user.fullName|split(' ')|first }}</h1>
-    <p class="text-[var(--color-secondary)] mt-1">Espace {{ app.user.company.name }}.</p>
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-navy-400)] uppercase tracking-wide mb-1">Bonjour</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-navy-700)]">{{ app.user.fullName|split(' ')|first }}</h1>
+        <p class="text-[var(--color-navy-400)] text-sm mt-1">Espace {{ app.user.company.name }}.</p>
+    </div>
+    <a href="{{ path('app_catalogue') }}" class="btn btn-primary">
+        Parcourir le catalogue
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+    </a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    {% set cards = [
-        { label: 'Mes antennes', value: app.user.company.antennas|length, icon: 'pin' },
-        { label: 'Commandes totales', value: app.user.company.orders|length, icon: 'list' },
-    ] %}
-    {% for card in cards %}
-        <div class="relative overflow-hidden p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border-soft)] group transition-all hover:border-[var(--color-border)] hover:shadow-[var(--shadow-md)]">
-            <span aria-hidden="true" class="pointer-events-none absolute -right-8 -top-8 w-20 h-20 rounded-full bg-[var(--color-muted)]/60 transition-transform duration-300 group-hover:scale-110"></span>
-            <div class="relative flex items-start justify-between mb-4">
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide">{{ card.label }}</div>
-                <div class="w-7 h-7 rounded-md bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-secondary)] border border-[var(--color-border-soft)]">
-                    {% if card.icon == 'pin' %}
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                    {% else %}
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
-                    {% endif %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <div class="text-xs font-medium text-[var(--color-navy-400)] uppercase tracking-wide mb-2">Mes antennes</div>
+                <div class="font-display text-3xl font-semibold tracking-tight text-[var(--color-navy-700)]">{{ app.user.company.antennas|length }}</div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+            </div>
+        </div>
+        <div class="h-1 w-12 rounded-full bg-[var(--color-primary)]/40"></div>
+    </div>
+
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <div class="text-xs font-medium text-[var(--color-navy-400)] uppercase tracking-wide mb-2">Commandes totales</div>
+                <div class="font-display text-3xl font-semibold tracking-tight text-[var(--color-navy-700)]">{{ app.user.company.orders|length }}</div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-[var(--color-info)]/10 text-[var(--color-info)] flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+            </div>
+        </div>
+        <div class="h-1 w-12 rounded-full bg-[var(--color-info)]/40"></div>
+    </div>
+
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <div class="text-xs font-medium text-[var(--color-navy-400)] uppercase tracking-wide mb-2">Statut compte</div>
+                <div class="inline-flex items-center gap-2 font-display text-lg font-medium text-[var(--color-success)]">
+                    <span class="relative flex w-2 h-2">
+                        <span class="absolute inline-flex w-full h-full rounded-full bg-[var(--color-success)] opacity-60 animate-ping"></span>
+                        <span class="relative inline-flex rounded-full w-2 h-2 bg-[var(--color-success)]"></span>
+                    </span>
+                    Actif
                 </div>
             </div>
-            <div class="relative font-display text-3xl md:text-4xl font-semibold tracking-tight text-[var(--color-primary)]">{{ card.value }}</div>
+            <div class="w-10 h-10 rounded-lg bg-[var(--color-success)]/10 text-[var(--color-success)] flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"/></svg>
+            </div>
         </div>
-    {% endfor %}
-    <div class="relative overflow-hidden p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border-soft)]">
-        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-4">Statut compte</div>
-        <div class="inline-flex items-center gap-2 font-display text-lg font-medium text-emerald-700">
-            <span class="relative flex w-2 h-2">
-                <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-60 animate-ping"></span>
-                <span class="relative inline-flex rounded-full w-2 h-2 bg-emerald-500"></span>
-            </span>
-            Actif
-        </div>
-        <p class="text-sm text-[var(--color-secondary)] mt-2">Accès depuis {{ app.user.createdAt|date('m/Y') }}</p>
+        <p class="text-xs text-[var(--color-navy-400)]">Accès depuis {{ app.user.createdAt|date('m/Y') }}</p>
     </div>
 </div>
 {% endblock %}
