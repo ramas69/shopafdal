@@ -61,7 +61,7 @@
              {% if order.status.value not in ['delivered', 'cancelled'] %}
              data-controller="poll"
              data-poll-url-value="{{ path('app_order_detail', {reference: order.reference}) }}"
-             data-poll-interval-value="10000"
+             data-poll-interval-value="5000"
              {% endif %}>
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">

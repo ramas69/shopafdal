@@ -51,7 +51,7 @@
                  class="card overflow-hidden"
                  data-controller="poll"
                  data-poll-url-value="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
-                 data-poll-interval-value="10000">
+                 data-poll-interval-value="5000">
             <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] px-6 py-4 border-b border-[var(--color-border-soft)]">Articles</h2>
             <div class="divide-y divide-[var(--color-border-soft)]">
                 {% for item in order.items %}
@@ -93,7 +93,7 @@
                  class="card p-6"
                  data-controller="poll"
                  data-poll-url-value="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
-                 data-poll-interval-value="10000">
+                 data-poll-interval-value="5000">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Historique</h2>
                 <span class="inline-flex items-center gap-1.5 text-xs text-[var(--color-secondary)]">
