@@ -31,11 +31,11 @@
                         {% endif %}
                     </div>
                     <div class="flex items-center gap-3">
-                        <label class="text-xs text-[var(--color-secondary)]">
-                            Qté
+                        <label class="flex flex-col items-center text-xs text-[var(--color-secondary)]">
+                            <span class="mb-1">Qté</span>
                             <input type="number" name="quantity[{{ item.id }}]" min="0" value="{{ item.quantity }}"
                                 data-action="input->order-edit#recompute"
-                                class="form-input !w-20 text-right mt-1">
+                                class="form-input !w-20 text-center font-semibold text-[var(--color-foreground)]">
                         </label>
                         <span class="text-sm text-[var(--color-secondary)] whitespace-nowrap">×&nbsp;{{ item.unitPriceCents|price }}</span>
                         <span class="font-semibold text-[var(--color-foreground)] w-24 text-right text-sm"

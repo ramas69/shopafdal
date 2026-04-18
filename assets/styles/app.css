@@ -212,6 +212,16 @@
     border-color: var(--color-primary);
   }
 
+  /* Hide native number spinners — use text-center for clean numeric inputs */
+  input[type="number"].form-input::-webkit-outer-spin-button,
+  input[type="number"].form-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"].form-input {
+    -moz-appearance: textfield;
+  }
+
   /* ----- Badges ----- */
   .badge {
     display: inline-flex;
