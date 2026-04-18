@@ -7,7 +7,9 @@ use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Repository\OrderRepository;
+use App\Entity\Notification;
 use App\Service\Cart;
+use App\Service\NotificationService;
 use App\Service\OrderExporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -112,6 +114,7 @@ final class OrderController extends AbstractController
         Request $request,
         AntennaRepository $antennas,
         EntityManagerInterface $em,
+        NotificationService $notifications,
     ): Response {
         $this->assertOwns($order);
         if ($order->getStatus() !== OrderStatus::PLACED) {
@@ -160,6 +163,15 @@ final class OrderController extends AbstractController
 
             $em->flush();
 
+            $notifications->notifyAdmins(
+                sprintf('Commande %s modifiée', $order->getReference()),
+                sprintf('Le client a ajusté la commande avant confirmation. Nouveau total : %s',
+                    number_format($order->getTotalCents() / 100, 2, ',', ' ') . ' €'
+                ),
+                $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+                Notification::TYPE_WARNING,
+            );
+
             $this->addFlash('success', 'Commande mise à jour.');
             return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
         }
@@ -184,8 +196,11 @@ final class OrderController extends AbstractController
     }
 
     #[Route('/{reference}/cancel', name: 'app_order_cancel', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]
-    public function cancel(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, EntityManagerInterface $em): RedirectResponse
-    {
+    public function cancel(
+        #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
+        EntityManagerInterface $em,
+        NotificationService $notifications,
+    ): RedirectResponse {
         $this->assertOwns($order);
         if (!in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true)) {
             $this->addFlash('error', 'Cette commande ne peut plus être annulée.');
@@ -193,6 +208,14 @@ final class OrderController extends AbstractController
         }
         $order->setStatus(OrderStatus::CANCELLED);
         $em->flush();
+
+        $notifications->notifyAdmins(
+            sprintf('Commande %s annulée', $order->getReference()),
+            sprintf('Le client %s a annulé sa commande avant confirmation.', $order->getCompany()->getName()),
+            $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+            Notification::TYPE_DESTRUCTIVE,
+        );
+
         $this->addFlash('success', 'Commande annulée.');
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
     }

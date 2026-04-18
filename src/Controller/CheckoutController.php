@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Service\Cart;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,7 @@ final class CheckoutController extends AbstractController
         Cart $cart,
         AntennaRepository $antennas,
         EntityManagerInterface $em,
+        NotificationService $notifications,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -82,6 +84,18 @@ final class CheckoutController extends AbstractController
                 $em->flush();
                 $cart->clear();
                 $request->getSession()->remove('preselected_antenna_id');
+
+                $notifications->notifyAdmins(
+                    sprintf('Nouvelle commande %s', $order->getReference()),
+                    sprintf('%s · %s · %d pièces · %s',
+                        $company->getName(),
+                        $antenna->getName(),
+                        $order->getTotalQuantity(),
+                        number_format($order->getTotalCents() / 100, 2, ',', ' ') . ' €'
+                    ),
+                    $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+                    \App\Entity\Notification::TYPE_SUCCESS,
+                );
 
                 return $this->redirectToRoute('app_checkout_confirmation', ['reference' => $order->getReference()]);
             }

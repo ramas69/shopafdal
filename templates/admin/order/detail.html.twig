@@ -1,0 +1,110 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ order.reference }} — Admin{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_admin_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Toutes les commandes</a>
+
+<div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Commande</div>
+        <h1 class="font-display text-2xl font-mono font-semibold text-[var(--color-foreground)]">{{ order.reference }}</h1>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">{{ order.company.name }} · {{ order.createdBy.fullName }} · {{ (order.placedAt ?? order.createdAt)|date('d/m/Y à H:i') }}</p>
+    </div>
+    <span class="badge border {{ status_badge_class(order.status) }}">
+        <span class="w-2 h-2 rounded-full {{ status_dot_class(order.status) }}"></span>
+        {{ order.status.label() }}
+    </span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        {% if allowed_transitions is not empty %}
+            <section class="card p-6">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Actions</h2>
+                <div class="flex flex-wrap gap-3">
+                    {% for next_status in allowed_transitions %}
+                        <form method="post" action="{{ path('app_admin_order_transition', {reference: order.reference}) }}"
+                              {% if next_status.value == 'cancelled' %}
+                                  data-controller="confirm"
+                                  data-confirm-title-value="Annuler la commande {{ order.reference }} ?"
+                                  data-confirm-message-value="Le client sera notifié de l'annulation. Cette action est irréversible."
+                                  data-confirm-label-value="Annuler la commande"
+                                  data-action="submit->confirm#gate"
+                              {% endif %}>
+                            <input type="hidden" name="status" value="{{ next_status.value }}">
+                            <button type="submit" class="btn {{ next_status.value == 'cancelled' ? 'btn-error' : 'btn-primary' }}">
+                                {% if next_status.value == 'confirmed' %}
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                {% elseif next_status.value == 'shipped' %}
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25"/></svg>
+                                {% endif %}
+                                {{ next_status.label() }}
+                            </button>
+                        </form>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="card overflow-hidden">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] px-6 py-4 border-b border-[var(--color-border-soft)]">Articles</h2>
+            <div class="divide-y divide-[var(--color-border-soft)]">
+                {% for item in order.items %}
+                    <div class="flex items-center justify-between gap-4 p-4">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
+                            <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1 flex-wrap">
+                                <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ item.variant.colorHex }}"></span>
+                                {{ item.variant.color }} · {{ item.variant.size }}
+                                <span class="font-mono text-xs">{{ item.variant.sku }}</span>
+                            </div>
+                            {% if item.marking %}
+                                <div class="text-xs text-[var(--color-secondary)] mt-1">Marquage : {{ item.marking.zone|capitalize }} ({{ item.marking.size }})</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-[var(--color-secondary)]">{{ item.quantity }} × {{ item.unitPriceCents|price }}</div>
+                            <div class="font-semibold">{{ (item.quantity * item.unitPriceCents)|price }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="flex justify-between items-center p-4 bg-[var(--color-muted)] border-t border-[var(--color-border-soft)]">
+                <span class="text-[var(--color-secondary)]">Total HT</span>
+                <span class="text-xl font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
+            </div>
+        </section>
+
+        {% if order.notes %}
+            <section class="card p-6">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-2">Notes du client</h2>
+                <p class="text-[var(--color-body)] whitespace-pre-line">{{ order.notes }}</p>
+            </section>
+        {% endif %}
+    </div>
+
+    <aside class="space-y-6">
+        <section class="card p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-3">Livraison</h2>
+            <div class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</div>
+            <div class="text-sm text-[var(--color-secondary)]">{{ order.antenna.fullAddress }}</div>
+            {% if order.antenna.phone %}<div class="text-sm text-[var(--color-secondary)] mt-1">{{ order.antenna.phone }}</div>{% endif %}
+            {% if order.antenna.contactName %}
+                <div class="mt-3 pt-3 border-t border-[var(--color-border-soft)]">
+                    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Contact</div>
+                    <div class="font-medium text-[var(--color-foreground)]">{{ order.antenna.contactName }}</div>
+                    {% if order.antenna.contactEmail %}<a href="mailto:{{ order.antenna.contactEmail }}" class="link text-sm block">{{ order.antenna.contactEmail }}</a>{% endif %}
+                    {% if order.antenna.contactPhone %}<div class="text-sm text-[var(--color-secondary)]">{{ order.antenna.contactPhone }}</div>{% endif %}
+                </div>
+            {% endif %}
+            {% if order.antenna.notes %}
+                <div class="mt-3 pt-3 border-t border-[var(--color-border-soft)]">
+                    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Notes antenne</div>
+                    <p class="text-sm text-[var(--color-body)] whitespace-pre-line">{{ order.antenna.notes }}</p>
+                </div>
+            {% endif %}
+        </section>
+    </aside>
+</div>
+{% endblock %}

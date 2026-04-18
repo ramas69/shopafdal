@@ -1,0 +1,88 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Commandes — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Commandes</h1>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }}{% if current_status %} · statut « {{ (statuses|filter(s => s.value == current_status)|first).label() }} »{% endif %}</p>
+    </div>
+    <form method="get" data-controller="autosubmit" class="flex items-center gap-2">
+        <select name="status" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[180px]">
+            <option value="">Tous statuts</option>
+            {% for s in statuses %}
+                <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
+            {% endfor %}
+        </select>
+        {% if current_status %}
+            <a href="{{ path('app_admin_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)]">Réinit.</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if orders is empty %}
+    <div class="card p-12 text-center">
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucune commande</h2>
+        <p class="text-sm text-[var(--color-secondary)]">Aucune commande ne correspond au filtre.</p>
+    </div>
+{% else %}
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr>
+                        <th class="whitespace-nowrap rounded-tl-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Commande</th>
+                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Client</th>
+                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Antenne</th>
+                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Date</th>
+                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">Total HT</th>
+                        <th class="whitespace-nowrap rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        {% set tile = status_tile_classes(order.status) %}
+                        <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
+                            <td class="whitespace-nowrap px-5 py-3">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ tile[0] }} {{ tile[1] }}">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
+                                    </div>
+                                    <div>
+                                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                                           class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ order.reference }}</a>
+                                        <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.totalQuantity }} pièces · {{ order.items|length }} lignes</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-3">
+                                <p class="font-medium text-[var(--color-foreground)]">{{ order.company.name }}</p>
+                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.createdBy.fullName }}</p>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-3">
+                                <p class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</p>
+                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.antenna.city }}</p>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-3">
+                                <p class="text-[var(--color-body)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</p>
+                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('H:i') }}</p>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-3 text-right">
+                                <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-3">
+                                <span class="badge border {{ status_badge_class(order.status) }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
+                                    {{ order.status.label() }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

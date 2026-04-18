@@ -1,9 +1,12 @@
 {% extends 'base.html.twig' %}
 
 {% set is_admin = app.user.isAdmin() %}
+{% set recent_notifications = notifications_repo.findRecentFor(app.user, 10) %}
+{% set unread_count = notifications_repo.countUnreadFor(app.user) %}
 
 {% set nav_items = is_admin ? [
     { route: 'app_admin', label: 'Dashboard', icon: 'grid' },
+    { route: 'app_admin_orders', label: 'Commandes', icon: 'list' },
     { route: 'app_admin_invitations', label: 'Invitations', icon: 'mail' },
 ] : [
     { route: 'app_catalogue', label: 'Catalogue', icon: 'grid' },
@@ -57,8 +60,55 @@
             </div>
 
             <div class="flex items-center gap-1 sm:gap-2">
+                <div data-controller="dropdown" class="relative">
+                    <button type="button" data-action="click->dropdown#toggle"
+                        class="relative p-2 rounded-md cursor-pointer hover:bg-[var(--color-muted)] text-[var(--color-secondary)] transition-colors" aria-label="Notifications">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+                        </svg>
+                        {% if unread_count > 0 %}
+                            <span class="absolute top-0.5 right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold rounded-full bg-[var(--color-accent)] text-white">{{ unread_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div data-dropdown-target="menu"
+                        class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 card p-0 overflow-hidden z-40 max-h-[70vh] flex flex-col">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-soft)]">
+                            <span class="font-display font-semibold text-[var(--color-foreground)]">Notifications</span>
+                            {% if unread_count > 0 %}
+                                <form method="post" action="{{ path('app_notifications_read_all') }}">
+                                    <button type="submit" class="text-xs text-[var(--color-primary)] hover:underline">Tout marquer lu</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="overflow-y-auto flex-1">
+                            {% if recent_notifications is empty %}
+                                <div class="px-4 py-8 text-center text-sm text-[var(--color-secondary)]">Aucune notification.</div>
+                            {% else %}
+                                {% for n in recent_notifications %}
+                                    {% set dot_class = {'info': 'bg-sky-500', 'success': 'bg-emerald-500', 'warning': 'bg-amber-500', 'destructive': 'bg-red-500'}[n.type] ?? 'bg-slate-400' %}
+                                    <a href="{{ path('app_notification_read', {id: n.id}) }}"
+                                       class="block px-4 py-3 border-b border-[var(--color-border-soft)] hover:bg-[var(--color-muted)] transition-colors {{ not n.read ? 'bg-[var(--color-primary-light)]/30' : '' }}">
+                                        <div class="flex items-start gap-3">
+                                            <span class="mt-1.5 w-2 h-2 rounded-full {{ dot_class }} shrink-0"></span>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="font-medium text-sm text-[var(--color-foreground)] truncate">{{ n.title }}</div>
+                                                    <div class="text-[11px] text-[var(--color-secondary)] shrink-0">{{ n.createdAt|date('d/m H:i') }}</div>
+                                                </div>
+                                                {% if n.message %}
+                                                    <div class="text-xs text-[var(--color-secondary)] mt-0.5 line-clamp-2">{{ n.message }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 {% if not is_admin %}
-                    <a href="{{ path('app_cart') }}" class="relative p-2 rounded-md cursor-pointer hover:bg-[var(--color-slate-150)] text-[var(--color-navy-500)] transition-colors" aria-label="Panier">
+                    <a href="{{ path('app_cart') }}" class="relative p-2 rounded-md cursor-pointer hover:bg-[var(--color-muted)] text-[var(--color-secondary)] transition-colors" aria-label="Panier">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
                         </svg>
