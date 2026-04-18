@@ -74,8 +74,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 15.5px;
+    line-height: 1.55;
   }
 
   h1, h2, h3, h4, h5, h6 {
