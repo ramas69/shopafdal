@@ -4,7 +4,6 @@ export default class extends Controller {
     static targets = ['input', 'overlay'];
 
     connect() {
-        // Expose state via class on root, CSS-driven styling from there
         this.element.dataset.marked = 'false';
     }
 
@@ -17,7 +16,13 @@ export default class extends Controller {
 
         this.element.dataset.marked = next ? 'true' : 'false';
         this.inputTarget.disabled = !next;
-        this.overlayTarget.classList.toggle('opacity-0', !next);
-        this.overlayTarget.classList.toggle('pointer-events-none', !next);
+
+        // Inline styles — bypass any Tailwind compilation issue
+        this.overlayTarget.style.opacity = next ? '1' : '0';
+        this.overlayTarget.style.pointerEvents = next ? 'auto' : 'none';
+
+        // Visual ring on the wrapper via inline outline
+        this.element.style.outline = next ? '2px solid #E82538' : '';
+        this.element.style.outlineOffset = next ? '2px' : '';
     }
 }
