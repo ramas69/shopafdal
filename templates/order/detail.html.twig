@@ -81,9 +81,13 @@
                     <div class="w-8 h-8 rounded-full bg-[var(--color-destructive)] flex items-center justify-center flex-shrink-0">
                         <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                     </div>
-                    <div>
-                        <div class="font-medium text-[var(--color-destructive)]">Commande annulée</div>
-                        {% if order.updatedAt %}<div class="text-xs text-[var(--color-secondary)] mt-0.5">le {{ order.updatedAt|date('d/m/Y à H:i') }}</div>{% endif %}
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div class="font-medium text-[var(--color-destructive)]">Commande annulée</div>
+                            {% if order.cancelledAt %}
+                                <time datetime="{{ order.cancelledAt|date('c') }}" class="text-xs text-[var(--color-secondary)] font-mono">{{ order.cancelledAt|date('d/m/Y à H:i') }}</time>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             {% else %}
@@ -94,17 +98,26 @@
                             {% if not is_last %}
                                 <div class="absolute left-4 top-8 bottom-0 w-px {{ step.state == 'done' ? 'bg-emerald-400' : 'bg-[var(--color-border)]' }}"></div>
                             {% endif %}
-                            <div class="relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 {{ step.state == 'done' ? 'bg-emerald-500' : step.state == 'current' ? 'bg-[var(--color-accent)] ring-4 ring-sky-100' : 'bg-[var(--color-muted)] border border-[var(--color-border)]' }}">
+                            <div class="relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 {{ step.state == 'done' ? 'bg-emerald-500' : step.state == 'current' ? 'bg-[var(--color-primary)] ring-4 ring-[var(--color-primary-light)]' : 'bg-[var(--color-muted)] border border-[var(--color-border)]' }}">
                                 {% if step.state == 'done' %}
                                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                                 {% elseif step.state == 'current' %}
                                     <div class="w-2 h-2 rounded-full bg-white"></div>
                                 {% endif %}
                             </div>
-                            <div class="pt-1">
-                                <div class="font-medium {{ step.state == 'upcoming' ? 'text-[var(--color-secondary)]' : 'text-[var(--color-foreground)]' }}">{{ step.status.label() }}</div>
+                            <div class="pt-1 flex-1">
+                                <div class="flex items-center justify-between gap-3 flex-wrap">
+                                    <div class="font-medium {{ step.state == 'upcoming' ? 'text-[var(--color-secondary)]' : 'text-[var(--color-foreground)]' }}">{{ step.status.label() }}</div>
+                                    {% if step.at %}
+                                        <time datetime="{{ step.at|date('c') }}" class="text-xs text-[var(--color-secondary)] font-mono">
+                                            {{ step.at|date('d/m/Y à H:i') }}
+                                        </time>
+                                    {% endif %}
+                                </div>
                                 {% if step.state == 'current' %}
-                                    <div class="text-xs text-[var(--color-secondary)] mt-0.5">Étape en cours</div>
+                                    <div class="text-xs text-[var(--color-primary)] mt-0.5 font-medium">Étape en cours</div>
+                                {% elseif step.state == 'upcoming' %}
+                                    <div class="text-xs text-[var(--color-secondary)] mt-0.5">À venir</div>
                                 {% endif %}
                             </div>
                         </li>

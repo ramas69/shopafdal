@@ -230,7 +230,7 @@ final class OrderController extends AbstractController
     }
 
     /**
-     * @return array<int, array{status: OrderStatus, state: 'done'|'current'|'upcoming'|'cancelled'}>
+     * @return array<int, array{status: OrderStatus, state: 'done'|'current'|'upcoming'|'cancelled', at: ?\DateTimeImmutable}>
      */
     private function buildTimeline(Order $order): array
     {
@@ -242,12 +242,16 @@ final class OrderController extends AbstractController
             OrderStatus::DELIVERED,
         ];
         $current = $order->getStatus();
-        $timeline = [];
 
         if ($current === OrderStatus::CANCELLED) {
-            return [['status' => OrderStatus::CANCELLED, 'state' => 'cancelled']];
+            return [[
+                'status' => OrderStatus::CANCELLED,
+                'state' => 'cancelled',
+                'at' => $order->getCancelledAt(),
+            ]];
         }
 
+        $timeline = [];
         $currentIdx = array_search($current, $happyPath, true);
         foreach ($happyPath as $idx => $status) {
             $state = match (true) {
@@ -256,7 +260,11 @@ final class OrderController extends AbstractController
                 $idx === $currentIdx => 'current',
                 default => 'upcoming',
             };
-            $timeline[] = ['status' => $status, 'state' => $state];
+            $timeline[] = [
+                'status' => $status,
+                'state' => $state,
+                'at' => $order->getStatusTimestamp($status),
+            ];
         }
         return $timeline;
     }

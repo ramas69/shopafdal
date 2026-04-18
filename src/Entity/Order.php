@@ -48,6 +48,21 @@ class Order
     private ?\DateTimeImmutable $placedAt = null;
 
     #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $confirmedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $inProductionAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $shippedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deliveredAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $cancelledAt = null;
+
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
     /** @var Collection<int, OrderItem> */
@@ -70,7 +85,22 @@ class Order
     public function getCreatedBy(): User { return $this->createdBy; }
     public function setCreatedBy(User $v): self { $this->createdBy = $v; return $this; }
     public function getStatus(): OrderStatus { return $this->status; }
-    public function setStatus(OrderStatus $v): self { $this->status = $v; $this->updatedAt = new \DateTimeImmutable(); return $this; }
+    public function setStatus(OrderStatus $v): self
+    {
+        $this->status = $v;
+        $now = new \DateTimeImmutable();
+        $this->updatedAt = $now;
+        match ($v) {
+            OrderStatus::PLACED => $this->placedAt ??= $now,
+            OrderStatus::CONFIRMED => $this->confirmedAt ??= $now,
+            OrderStatus::IN_PRODUCTION => $this->inProductionAt ??= $now,
+            OrderStatus::SHIPPED => $this->shippedAt ??= $now,
+            OrderStatus::DELIVERED => $this->deliveredAt ??= $now,
+            OrderStatus::CANCELLED => $this->cancelledAt ??= $now,
+            default => null,
+        };
+        return $this;
+    }
     public function getNotes(): ?string { return $this->notes; }
     public function setNotes(?string $v): self { $this->notes = $v; return $this; }
     public function getAdminNotes(): ?string { return $this->adminNotes; }
@@ -78,6 +108,25 @@ class Order
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getPlacedAt(): ?\DateTimeImmutable { return $this->placedAt; }
     public function setPlacedAt(?\DateTimeImmutable $v): self { $this->placedAt = $v; return $this; }
+    public function getConfirmedAt(): ?\DateTimeImmutable { return $this->confirmedAt; }
+    public function getInProductionAt(): ?\DateTimeImmutable { return $this->inProductionAt; }
+    public function getShippedAt(): ?\DateTimeImmutable { return $this->shippedAt; }
+    public function getDeliveredAt(): ?\DateTimeImmutable { return $this->deliveredAt; }
+    public function getCancelledAt(): ?\DateTimeImmutable { return $this->cancelledAt; }
+
+    public function getStatusTimestamp(OrderStatus $status): ?\DateTimeImmutable
+    {
+        return match ($status) {
+            OrderStatus::PLACED => $this->placedAt,
+            OrderStatus::CONFIRMED => $this->confirmedAt,
+            OrderStatus::IN_PRODUCTION => $this->inProductionAt,
+            OrderStatus::SHIPPED => $this->shippedAt,
+            OrderStatus::DELIVERED => $this->deliveredAt,
+            OrderStatus::CANCELLED => $this->cancelledAt,
+            default => null,
+        };
+    }
+
     public function getUpdatedAt(): ?\DateTimeImmutable { return $this->updatedAt; }
     public function getItems(): Collection { return $this->items; }
 
