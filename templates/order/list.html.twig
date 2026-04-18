@@ -2,24 +2,43 @@
 
 {% block title %}Mes commandes — Afdal{% endblock %}
 
+{% macro status_icon(status) %}
+    {% if status.value == 'placed' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    {% elseif status.value == 'confirmed' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+    {% elseif status.value == 'in_production' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+    {% elseif status.value == 'shipped' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-5.379a1.5 1.5 0 0 0-1.06.44l-2.12 2.12a1.5 1.5 0 0 1-1.061.44H3.75"/></svg>
+    {% elseif status.value == 'delivered' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+    {% elseif status.value == 'cancelled' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75 14.25 14.25m0-4.5L9.75 14.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    {% else %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.25 11.25-1.5 1.5m0 0-1.5 1.5m1.5-1.5h-3.75M9 12h3M9 3H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+    {% endif %}
+{% endmacro %}
+
 {% block content %}
-<div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
     <div>
-        <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Mes commandes</h1>
-        <p class="text-[var(--color-secondary)]">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }} pour {{ app.user.company.name }}.</p>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Mes commandes</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }}</h1>
+        <p class="text-[var(--color-secondary)] text-sm mt-1">pour {{ app.user.company.name }}</p>
     </div>
-    <a href="{{ path('app_orders_export', app.request.query.all) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-[var(--color-border)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">
+    <a href="{{ path('app_orders_export', app.request.query.all) }}" class="btn btn-outline">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
         </svg>
         Exporter tout {{ orders|length > 0 ? '(' ~ orders|length ~ ')' : '' }}
     </a>
 </div>
 
-<form method="get" class="mb-6 flex flex-wrap items-end gap-3 bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3">
     <label>
         <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Statut</span>
-        <select name="status" class="px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+        <select name="status" class="form-input !w-auto min-w-[160px]">
             <option value="">Tous</option>
             {% for s in statuses %}
                 <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
@@ -29,7 +48,7 @@
     {% if antennas|length > 1 %}
         <label>
             <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Antenne</span>
-            <select name="antenna" class="px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+            <select name="antenna" class="form-input !w-auto min-w-[180px]">
                 <option value="">Toutes</option>
                 {% for a in antennas %}
                     <option value="{{ a.id }}" {{ current_antenna == a.id ? 'selected' }}>{{ a.name }}</option>
@@ -37,78 +56,95 @@
             </select>
         </label>
     {% endif %}
-    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-        Filtrer
-    </button>
+    <button type="submit" class="btn btn-primary self-end">Filtrer</button>
     {% if current_status or current_antenna %}
-        <a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)]">Réinitialiser</a>
+        <a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] self-end pb-2">Réinitialiser</a>
     {% endif %}
 </form>
 
 {% if orders is empty %}
-    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
-        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Aucune commande</h2>
+    <div class="card p-12 text-center">
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucune commande</h2>
         <p class="text-sm text-[var(--color-secondary)] mb-6">Passez votre première commande depuis le catalogue.</p>
-        <a href="{{ path('app_catalogue') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">Voir le catalogue</a>
+        <a href="{{ path('app_catalogue') }}" class="btn btn-primary">Voir le catalogue</a>
     </div>
 {% else %}
     <div data-controller="selection"
          data-selection-export-base-value="{{ path('app_orders_export') }}">
 
-        <div data-selection-target="bar" class="hidden mb-3 flex items-center justify-between gap-3 p-3 rounded-md bg-[var(--color-muted)] border border-[var(--color-border)]">
+        <div data-selection-target="bar" class="hidden mb-3 flex items-center justify-between gap-3 p-3 rounded-md bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20">
             <span class="text-sm text-[var(--color-foreground)]"><strong data-selection-target="counter">0</strong> commande(s) sélectionnée(s)</span>
-            <a data-selection-target="exportLink" href="{{ path('app_orders_export') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
+            <a data-selection-target="exportLink" href="{{ path('app_orders_export') }}" class="btn btn-primary text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                 Exporter la sélection
             </a>
         </div>
 
-        <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+        <div class="card overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-[var(--color-muted)] text-left text-xs uppercase tracking-wide text-[var(--color-secondary)]">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 w-10">
+                            <th class="whitespace-nowrap rounded-tl-lg bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] lg:px-5 w-10">
                                 <input type="checkbox" data-selection-target="selectAll" data-action="change->selection#toggleAll"
                                     aria-label="Tout sélectionner"
-                                    class="rounded border-[var(--color-border)] cursor-pointer">
+                                    class="form-checkbox">
                             </th>
-                            <th class="px-4 py-3 font-medium">Référence</th>
-                            <th class="px-4 py-3 font-medium">Date</th>
-                            <th class="px-4 py-3 font-medium">Antenne</th>
-                            <th class="px-4 py-3 font-medium">Articles</th>
-                            <th class="px-4 py-3 font-medium">Total HT</th>
-                            <th class="px-4 py-3 font-medium">Statut</th>
+                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] text-left lg:px-5">Commande</th>
+                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] text-left lg:px-5">Antenne</th>
+                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] text-left lg:px-5">Date</th>
+                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] text-right lg:px-5">Total HT</th>
+                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] text-left lg:px-5">Statut</th>
+                            <th class="whitespace-nowrap rounded-tr-lg bg-[var(--color-muted)] px-4 py-3 font-semibold uppercase text-xs tracking-wide text-[var(--color-foreground)] lg:px-5 w-10"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[var(--color-border)]">
+                    <tbody>
                         {% for order in orders %}
-                            <tr class="relative hover:bg-[var(--color-muted)] focus-within:bg-[var(--color-muted)]">
-                                <td class="px-4 py-3">
+                            {% set tile = status_tile_classes(order.status) %}
+                            <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
                                     <input type="checkbox" value="{{ order.id }}"
                                         data-selection-target="checkbox"
                                         data-action="change->selection#update"
                                         aria-label="Sélectionner commande {{ order.reference }}"
-                                        class="relative z-20 rounded border-[var(--color-border)] cursor-pointer">
+                                        class="form-checkbox relative z-20">
                                 </td>
-                                <td class="px-4 py-3 font-mono font-medium text-[var(--color-primary)]">
-                                    <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
-                                       class="before:absolute before:inset-0 before:content-[''] focus-visible:outline-none focus-visible:before:outline-2 focus-visible:before:outline-[var(--color-ring)] focus-visible:before:outline-offset-[-2px]"
-                                       aria-label="Voir la commande {{ order.reference }}">
-                                        {{ order.reference }}
-                                    </a>
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ tile[0] }} {{ tile[1] }}">
+                                            {{ _self.status_icon(order.status) }}
+                                        </div>
+                                        <div>
+                                            <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
+                                               class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']"
+                                               aria-label="Voir la commande {{ order.reference }}">{{ order.reference }}</a>
+                                            <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.totalQuantity }} pièce{{ order.totalQuantity > 1 ? 's' : '' }} · {{ order.items|length }} ligne{{ order.items|length > 1 ? 's' : '' }}</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</td>
-                                <td class="px-4 py-3">{{ order.antenna.name }}</td>
-                                <td class="px-4 py-3 text-[var(--color-secondary)]">{{ order.totalQuantity }} pc</td>
-                                <td class="px-4 py-3 font-medium">{{ order.totalCents|price }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border {{ status_badge_class(order.status) }}">
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
+                                    <p class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</p>
+                                    <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.antenna.city }}</p>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
+                                    <p class="text-[var(--color-body)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</p>
+                                    <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('H:i') }}</p>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5 text-right">
+                                    <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
+                                    <span class="badge border {{ status_badge_class(order.status) }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
                                         {{ order.status.label() }}
                                     </span>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-3 sm:px-5 relative z-20">
+                                    <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
+                                       class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors"
+                                       aria-label="Voir détail {{ order.reference }}">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                                    </a>
                                 </td>
                             </tr>
                         {% endfor %}

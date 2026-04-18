@@ -41,4 +41,22 @@ final class AppExtension
             OrderStatus::CANCELLED => 'bg-red-500',
         };
     }
+
+    /**
+     * Returns [bgClass, textClass] for the status tile (colored icon square).
+     * @return array{0:string,1:string}
+     */
+    #[AsTwigFunction('status_tile_classes')]
+    public function statusTileClasses(OrderStatus $status): array
+    {
+        return match ($status) {
+            OrderStatus::DRAFT => ['bg-slate-100', 'text-slate-500'],
+            OrderStatus::PLACED => ['bg-sky-50', 'text-sky-600'],
+            OrderStatus::CONFIRMED => ['bg-emerald-50', 'text-emerald-600'],
+            OrderStatus::IN_PRODUCTION => ['bg-amber-50', 'text-amber-600'],
+            OrderStatus::SHIPPED => ['bg-indigo-50', 'text-indigo-600'],
+            OrderStatus::DELIVERED => ['bg-emerald-100', 'text-emerald-700'],
+            OrderStatus::CANCELLED => ['bg-red-50', 'text-red-600'],
+        };
+    }
 }
