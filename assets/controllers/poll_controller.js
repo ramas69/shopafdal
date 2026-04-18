@@ -16,6 +16,9 @@ export default class extends Controller {
 
     async _refresh() {
         if (document.hidden || !this.element.id) return;
+        // Skip if this element has a currently-open dropdown menu (avoid closing it during user interaction)
+        const openMenu = this.element.querySelector('[data-dropdown-target="menu"]:not(.hidden)');
+        if (openMenu) return;
         try {
             const res = await fetch(this.urlValue, {
                 headers: { 'Accept': 'text/html' },

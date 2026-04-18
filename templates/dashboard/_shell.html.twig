@@ -124,7 +124,10 @@
             </div>
 
             <div class="flex items-center gap-1 sm:gap-2">
-                <div data-controller="dropdown" class="relative">
+                <div id="notifications-dropdown" data-controller="dropdown poll"
+                     data-poll-url-value="{{ app.request.uri }}"
+                     data-poll-interval-value="10000"
+                     class="relative">
                     <button type="button" data-action="click->dropdown#toggle"
                         class="relative p-2 rounded-md cursor-pointer hover:bg-[var(--color-muted)] text-[var(--color-secondary)] transition-colors" aria-label="Notifications">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
