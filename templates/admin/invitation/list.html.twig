@@ -1,0 +1,70 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Invitations — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-center justify-between">
+    <div>
+        <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Invitations</h1>
+        <p class="text-[var(--color-secondary)]">Gérez les accès des clients VIP.</p>
+    </div>
+    <a href="{{ path('app_admin_invitation_new') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+        Nouvelle invitation
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="mb-4 p-3 rounded-md bg-emerald-50 border border-emerald-200 text-sm text-emerald-800 break-all" role="status">
+        {{ message }}
+    </div>
+{% endfor %}
+
+<div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+    {% if invitations is empty %}
+        <div class="p-12 text-center text-[var(--color-secondary)]">
+            Aucune invitation pour le moment.
+        </div>
+    {% else %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-[var(--color-muted)] text-left text-xs uppercase tracking-wide text-[var(--color-secondary)]">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Email</th>
+                        <th class="px-4 py-3 font-medium">Entreprise</th>
+                        <th class="px-4 py-3 font-medium">Statut</th>
+                        <th class="px-4 py-3 font-medium">Expire</th>
+                        <th class="px-4 py-3 font-medium text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--color-border)]">
+                    {% for invitation in invitations %}
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-[var(--color-foreground)]">{{ invitation.email }}</td>
+                            <td class="px-4 py-3 text-[var(--color-secondary)]">{{ invitation.company.name }}</td>
+                            <td class="px-4 py-3">
+                                {% if invitation.acceptedAt %}
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Acceptée</span>
+                                {% elseif invitation.revokedAt %}
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">Révoquée</span>
+                                {% elseif invitation.isPending() %}
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">En attente</span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">Expirée</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-[var(--color-secondary)]">{{ invitation.expiresAt|date('d/m/Y H:i') }}</td>
+                            <td class="px-4 py-3 text-right">
+                                {% if invitation.isPending() %}
+                                    <form method="post" action="{{ path('app_admin_invitation_revoke', {id: invitation.id}) }}" class="inline">
+                                        <button type="submit" class="text-sm text-[var(--color-destructive)] hover:underline cursor-pointer">Révoquer</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

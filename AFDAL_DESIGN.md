@@ -243,6 +243,47 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 
 **Base de données** : PostgreSQL 16 Homebrew local (DB `afdal_dev`), config via `.env.local` (gitignoré). Pas de Docker nécessaire en dev.
 
+### Phase 2 — Auth & invitations (2026-04-18)
+
+**Security config** (`config/packages/security.yaml`) :
+- Provider Doctrine sur `App\Entity\User` (email comme identifier)
+- Firewall `main` : `form_login` + `logout` + `remember_me` (30 jours, samesite=lax)
+- Role hierarchy : `ROLE_ADMIN` inclut `ROLE_CLIENT_MANAGER`
+- `access_control` : `/admin/*` = ROLE_ADMIN · `/*` = ROLE_CLIENT_MANAGER (sauf `/`, `/login`, `/register` publics)
+- CSRF **stateless** (via Stimulus) — standard Symfony 7.4, pas de config manuelle
+
+**Routes auth** :
+- `GET /login` · `POST /login` : formulaire connexion (redirect vers /dashboard si déjà logué)
+- `GET /logout` : déconnexion + redirect vers /
+- `GET /register/{token}` · `POST` : inscription via invitation (token 48 chars, valide 7j)
+- `GET /dashboard` : redirige vers `/admin` (admin) ou `/catalogue` (client)
+
+**Routes admin invitations** :
+- `GET /admin/invitations` : liste avec statuts (En attente / Acceptée / Révoquée / Expirée)
+- `GET|POST /admin/invitations/new` : création (email + company)
+- `POST /admin/invitations/{id}/revoke` : révoquer
+
+**Flow invitation (actuel)** :
+1. Admin crée invitation → token généré (bin2hex 24 bytes) + expiration +7j
+2. L'URL complète `/{host}/register/{token}` est affichée en flash message (copy-paste) — **pas d'email envoyé en Phase 2** (mailer = null://null, emails en Phase 5)
+3. Client ouvre le lien → si token valide+pending, affiche form (nom + password min 8 chars)
+4. Submit → crée User avec role CLIENT_MANAGER + company de l'invitation, marque `acceptedAt`, login auto via `Security::login()`, redirect vers /dashboard
+
+**Décisions techniques** :
+- `Security::login()` (Symfony 7) pour login programmatique — évite de wire manuellement `FormLoginAuthenticator`
+- Validation simple en contrôleur (NotBlank + Email + longueur password) — pas de FormType pour l'instant (moins de boilerplate pour 2 formulaires)
+- Réponse HTTP 410 Gone pour token invalide/expiré (plutôt que 404 — le ressource a existé mais n'est plus dispo)
+- Logout bouton dans shell `_shell.html.twig` — `<a>` simple (pas de POST form), acceptable ici car le risque CSRF sur logout est faible et l'UX est meilleure
+
+**Shell authentifié** (`templates/dashboard/_shell.html.twig`) :
+- Topbar minimaliste (logo + nom user + entreprise/rôle + déconnexion)
+- Pas de sidebar pour l'instant (stubs simples) — sidebar complète en Phase 3/4
+- Max-width 7xl, responsive
+
+**Stubs dashboard** :
+- `/catalogue` : 3 stat cards (antennes · commandes · statut) pour le client
+- `/admin` : 4 stat cards (clients · produits actifs · commandes · à traiter) + lien invitations
+
 ---
 
 ## Patterns Tailwind partagés

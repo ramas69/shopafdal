@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Invitation invalide — Afdal{% endblock %}
+
+{% block body %}
+<main class="min-h-screen flex items-center justify-center px-6">
+    <div class="max-w-md w-full text-center">
+        <div class="w-16 h-16 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-[var(--color-destructive)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Zm0 13.036h.008v.008H12v-.008Z" />
+            </svg>
+        </div>
+        <h1 class="text-2xl font-semibold text-[var(--color-primary)] mb-2">Invitation invalide ou expirée</h1>
+        <p class="text-[var(--color-secondary)] mb-6">Le lien est introuvable, expiré ou a déjà été utilisé.</p>
+        <a href="mailto:contact@afdal.fr" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+            Contacter Afdal
+        </a>
+    </div>
+</main>
+{% endblock %}

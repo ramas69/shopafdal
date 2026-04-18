@@ -1,0 +1,39 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Admin — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Dashboard Admin</h1>
+    <p class="text-[var(--color-secondary)]">Les vues CRUD produits/clients/invitations arrivent en Phase 4.</p>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Clients VIP</div>
+        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ stats.companies }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Produits actifs</div>
+        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ stats.products }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Commandes totales</div>
+        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ stats.orders }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">À traiter</div>
+        <div class="text-3xl font-semibold text-[var(--color-accent)]">{{ stats.to_process }}</div>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-[var(--color-primary)]">Invitations</h2>
+        <a href="{{ path('app_admin_invitation_new') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+            Nouvelle invitation
+        </a>
+    </div>
+    <p class="text-sm text-[var(--color-secondary)]">Invitez des clients VIP à rejoindre la plateforme.</p>
+</div>
+{% endblock %}

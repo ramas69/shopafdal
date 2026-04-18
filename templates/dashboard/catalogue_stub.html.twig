@@ -1,0 +1,28 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Catalogue — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
+    <p class="text-[var(--color-secondary)]">Espace {{ app.user.company.name }}. Le catalogue produits arrive en Phase 3.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Mes antennes</div>
+        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ app.user.company.antennas|length }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Commandes totales</div>
+        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ app.user.company.orders|length }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Statut compte</div>
+        <div class="text-lg font-medium text-emerald-700">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 align-middle"></span>
+            Actif
+        </div>
+    </div>
+</div>
+{% endblock %}
