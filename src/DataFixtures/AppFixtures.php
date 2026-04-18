@@ -10,6 +10,7 @@ use App\Entity\Product;
 use App\Entity\ProductVariant;
 use App\Entity\User;
 use App\Enum\OrderStatus;
+use App\Enum\ProductStatus;
 use App\Enum\UserRole;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -84,8 +85,8 @@ class AppFixtures extends Fixture
                 ->setName($name)->setSlug($slug)
                 ->setCategory($cat)->setMaterial($mat)
                 ->setDescription($desc)
-                ->setBasePriceCents($price)
-                ->setActive(true);
+                ->setBasePriceCents($price);
+            $product->publish();
 
             $sizes = ($cat === 'Couvre-chef' || $cat === 'Accessoire') ? ['TU'] : ['S', 'M', 'L', 'XL', 'XXL'];
             $colors = [

@@ -17,10 +17,11 @@ class ProductRepository extends ServiceEntityRepository
     }
 
     /** @return Product[] */
-    public function findActive(): array
+    public function findPublished(): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.active = true')
+            ->andWhere('p.status = :published')
+            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
             ->orderBy('p.createdAt', 'DESC')
             ->getQuery()
             ->getResult();

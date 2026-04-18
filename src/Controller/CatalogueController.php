@@ -23,7 +23,8 @@ final class CatalogueController extends AbstractController
         $category = (string) $request->query->get('category', '');
 
         $qb = $products->createQueryBuilder('p')
-            ->andWhere('p.active = true')
+            ->andWhere('p.status = :published')
+            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
             ->orderBy('p.name', 'ASC');
 
         if ($search !== '') {
@@ -38,7 +39,8 @@ final class CatalogueController extends AbstractController
 
         $categories = $products->createQueryBuilder('p')
             ->select('DISTINCT p.category')
-            ->andWhere('p.active = true')
+            ->andWhere('p.status = :published')
+            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
             ->andWhere('p.category IS NOT NULL')
             ->orderBy('p.category', 'ASC')
             ->getQuery()
@@ -55,7 +57,7 @@ final class CatalogueController extends AbstractController
     #[Route('/catalogue/{slug}', name: 'app_catalogue_detail')]
     public function detail(Product $product): Response
     {
-        if (!$product->isActive()) {
+        if (!$product->isPublished()) {
             throw $this->createNotFoundException();
         }
 
@@ -96,7 +98,9 @@ final class CatalogueController extends AbstractController
         $added = 0;
         foreach ($quantities as $variantId => $qty) {
             $qty = (int) $qty;
-            if ($qty < 1) continue;
+            if ($qty < 1) {
+                continue;
+            }
             $cart->add((int) $variantId, $qty, $marking);
             $added += $qty;
         }

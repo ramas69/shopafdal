@@ -1,0 +1,94 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Produits — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Produits</h1>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">
+            <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{{ counts.published }} publié{{ counts.published > 1 ? 's' : '' }}</span>
+            <span class="mx-2">·</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>{{ counts.draft }} brouillon{{ counts.draft > 1 ? 's' : '' }}</span>
+        </p>
+    </div>
+    <a href="{{ path('app_admin_product_new') }}" class="btn btn-primary">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Nouveau produit
+    </a>
+</div>
+
+<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3" data-controller="autosubmit">
+    <div class="relative flex-1 min-w-[240px]">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+        <input type="search" name="q" value="{{ q }}" placeholder="Rechercher un produit..."
+            data-action="input->autosubmit#submit"
+            class="form-input pl-9">
+    </div>
+    <select name="status" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[180px]">
+        <option value="">Tous statuts</option>
+        {% for s in statuses %}
+            <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
+        {% endfor %}
+    </select>
+    {% if q or current_status %}
+        <a href="{{ path('app_admin_products') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
+    {% endif %}
+</form>
+
+{% if products is empty %}
+    <div class="card p-12 text-center">
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucun produit</h2>
+        <p class="text-sm text-[var(--color-secondary)] mb-6">Créez votre premier produit pour le catalogue.</p>
+        <a href="{{ path('app_admin_product_new') }}" class="btn btn-primary">Nouveau produit</a>
+    </div>
+{% else %}
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr>
+                        <th class="rounded-tl-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Produit</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Catégorie</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Variantes</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">Prix HT</th>
+                        <th class="rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
+                            <td class="px-5 py-3">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--color-muted)] to-[var(--color-border)] flex items-center justify-center font-display font-bold text-[var(--color-secondary)]">{{ product.name|first|upper }}</div>
+                                    <div>
+                                        <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ product.name }}</a>
+                                        {% if product.material %}<p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ product.material }}</p>{% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3 text-[var(--color-body)]">{{ product.category ?? '—' }}</td>
+                            <td class="px-5 py-3 text-center text-[var(--color-secondary)]">{{ product.variants|length }}</td>
+                            <td class="px-5 py-3 text-right font-display font-semibold text-[var(--color-foreground)]">{{ product.basePriceCents|price }}</td>
+                            <td class="px-5 py-3">
+                                {% if product.status.value == 'published' %}
+                                    <span class="badge border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Publié
+                                    </span>
+                                {% else %}
+                                    <span class="badge border bg-slate-50 text-slate-700 border-slate-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        Brouillon
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\ProductStatus;
 use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -38,8 +39,11 @@ class Product
     #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     private array $images = [];
 
-    #[ORM\Column]
-    private bool $active = true;
+    #[ORM\Column(enumType: ProductStatus::class, options: ['default' => 'draft'])]
+    private ProductStatus $status = ProductStatus::DRAFT;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $publishedAt = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -69,8 +73,20 @@ class Product
     public function setBasePriceCents(int $v): self { $this->basePriceCents = $v; return $this; }
     public function getImages(): array { return $this->images; }
     public function setImages(array $v): self { $this->images = array_values($v); return $this; }
-    public function isActive(): bool { return $this->active; }
-    public function setActive(bool $v): self { $this->active = $v; return $this; }
+    public function getStatus(): ProductStatus { return $this->status; }
+    public function getPublishedAt(): ?\DateTimeImmutable { return $this->publishedAt; }
+    public function isPublished(): bool { return $this->status === ProductStatus::PUBLISHED; }
+    public function publish(): self
+    {
+        $this->status = ProductStatus::PUBLISHED;
+        $this->publishedAt ??= new \DateTimeImmutable();
+        return $this;
+    }
+    public function unpublish(): self
+    {
+        $this->status = ProductStatus::DRAFT;
+        return $this;
+    }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getVariants(): Collection { return $this->variants; }
 

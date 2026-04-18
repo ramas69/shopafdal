@@ -1,0 +1,180 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ is_new ? 'Nouveau produit' : product.name }} — Admin{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_admin_products') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Tous les produits</a>
+
+<div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">{{ is_new ? 'Nouveau produit' : 'Modifier' }}</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ is_new ? 'Nouveau produit' : product.name }}</h1>
+        {% if not is_new %}
+            <div class="mt-2">
+                {% if product.status.value == 'published' %}
+                    <span class="badge border bg-emerald-50 text-emerald-700 border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Publié · visible par les clients
+                    </span>
+                {% else %}
+                    <span class="badge border bg-slate-50 text-slate-700 border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        Brouillon · invisible pour les clients
+                    </span>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    {% if not is_new %}
+        <div class="flex flex-wrap gap-2">
+            {% if product.status.value == 'published' %}
+                <form method="post" action="{{ path('app_admin_product_unpublish', {id: product.id}) }}"
+                      data-controller="confirm"
+                      data-confirm-title-value="Dépublier {{ product.name }} ?"
+                      data-confirm-message-value="Le produit ne sera plus visible par les clients. Les commandes existantes restent inchangées."
+                      data-confirm-label-value="Dépublier"
+                      data-action="submit->confirm#gate">
+                    <button type="submit" class="btn btn-outline">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                        Dépublier
+                    </button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('app_admin_product_publish', {id: product.id}) }}">
+                    <button type="submit" class="btn btn-primary">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                        Publier
+                    </button>
+                </form>
+                <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}"
+                      data-controller="confirm"
+                      data-confirm-title-value="Supprimer {{ product.name }} ?"
+                      data-confirm-message-value="Le produit et ses variantes seront définitivement supprimés. Cette action est irréversible."
+                      data-confirm-label-value="Supprimer"
+                      data-action="submit->confirm#gate">
+                    <button type="submit" class="btn btn-error">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397"/></svg>
+                        Supprimer
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<form method="post" class="space-y-6" data-controller="variants-editor">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {# Col 1 — Informations #}
+        <section class="card p-6 lg:col-span-2 space-y-4">
+            <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-2">Informations</h2>
+
+            <label class="block">
+                <span class="form-label">Nom <span class="text-[var(--color-destructive)]">*</span></span>
+                <input type="text" name="name" value="{{ is_new ? '' : product.name }}" required
+                    placeholder="Ex. T-shirt Premium"
+                    class="form-input mt-1.5 {{ errors.name is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                {% if errors.name is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.name }}</span>{% endif %}
+            </label>
+
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="form-label">Catégorie</span>
+                    <input type="text" name="category" value="{{ is_new ? '' : (product.category ?? '') }}"
+                        placeholder="Ex. T-shirt"
+                        list="categories"
+                        class="form-input mt-1.5">
+                    <datalist id="categories">
+                        <option value="T-shirt">
+                        <option value="Polo">
+                        <option value="Sweat">
+                        <option value="Couvre-chef">
+                        <option value="Accessoire">
+                    </datalist>
+                </label>
+                <label class="block">
+                    <span class="form-label">Matière</span>
+                    <input type="text" name="material" value="{{ is_new ? '' : (product.material ?? '') }}"
+                        placeholder="Ex. Coton bio 180g/m²"
+                        class="form-input mt-1.5">
+                </label>
+            </div>
+
+            <label class="block">
+                <span class="form-label">Description</span>
+                <textarea name="description" rows="4" placeholder="Description qui sera visible par les clients..."
+                    class="form-input mt-1.5">{{ is_new ? '' : (product.description ?? '') }}</textarea>
+            </label>
+        </section>
+
+        {# Col 2 — Prix #}
+        <section class="card p-6 space-y-4">
+            <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-2">Tarif</h2>
+
+            <label class="block">
+                <span class="form-label">Prix HT de base <span class="text-[var(--color-destructive)]">*</span></span>
+                <div class="relative mt-1.5">
+                    <input type="text" name="base_price" value="{{ is_new ? '' : (product.basePriceCents / 100)|number_format(2, ',', '') }}" required
+                        placeholder="0,00"
+                        class="form-input pr-10 text-right font-mono {{ errors.base_price is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]">€</span>
+                </div>
+                {% if errors.base_price is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.base_price }}</span>{% endif %}
+                <p class="text-xs text-[var(--color-secondary)] mt-1.5">Prix unitaire affiché aux clients.</p>
+            </label>
+        </section>
+    </div>
+
+    {# Variants #}
+    <section class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Variantes</h2>
+                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Taille × couleur. Au moins 1 variante pour publier.</p>
+            </div>
+            <button type="button" data-action="variants-editor#add" class="btn btn-outline text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Ajouter
+            </button>
+        </div>
+
+        <div data-variants-editor-target="list" class="space-y-2">
+            {% for v in is_new ? [] : product.variants %}
+                <div class="grid grid-cols-12 gap-2 items-center p-3 rounded-md border border-[var(--color-border-soft)]" data-variants-editor-target="row">
+                    <input type="hidden" name="variants[{{ loop.index0 }}][id]" value="{{ v.id }}">
+                    <input type="text" name="variants[{{ loop.index0 }}][size]" value="{{ v.size }}" required placeholder="S" class="form-input col-span-2 text-center">
+                    <input type="text" name="variants[{{ loop.index0 }}][color]" value="{{ v.color }}" required placeholder="Blanc" class="form-input col-span-3">
+                    <input type="color" name="variants[{{ loop.index0 }}][color_hex]" value="{{ v.colorHex ?? '#FFFFFF' }}" class="form-input col-span-1 h-10 !p-1">
+                    <input type="text" name="variants[{{ loop.index0 }}][sku]" value="{{ v.sku }}" required placeholder="TSHIRT-S-BLC" class="form-input col-span-5 font-mono text-xs">
+                    <button type="button" data-action="variants-editor#remove" class="col-span-1 inline-flex items-center justify-center h-10 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)]" aria-label="Retirer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <template data-variants-editor-target="template">
+            <div class="grid grid-cols-12 gap-2 items-center p-3 rounded-md border border-[var(--color-border-soft)]" data-variants-editor-target="row">
+                <input type="hidden" name="variants[__INDEX__][id]" value="">
+                <input type="text" name="variants[__INDEX__][size]" required placeholder="S" class="form-input col-span-2 text-center">
+                <input type="text" name="variants[__INDEX__][color]" required placeholder="Blanc" class="form-input col-span-3">
+                <input type="color" name="variants[__INDEX__][color_hex]" value="#FFFFFF" class="form-input col-span-1 h-10 !p-1">
+                <input type="text" name="variants[__INDEX__][sku]" required placeholder="TSHIRT-S-BLC" class="form-input col-span-5 font-mono text-xs">
+                <button type="button" data-action="variants-editor#remove" class="col-span-1 inline-flex items-center justify-center h-10 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)]" aria-label="Retirer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </template>
+
+        {% if is_new or product.variants|length == 0 %}
+            <p data-variants-editor-target="empty" class="text-center text-sm text-[var(--color-secondary)] py-8">Aucune variante. Cliquez sur « Ajouter ».</p>
+        {% endif %}
+    </section>
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">
+            {{ is_new ? 'Créer le produit (brouillon)' : 'Enregistrer' }}
+        </button>
+        <a href="{{ path('app_admin_products') }}" class="btn btn-outline">Annuler</a>
+    </div>
+</form>
+{% endblock %}

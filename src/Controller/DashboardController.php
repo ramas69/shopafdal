@@ -33,7 +33,7 @@ final class DashboardController extends AbstractController
         return $this->render('dashboard/admin_stub.html.twig', [
             'stats' => [
                 'companies' => $companies->count([]),
-                'products' => $products->count(['active' => true]),
+                'products' => $products->count(['status' => \App\Enum\ProductStatus::PUBLISHED]),
                 'orders' => $orders->count([]),
                 'to_process' => count($orders->findToProcess()),
             ],
