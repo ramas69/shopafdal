@@ -8,6 +8,7 @@ use App\Repository\AntennaRepository;
 use App\Repository\CompanyRepository;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,6 +28,7 @@ final class SearchController extends AbstractController
         ProductRepository $products,
         CompanyRepository $companies,
         AntennaRepository $antennas,
+        UserRepository $users,
     ): JsonResponse {
         /** @var User $user */
         $user = $this->getUser();
@@ -108,9 +110,12 @@ final class SearchController extends AbstractController
             }
         }
 
-        // Antennas (admin: all; client: own company)
+        // Antennas (admin: all; client: own company) — searchable on name, city, contact name
         $antennaQb = $antennas->createQueryBuilder('a')
-            ->andWhere('LOWER(a.name) LIKE :q OR LOWER(a.city) LIKE :q')
+            ->andWhere('LOWER(a.name) LIKE :q
+                     OR LOWER(a.city) LIKE :q
+                     OR LOWER(a.contactName) LIKE :q
+                     OR LOWER(a.contactEmail) LIKE :q')
             ->setParameter('q', $like)
             ->orderBy('a.name', 'ASC')
             ->setMaxResults(self::MAX_PER_GROUP);
@@ -123,11 +128,36 @@ final class SearchController extends AbstractController
                 'label' => 'Antennes',
                 'items' => array_map(fn($a) => [
                     'title' => $a->getName(),
-                    'subtitle' => $a->getPostalCode() . ' ' . $a->getCity() . ($user->isAdmin() ? ' · ' . $a->getCompany()->getName() : ''),
+                    'subtitle' => trim(
+                        $a->getPostalCode() . ' ' . $a->getCity()
+                        . ($a->getContactName() ? ' · ' . $a->getContactName() : '')
+                        . ($user->isAdmin() ? ' · ' . $a->getCompany()->getName() : '')
+                    ),
                     'url' => $user->isAdmin() ? '#' : $this->generateUrl('app_antenna_detail', ['id' => $a->getId()]),
                     'icon' => 'pin',
                 ], $antennaResults),
             ];
+        }
+
+        // Users (admin only) — email or full name
+        if ($user->isAdmin()) {
+            $userResults = $users->createQueryBuilder('u')
+                ->andWhere('LOWER(u.email) LIKE :q OR LOWER(u.fullName) LIKE :q')
+                ->setParameter('q', $like)
+                ->orderBy('u.fullName', 'ASC')
+                ->setMaxResults(self::MAX_PER_GROUP)
+                ->getQuery()->getResult();
+            if (!empty($userResults)) {
+                $groups[] = [
+                    'label' => 'Utilisateurs',
+                    'items' => array_map(fn($u) => [
+                        'title' => $u->getFullName(),
+                        'subtitle' => $u->getEmail() . ($u->getCompany() ? ' · ' . $u->getCompany()->getName() : ' · Admin Afdal'),
+                        'url' => '#',
+                        'icon' => 'users',
+                    ], $userResults),
+                ];
+            }
         }
 
         return $this->json(['groups' => $groups]);
