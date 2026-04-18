@@ -160,22 +160,25 @@
         {% if recent_orders is empty %}
             <p class="text-sm text-[var(--color-secondary)] text-center py-8">Aucune activité récente.</p>
         {% else %}
-            <ol class="space-y-3">
+            <ol class="space-y-1">
                 {% for order in recent_orders %}
                     {% set tile = status_tile_classes(order.status) %}
-                    <li class="flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-muted)]">
-                        <div class="w-9 h-9 shrink-0 rounded-lg {{ tile[0] }} {{ tile[1] }} flex items-center justify-center">
+                    <li class="relative flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-muted)] transition-colors">
+                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                           class="absolute inset-0 z-0 rounded-md focus-visible:outline-2 focus-visible:outline-[var(--color-ring)] focus-visible:outline-offset-[-2px]"
+                           aria-label="Voir {{ order.reference }}"></a>
+                        <div class="relative z-10 w-9 h-9 shrink-0 rounded-lg {{ tile[0] }} {{ tile[1] }} flex items-center justify-center pointer-events-none">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}" class="font-medium text-sm text-[var(--color-foreground)] hover:text-[var(--color-primary)]">{{ order.reference }}</a>
-                            <div class="text-xs text-[var(--color-secondary)] flex items-center gap-2">
+                        <div class="relative z-10 flex-1 min-w-0 pointer-events-none">
+                            <div class="font-mono font-semibold text-sm text-[var(--color-foreground)]">{{ order.reference }}</div>
+                            <div class="text-xs text-[var(--color-secondary)] flex items-center gap-2 flex-wrap">
                                 <span>{{ order.company.name }}</span>
                                 <span>·</span>
                                 <span class="badge border {{ status_badge_class(order.status) }}">{{ order.status.label() }}</span>
                             </div>
                         </div>
-                        <div class="text-xs text-[var(--color-secondary)] whitespace-nowrap">
+                        <div class="relative z-10 text-xs text-[var(--color-secondary)] whitespace-nowrap pointer-events-none">
                             {{ (order.updatedAt ?? order.createdAt)|date('d/m H:i') }}
                         </div>
                     </li>
