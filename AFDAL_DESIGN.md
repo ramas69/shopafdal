@@ -216,6 +216,33 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 - PHP 8.2 dispo partout sur o2switch
 - PostgreSQL illimité via phpPgAdmin (standard PG, `pg_dump`/`pg_restore` fonctionnent)
 
+### Phase 1 — Modèle de données (2026-04-18)
+**Entités Doctrine créées** (8 entités + 2 enums) :
+- `User` — email, fullName, role (enum ADMIN/CLIENT_MANAGER), password hashé, company (nullable pour admin), active, lastLoginAt
+- `Company` — name, slug unique, siret, antennas/users/orders
+- `Antenna` — company, name, addressLine, postalCode, city, country, phone
+- `Product` — name, slug, description, category, material, basePriceCents (entier), images (json), active
+- `ProductVariant` — product, size, color, colorHex, SKU unique, stock (nullable)
+- `Order` — reference unique, company, antenna, createdBy, status (enum 7 états), notes, adminNotes, timestamps
+- `OrderItem` — order, variant, quantity, unitPriceCents, marking (json : zone/taille/fichier)
+- `Invitation` — email, company, token 48 chars (bin2hex 24 bytes), expiresAt (+7j auto), acceptedAt, revokedAt
+
+**Décisions d'archi** :
+- **IDs** : int auto-increment (simple, standard, pas d'UUID inutile pour B2B fermé)
+- **Prix** : stockés en centimes (`int`) — pas de float pour éviter erreurs d'arrondi
+- **Marking** : JSON flexible sur `OrderItem` (zone, dimensions, fichier) — pas de table dédiée (évite surdesign)
+- **Pas de soft delete** : produits désactivés via `active = false`, commandes ont statut CANCELLED
+- **Timestamps** : `createdAt` immutable en constructor, `updatedAt` sur Order seulement (setStatus le met à jour)
+- **Table `orders`** (et pas `order`) — mot réservé SQL
+
+**Fixtures de dev** (`bin/console doctrine:fixtures:load`) :
+- 1 admin : `admin@afdal.fr` / `admin123`
+- 2 clients VIP + 3 antennes + 2 managers : `marie@groupe-alpha.fr` / `jean@beta-sas.fr` (password: `client123`)
+- 5 produits textile (T-shirt, Polo, Sweat, Casquette, Tote) × 51 variantes
+- 4 commandes d'exemple (différents statuts)
+
+**Base de données** : PostgreSQL 16 Homebrew local (DB `afdal_dev`), config via `.env.local` (gitignoré). Pas de Docker nécessaire en dev.
+
 ---
 
 ## Patterns Tailwind partagés
