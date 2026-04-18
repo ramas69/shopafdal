@@ -85,17 +85,17 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr>
-                            <th class="whitespace-nowrap rounded-tl-lg bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] lg:px-5 w-10">
+                            <th class="whitespace-nowrap rounded-tl-lg px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 lg:px-5 w-10">
                                 <input type="checkbox" data-selection-target="selectAll" data-action="change->selection#toggleAll"
                                     aria-label="Tout sélectionner"
                                     class="form-checkbox">
                             </th>
-                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left lg:px-5">Commande</th>
-                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left lg:px-5">Antenne</th>
-                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left lg:px-5">Date</th>
-                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right lg:px-5">Total HT</th>
-                            <th class="whitespace-nowrap bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left lg:px-5">Statut</th>
-                            <th class="whitespace-nowrap rounded-tr-lg bg-[var(--color-muted)] px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] lg:px-5 w-10"></th>
+                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Commande</th>
+                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Antenne</th>
+                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Date</th>
+                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-right lg:px-5">Total HT</th>
+                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Statut</th>
+                            <th class="whitespace-nowrap rounded-tr-lg px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 lg:px-5 w-10"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,7 +141,7 @@
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 sm:px-5 relative z-20">
                                     <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
-                                       class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors"
+                                       class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-secondary)] hover:hover:text-[var(--color-foreground)] transition-colors"
                                        aria-label="Voir détail {{ order.reference }}">
                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                                     </a>
