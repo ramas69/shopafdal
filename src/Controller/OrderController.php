@@ -10,6 +10,7 @@ use App\Repository\OrderRepository;
 use App\Entity\Notification;
 use App\Service\Cart;
 use App\Service\NotificationService;
+use App\Service\OrderEventLogger;
 use App\Service\OrderExporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -115,6 +116,7 @@ final class OrderController extends AbstractController
         AntennaRepository $antennas,
         EntityManagerInterface $em,
         NotificationService $notifications,
+        OrderEventLogger $events,
     ): Response {
         $this->assertOwns($order);
         if ($order->getStatus() !== OrderStatus::PLACED) {
@@ -138,16 +140,29 @@ final class OrderController extends AbstractController
                 return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
             }
 
+            $itemsRemoved = [];
+            $itemsChanged = [];
+            $previousAntenna = $order->getAntenna()->getName();
+            $previousNotes = $order->getNotes();
+
             foreach ($order->getItems() as $item) {
                 $itemId = (string) $item->getId();
+                $label = sprintf('%s · %s · %s',
+                    $item->getVariant()->getProduct()->getName(),
+                    $item->getVariant()->getColor(),
+                    $item->getVariant()->getSize()
+                );
                 if (isset($removed[$itemId])) {
+                    $itemsRemoved[] = ['label' => $label, 'qty' => $item->getQuantity()];
                     $em->remove($item);
                     continue;
                 }
                 $qty = (int) ($quantities[$itemId] ?? $item->getQuantity());
                 if ($qty < 1) {
+                    $itemsRemoved[] = ['label' => $label, 'qty' => $item->getQuantity()];
                     $em->remove($item);
                 } elseif ($qty !== $item->getQuantity()) {
+                    $itemsChanged[] = ['label' => $label, 'from' => $item->getQuantity(), 'to' => $qty];
                     $item->setQuantity($qty);
                 }
             }
@@ -161,6 +176,11 @@ final class OrderController extends AbstractController
             $order->setNotes($notes ?: null);
             $order->setStatus(OrderStatus::PLACED); // trigger updatedAt via setter
 
+            $em->flush(); // flush changes so totals are up to date
+
+            $events->logItemsEdited($order, added: [], removed: $itemsRemoved, changed: $itemsChanged);
+            $events->logAntennaChanged($order, $previousAntenna, $antenna->getName());
+            $events->logNotesUpdated($order, $previousNotes, $order->getNotes());
             $em->flush();
 
             $notifications->notifyAdmins(
@@ -200,13 +220,16 @@ final class OrderController extends AbstractController
         #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
         EntityManagerInterface $em,
         NotificationService $notifications,
+        OrderEventLogger $events,
     ): RedirectResponse {
         $this->assertOwns($order);
         if (!in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true)) {
             $this->addFlash('error', 'Cette commande ne peut plus être annulée.');
             return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
         }
+        $previousStatus = $order->getStatus();
         $order->setStatus(OrderStatus::CANCELLED);
+        $events->logStatusChanged($order, $previousStatus, OrderStatus::CANCELLED);
         $em->flush();
 
         $notifications->notifyAdmins(

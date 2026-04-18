@@ -9,6 +9,7 @@ use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Service\Cart;
 use App\Service\NotificationService;
+use App\Service\OrderEventLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ final class CheckoutController extends AbstractController
         AntennaRepository $antennas,
         EntityManagerInterface $em,
         NotificationService $notifications,
+        OrderEventLogger $events,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -81,6 +83,8 @@ final class CheckoutController extends AbstractController
                 }
 
                 $em->persist($order);
+                $em->flush();
+                $events->logCreated($order);
                 $em->flush();
                 $cart->clear();
                 $request->getSession()->remove('preselected_antenna_id');

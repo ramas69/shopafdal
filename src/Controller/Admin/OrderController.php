@@ -6,7 +6,9 @@ use App\Entity\Notification;
 use App\Entity\Order;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
+use App\Repository\OrderEventRepository;
 use App\Service\NotificationService;
+use App\Service\OrderEventLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -50,11 +52,14 @@ final class OrderController extends AbstractController
     }
 
     #[Route('/{reference}', name: 'app_admin_order_detail', requirements: ['reference' => self::REF_PATTERN])]
-    public function detail(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order): Response
-    {
+    public function detail(
+        #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
+        OrderEventRepository $events,
+    ): Response {
         return $this->render('admin/order/detail.html.twig', [
             'order' => $order,
             'allowed_transitions' => self::TRANSITIONS[$order->getStatus()->value] ?? [],
+            'events' => $events->findForOrder($order),
         ]);
     }
 
@@ -64,6 +69,7 @@ final class OrderController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         NotificationService $notifications,
+        OrderEventLogger $events,
     ): RedirectResponse {
         $target = OrderStatus::tryFrom((string) $request->request->get('status', ''));
         $allowed = self::TRANSITIONS[$order->getStatus()->value] ?? [];
@@ -73,10 +79,18 @@ final class OrderController extends AbstractController
             return $this->redirectToRoute('app_admin_order_detail', ['reference' => $order->getReference()]);
         }
 
+        $previousStatus = $order->getStatus();
         $order->setStatus($target);
+        $events->logStatusChanged($order, $previousStatus, $target);
 
         if ($request->request->has('admin_notes')) {
-            $order->setAdminNotes(trim((string) $request->request->get('admin_notes')) ?: null);
+            $newNote = trim((string) $request->request->get('admin_notes')) ?: null;
+            if ($newNote !== $order->getAdminNotes()) {
+                $order->setAdminNotes($newNote);
+                if ($newNote) {
+                    $events->logAdminNote($order, $newNote);
+                }
+            }
         }
 
         $em->flush();
