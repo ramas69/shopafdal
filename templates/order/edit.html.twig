@@ -57,7 +57,6 @@
                       method="post"
                       action="{{ path('app_order_add_item', {reference: order.reference}) }}"
                       class="hidden flex-1 overflow-y-auto p-5 space-y-4">
-                    <input type="hidden" name="variant_id" data-add-article-target="variantInput">
                     <div data-add-article-target="detailContent"></div>
                     <div class="flex justify-end gap-3 pt-2 border-t border-[var(--color-border-soft)]">
                         <button type="button" data-action="click->add-article#showList" class="btn btn-outline">Retour</button>

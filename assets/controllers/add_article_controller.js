@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['backdrop', 'dialog', 'title', 'backBtn', 'listPanel', 'detailPanel', 'grid', 'search', 'empty', 'data', 'variantInput', 'detailContent'];
+    static targets = ['backdrop', 'dialog', 'title', 'backBtn', 'listPanel', 'detailPanel', 'grid', 'search', 'empty', 'data', 'detailContent', 'subtotal'];
     static values = { actionUrl: String };
 
     connect() {
@@ -98,56 +98,76 @@ export default class extends Controller {
     }
 
     _renderDetail(product) {
-        this.variantInputTarget.value = '';
+        // Group by color
         const variantsByColor = {};
         for (const v of product.variants) {
-            if (!variantsByColor[v.color]) variantsByColor[v.color] = { hex: v.hex, sizes: [] };
-            variantsByColor[v.color].sizes.push(v);
+            if (!variantsByColor[v.color]) variantsByColor[v.color] = { hex: v.hex, sizes: {} };
+            variantsByColor[v.color].sizes[v.size] = v;
         }
+        // Collect unique sorted sizes
+        const sizeOrder = ['TU', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+        const sizesSet = new Set();
+        for (const group of Object.values(variantsByColor)) {
+            for (const s of Object.keys(group.sizes)) sizesSet.add(s);
+        }
+        const allSizes = Array.from(sizesSet).sort((a, b) => {
+            const ia = sizeOrder.indexOf(a), ib = sizeOrder.indexOf(b);
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+        });
 
         this.detailContentTarget.innerHTML = `
-            <div class="flex items-start gap-4 mb-4">
+            <div class="flex items-start gap-4 mb-5">
                 <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-[var(--color-muted)] to-[var(--color-border)] flex items-center justify-center">
                     ${product.image
                         ? `<img src="${this._escape(product.image)}" alt="" class="w-full h-full object-cover">`
                         : `<span class="font-display text-2xl font-bold text-white">${this._escape(product.name[0].toUpperCase())}</span>`}
                 </div>
-                <div>
+                <div class="flex-1">
                     <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)]">${this._escape(product.category || 'Produit')}</div>
                     <div class="font-display font-semibold text-lg text-[var(--color-foreground)]">${this._escape(product.name)}</div>
-                    <div class="text-sm text-[var(--color-primary)] font-semibold">${this._formatPrice(product.price)} HT</div>
+                    <div class="text-sm text-[var(--color-primary)] font-semibold">${this._formatPrice(product.price)} HT / pièce</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)]">Sous-total</div>
+                    <div class="font-display font-semibold text-lg text-[var(--color-primary)]" data-add-article-target="subtotal">0,00 €</div>
                 </div>
             </div>
 
-            <div>
-                <label class="form-label block mb-1.5">Variante <span class="text-[var(--color-destructive)]">*</span></label>
-                <div class="space-y-2">
-                    ${Object.entries(variantsByColor).map(([color, group]) => `
-                        <div class="flex items-center gap-3 flex-wrap p-3 rounded-md border border-[var(--color-border-soft)]">
-                            <div class="flex items-center gap-2 min-w-[120px]">
-                                <span class="w-4 h-4 rounded-full border border-[var(--color-border)]" style="background-color:${this._escape(group.hex || '#fff')}"></span>
-                                <span class="text-sm font-medium">${this._escape(color)}</span>
-                            </div>
-                            <div class="flex flex-wrap gap-1.5">
-                                ${group.sizes.map(v => `
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="_variant_choice" value="${v.id}" class="peer sr-only" data-action="change->add-article#pickVariant">
-                                        <span class="inline-flex items-center justify-center min-w-[40px] px-3 py-1.5 rounded-md border border-[var(--color-border)] bg-white text-sm font-medium peer-checked:bg-[var(--color-primary)] peer-checked:text-white peer-checked:border-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors">${this._escape(v.size)}</span>
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
+            <div class="mb-5 overflow-x-auto">
+                <table class="w-full border-separate" style="border-spacing: 0 0.5rem">
+                    <thead>
+                        <tr>
+                            <th class="text-left text-[11px] uppercase font-semibold text-[var(--color-secondary)] tracking-wide px-3 py-1">Couleur</th>
+                            ${allSizes.map(s => `<th class="text-center text-[11px] uppercase font-semibold text-[var(--color-secondary)] tracking-wide px-1 py-1">${this._escape(s)}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(variantsByColor).map(([color, group]) => `
+                            <tr>
+                                <td class="px-3 py-1 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-4 h-4 rounded-full border border-[var(--color-border)] shrink-0" style="background-color:${this._escape(group.hex || '#fff')}"></span>
+                                        <span class="text-sm font-medium text-[var(--color-foreground)]">${this._escape(color)}</span>
+                                    </div>
+                                </td>
+                                ${allSizes.map(s => {
+                                    const v = group.sizes[s];
+                                    if (!v) return '<td class="px-1 py-1 text-center text-[var(--color-secondary)]/40">—</td>';
+                                    return `<td class="px-1 py-1">
+                                        <input type="number" name="quantities[${v.id}]" min="0" value="0" step="1"
+                                               data-action="input->add-article#recomputeSubtotal"
+                                               class="form-input !w-16 text-center font-semibold">
+                                    </td>`;
+                                }).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-[var(--color-border-soft)]">
                 <label class="block">
-                    <span class="form-label">Quantité <span class="text-[var(--color-destructive)]">*</span></span>
-                    <input type="number" name="quantity" min="1" value="1" required class="form-input mt-1.5 text-center font-semibold">
-                </label>
-                <label class="block">
-                    <span class="form-label">Marquage</span>
+                    <span class="form-label">Marquage (zone)</span>
                     <select name="marking_zone" class="form-input mt-1.5">
                         <option value="">Aucun</option>
                         <option value="poitrine">Poitrine</option>
@@ -166,10 +186,22 @@ export default class extends Controller {
                 </label>
             </div>
         `;
+
+        // Expose product price for subtotal computation
+        this._currentProductPrice = product.price;
+        this.detailPanelTarget.dataset.productPrice = String(product.price);
     }
 
-    pickVariant(event) {
-        this.variantInputTarget.value = event.target.value;
+    recomputeSubtotal() {
+        const price = this._currentProductPrice ?? 0;
+        let qty = 0;
+        this.detailPanelTarget.querySelectorAll('input[type="number"][name^="quantities["]').forEach(i => {
+            qty += Math.max(0, parseInt(i.value || '0', 10));
+        });
+        const subtotalEl = this.detailPanelTarget.querySelector('[data-add-article-target="subtotal"]');
+        if (subtotalEl) {
+            subtotalEl.textContent = this._formatPrice(price * qty);
+        }
     }
 
     _formatPrice(cents) {
