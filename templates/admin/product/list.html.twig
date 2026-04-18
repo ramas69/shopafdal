@@ -69,7 +69,7 @@
                                         {% endif %}
                                     </div>
                                     <div>
-                                        <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ product.name }}</a>
+                                        <a href="{{ path('app_admin_product_detail', {id: product.id}) }}" class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ product.name }}</a>
                                         {% if product.material %}<p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ product.material }}</p>{% endif %}
                                     </div>
                                 </div>
