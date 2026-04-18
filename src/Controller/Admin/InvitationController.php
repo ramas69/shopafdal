@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Company;
 use App\Entity\Invitation;
 use App\Repository\CompanyRepository;
 use App\Repository\InvitationRepository;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -35,10 +37,14 @@ final class InvitationController extends AbstractController
         UserRepository $users,
         EntityManagerInterface $em,
         ValidatorInterface $validator,
+        SluggerInterface $slugger,
     ): Response {
         $errors = [];
         $email = (string) $request->request->get('email', '');
-        $companyId = (int) $request->request->get('company_id', 0);
+        $mode = (string) $request->request->get('company_mode', 'existing');
+        $companyId = (int) ($request->request->get('company_id') ?? $request->query->get('company', 0));
+        $newCompanyName = trim((string) $request->request->get('new_company_name', ''));
+        $newCompanySiret = trim((string) $request->request->get('new_company_siret', ''));
 
         if ($request->isMethod('POST')) {
             $emailViolations = $validator->validate($email, [
@@ -53,9 +59,22 @@ final class InvitationController extends AbstractController
                 $errors['email'] = 'Un utilisateur avec cet email existe déjà.';
             }
 
-            $company = $companyId > 0 ? $companies->find($companyId) : null;
-            if (!$company) {
-                $errors['company'] = 'Entreprise requise.';
+            $company = null;
+            if ($mode === 'new') {
+                if ($newCompanyName === '') {
+                    $errors['new_company_name'] = 'Nom de l\'entreprise requis.';
+                } else {
+                    $company = (new Company())
+                        ->setName($newCompanyName)
+                        ->setSlug(strtolower((string) $slugger->slug($newCompanyName)))
+                        ->setSiret($newCompanySiret ?: null);
+                    $em->persist($company);
+                }
+            } else {
+                $company = $companyId > 0 ? $companies->find($companyId) : null;
+                if (!$company) {
+                    $errors['company'] = 'Entreprise requise.';
+                }
             }
 
             if (empty($errors)) {
@@ -66,8 +85,10 @@ final class InvitationController extends AbstractController
                 $em->flush();
 
                 $url = $this->generateUrl('app_register', ['token' => $invitation->getToken()], 0);
+                $createdPrefix = $mode === 'new' ? sprintf('Entreprise « %s » créée. ', $company->getName()) : '';
                 $this->addFlash('success', sprintf(
-                    'Invitation créée. Lien à transmettre : %s%s',
+                    '%sInvitation créée. Lien à transmettre : %s%s',
+                    $createdPrefix,
                     $request->getSchemeAndHttpHost(),
                     $url
                 ));
@@ -81,6 +102,9 @@ final class InvitationController extends AbstractController
             'errors' => $errors,
             'email' => $email,
             'company_id' => $companyId,
+            'mode' => $mode,
+            'new_company_name' => $newCompanyName,
+            'new_company_siret' => $newCompanySiret,
         ]);
     }
 

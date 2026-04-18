@@ -4,42 +4,94 @@
 
 {% block content %}
 <div class="mb-8">
-    <a href="{{ path('app_admin_invitations') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)]">&larr; Retour aux invitations</a>
-    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mt-2 mb-2">Nouvelle invitation</h1>
-    <p class="text-[var(--color-secondary)]">Un lien d'inscription valable 7 jours sera généré.</p>
+    <a href="{{ path('app_admin_invitations') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)]">&larr; Retour aux invitations</a>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] mt-2">Nouvelle invitation</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Un lien d'inscription valable 7 jours sera généré.</p>
 </div>
 
-<form method="post" class="max-w-lg bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
-    <label class="block">
-        <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Email du client <span class="text-[var(--color-destructive)]">*</span></span>
-        <input type="email" name="email" value="{{ email }}" required
-            class="w-full px-3 py-2 rounded-md border {{ errors.email is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-        {% if errors.email is defined %}
-            <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.email }}</span>
-        {% endif %}
-    </label>
+<form method="post" class="max-w-2xl space-y-5" data-controller="tabs">
+    <div class="card p-6 space-y-4">
+        <label class="block">
+            <span class="form-label">Email du client <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="email" name="email" value="{{ email }}" required
+                placeholder="nom@entreprise.fr"
+                class="form-input mt-1.5 {{ errors.email is defined ? '!border-[var(--color-destructive)]' : '' }}">
+            {% if errors.email is defined %}
+                <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.email }}</span>
+            {% endif %}
+        </label>
+    </div>
 
-    <label class="block">
-        <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Entreprise <span class="text-[var(--color-destructive)]">*</span></span>
-        <select name="company_id" required data-controller="tom-select"
-            class="form-input {{ errors.company is defined ? '!border-[var(--color-destructive)]' : '' }}">
-            <option value="">— Choisir une entreprise —</option>
-            {% for c in companies %}
-                <option value="{{ c.id }}" {{ company_id == c.id ? 'selected' }}>{{ c.name }}</option>
-            {% endfor %}
-        </select>
-        {% if errors.company is defined %}
-            <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.company }}</span>
-        {% endif %}
-    </label>
+    {# Mode switcher #}
+    <div class="card p-6">
+        <div class="form-label mb-3">Entreprise <span class="text-[var(--color-destructive)]">*</span></div>
 
-    <div class="flex gap-3 pt-2">
-        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+        <div class="grid grid-cols-2 gap-2 mb-5 p-1 rounded-md bg-[var(--color-muted)]" data-controller="mode-switch">
+            <label class="cursor-pointer">
+                <input type="radio" name="company_mode" value="existing" {{ mode != 'new' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
+                <div class="px-3 py-2 rounded text-sm text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
+                    Entreprise existante
+                </div>
+            </label>
+            <label class="cursor-pointer">
+                <input type="radio" name="company_mode" value="new" {{ mode == 'new' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
+                <div class="px-3 py-2 rounded text-sm text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
+                    + Nouvelle entreprise
+                </div>
+            </label>
+        </div>
+
+        {# Mode: existing #}
+        <div data-mode-switch-target="existing" class="{{ mode == 'new' ? 'hidden' : '' }}">
+            <label class="block">
+                <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Sélectionner une entreprise</span>
+                <select name="company_id" data-controller="tom-select"
+                    class="form-input {{ errors.company is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    <option value="">— Choisir —</option>
+                    {% for c in companies %}
+                        <option value="{{ c.id }}" {{ company_id == c.id ? 'selected' }}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if errors.company is defined %}
+                    <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.company }}</span>
+                {% endif %}
+            </label>
+        </div>
+
+        {# Mode: new #}
+        <div data-mode-switch-target="new" class="{{ mode != 'new' ? 'hidden' : '' }} space-y-4">
+            <label class="block">
+                <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Nom de l'entreprise <span class="text-[var(--color-destructive)]">*</span></span>
+                <input type="text" name="new_company_name" value="{{ new_company_name }}"
+                    placeholder="Ex. Groupe Alpha"
+                    class="form-input {{ errors.new_company_name is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                {% if errors.new_company_name is defined %}
+                    <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.new_company_name }}</span>
+                {% endif %}
+            </label>
+
+            <label class="block">
+                <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">SIRET (optionnel)</span>
+                <input type="text" name="new_company_siret" value="{{ new_company_siret }}"
+                    placeholder="14 chiffres"
+                    maxlength="14"
+                    class="form-input font-mono">
+            </label>
+
+            <div class="flex items-start gap-2 p-3 rounded-md bg-[var(--color-primary-light)]/50 border border-[var(--color-primary)]/20">
+                <svg class="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+                <p class="text-xs text-[var(--color-foreground)]">
+                    L'entreprise sera créée en même temps que l'invitation. Tu pourras ajouter des antennes et invitations supplémentaires après.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">
             Créer l'invitation
         </button>
-        <a href="{{ path('app_admin_invitations') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-[var(--color-border)] text-[var(--color-foreground)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">
-            Annuler
-        </a>
+        <a href="{{ path('app_admin_invitations') }}" class="btn btn-outline">Annuler</a>
     </div>
 </form>
 {% endblock %}
