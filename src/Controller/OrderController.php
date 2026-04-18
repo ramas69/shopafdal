@@ -8,6 +8,9 @@ use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Repository\OrderRepository;
 use App\Entity\Notification;
+use App\Entity\OrderItem;
+use App\Repository\ProductRepository;
+use App\Repository\ProductVariantRepository;
 use App\Service\Cart;
 use App\Service\NotificationService;
 use App\Service\OrderEventLogger;
@@ -114,6 +117,7 @@ final class OrderController extends AbstractController
         #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
         Request $request,
         AntennaRepository $antennas,
+        ProductRepository $productsRepo,
         EntityManagerInterface $em,
         NotificationService $notifications,
         OrderEventLogger $events,
@@ -199,6 +203,7 @@ final class OrderController extends AbstractController
         return $this->render('order/edit.html.twig', [
             'order' => $order,
             'antennas' => $companyAntennas,
+            'available_products' => $productsRepo->findPublished(),
         ]);
     }
 
@@ -213,6 +218,86 @@ final class OrderController extends AbstractController
         }
         $this->addFlash('success', sprintf('Commande %s ajoutée au panier (%d pièces). Ajustez avant de valider.', $order->getReference(), $added));
         return $this->redirectToRoute('app_cart');
+    }
+
+    #[Route('/{reference}/add-item', name: 'app_order_add_item', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]
+    public function addItem(
+        #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
+        Request $request,
+        ProductVariantRepository $variants,
+        EntityManagerInterface $em,
+        NotificationService $notifications,
+        OrderEventLogger $events,
+    ): RedirectResponse {
+        $this->assertOwns($order);
+        if ($order->getStatus() !== OrderStatus::PLACED) {
+            $this->addFlash('error', 'La commande ne peut plus être modifiée.');
+            return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+        }
+
+        $variantId = (int) $request->request->get('variant_id', 0);
+        $quantity = (int) $request->request->get('quantity', 0);
+        $markingZone = trim((string) $request->request->get('marking_zone', ''));
+        $marking = $markingZone !== '' ? [
+            'zone' => $markingZone,
+            'size' => (string) $request->request->get('marking_size', 'A4'),
+        ] : null;
+
+        if ($quantity < 1) {
+            $this->addFlash('error', 'Quantité invalide.');
+            return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
+        }
+
+        $variant = $variantId > 0 ? $variants->find($variantId) : null;
+        if (!$variant) {
+            $this->addFlash('error', 'Variante introuvable.');
+            return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
+        }
+
+        $label = sprintf('%s · %s · %s',
+            $variant->getProduct()->getName(),
+            $variant->getColor(),
+            $variant->getSize()
+        );
+
+        // Merge if same variant + same marking already exists; otherwise add new item
+        $merged = false;
+        foreach ($order->getItems() as $existing) {
+            if ($existing->getVariant()->getId() === $variant->getId()
+                && ($existing->getMarking() ?? []) === ($marking ?? [])) {
+                $existing->setQuantity($existing->getQuantity() + $quantity);
+                $merged = true;
+                break;
+            }
+        }
+        if (!$merged) {
+            $item = (new OrderItem())
+                ->setVariant($variant)
+                ->setQuantity($quantity)
+                ->setUnitPriceCents($variant->getProduct()->getBasePriceCents())
+                ->setMarking($marking);
+            $order->addItem($item);
+            $em->persist($item);
+        }
+        $order->setStatus(OrderStatus::PLACED); // refresh updatedAt
+
+        $em->flush();
+        $events->logItemsEdited($order, added: [['label' => $label, 'qty' => $quantity]], removed: [], changed: []);
+        $em->flush();
+
+        $notifications->notifyAdmins(
+            sprintf('Commande %s : article ajouté', $order->getReference()),
+            sprintf('+%d × %s · nouveau total %s',
+                $quantity,
+                $label,
+                number_format($order->getTotalCents() / 100, 2, ',', ' ') . ' €'
+            ),
+            $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+            Notification::TYPE_WARNING,
+        );
+
+        $this->addFlash('success', sprintf('%d × %s ajouté à la commande.', $quantity, $label));
+        return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
     }
 
     #[Route('/{reference}/cancel', name: 'app_order_cancel', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]

@@ -83,4 +83,58 @@
         <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="btn btn-outline">Annuler</a>
     </div>
 </form>
+
+{# === Ajouter un article (form dédié, action séparée) === #}
+<form method="post" action="{{ path('app_order_add_item', {reference: order.reference}) }}" class="card p-6 mt-6 space-y-4">
+    <div>
+        <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Ajouter un article</h2>
+        <p class="text-xs text-[var(--color-secondary)] mt-0.5">Sélectionne un produit, une taille/couleur et une quantité. L'article sera ajouté à cette commande (Afdal sera notifié).</p>
+    </div>
+
+    <label class="block">
+        <span class="form-label">Produit & variante <span class="text-[var(--color-destructive)]">*</span></span>
+        <select name="variant_id" required data-controller="tom-select" class="form-input mt-1.5">
+            <option value="">— Choisir un produit —</option>
+            {% for product in available_products %}
+                <optgroup label="{{ product.name }} · {{ product.basePriceCents|price }}">
+                    {% for variant in product.variants %}
+                        <option value="{{ variant.id }}">{{ variant.color }} · Taille {{ variant.size }} · {{ variant.sku }}</option>
+                    {% endfor %}
+                </optgroup>
+            {% endfor %}
+        </select>
+    </label>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <label class="block">
+            <span class="form-label">Quantité <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="number" name="quantity" min="1" value="1" required class="form-input mt-1.5 text-center font-semibold">
+        </label>
+        <label class="block">
+            <span class="form-label">Marquage (zone)</span>
+            <select name="marking_zone" data-controller="tom-select" class="form-input mt-1.5">
+                <option value="">Aucun</option>
+                <option value="poitrine">Poitrine</option>
+                <option value="dos">Dos</option>
+                <option value="manche">Manche</option>
+            </select>
+        </label>
+        <label class="block">
+            <span class="form-label">Taille marquage</span>
+            <select name="marking_size" data-controller="tom-select" class="form-input mt-1.5">
+                <option value="A6">A6</option>
+                <option value="A5">A5</option>
+                <option value="A4" selected>A4</option>
+                <option value="A3">A3</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="btn btn-primary">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Ajouter à la commande
+        </button>
+    </div>
+</form>
 {% endblock %}
