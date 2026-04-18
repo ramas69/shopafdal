@@ -62,7 +62,7 @@
     {% endif %}
 </div>
 
-<form method="post" class="space-y-6" data-controller="variants-editor">
+<form method="post" enctype="multipart/form-data" class="space-y-6" data-controller="variants-editor">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {# Col 1 — Informations #}
         <section class="card p-6 lg:col-span-2 space-y-4">
@@ -123,6 +123,47 @@
             </label>
         </section>
     </div>
+
+    {# Images #}
+    <section class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Images</h2>
+                <p class="text-xs text-[var(--color-secondary)] mt-0.5">JPG, PNG, WebP ou GIF. La 1ère image sert de visuel principal.</p>
+            </div>
+        </div>
+
+        {% if not is_new and product.images|length > 0 %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+                {% for img in product.images %}
+                    <label class="relative group rounded-lg overflow-hidden border border-[var(--color-border-soft)] cursor-pointer block aspect-square">
+                        <img src="{{ img }}" alt="" class="w-full h-full object-cover">
+                        <input type="checkbox" name="remove_images[]" value="{{ img }}" class="peer sr-only">
+                        <div class="absolute inset-0 bg-[var(--color-destructive)]/80 opacity-0 peer-checked:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium">
+                            <svg class="w-5 h-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166"/></svg>
+                            À retirer
+                        </div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 peer-checked:opacity-100 transition-opacity">
+                            <div class="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-[var(--color-destructive)]" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                            </div>
+                        </div>
+                        {% if loop.first %}
+                            <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide">Principal</div>
+                        {% endif %}
+                    </label>
+                {% endfor %}
+            </div>
+            <p class="text-xs text-[var(--color-secondary)] mb-3">Cochez une image pour la retirer à l'enregistrement.</p>
+        {% endif %}
+
+        <label class="flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-[var(--color-border)] cursor-pointer hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/40 transition-colors">
+            <svg class="w-8 h-8 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+            <span class="text-sm text-[var(--color-foreground)] font-medium">Ajouter des images</span>
+            <span class="text-xs text-[var(--color-secondary)]">Cliquez ou déposez des fichiers</span>
+            <input type="file" name="images[]" accept="image/*" multiple class="sr-only">
+        </label>
+    </section>
 
     {# Variants #}
     <section class="card p-6">

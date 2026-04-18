@@ -61,7 +61,13 @@
                         <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--color-muted)] to-[var(--color-border)] flex items-center justify-center font-display font-bold text-[var(--color-secondary)]">{{ product.name|first|upper }}</div>
+                                    <div class="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-[var(--color-muted)] to-[var(--color-border)] flex items-center justify-center font-display font-bold text-[var(--color-secondary)] shrink-0">
+                                        {% if product.images|length > 0 %}
+                                            <img src="{{ product.images|first }}" alt="" class="w-full h-full object-cover">
+                                        {% else %}
+                                            {{ product.name|first|upper }}
+                                        {% endif %}
+                                    </div>
                                     <div>
                                         <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ product.name }}</a>
                                         {% if product.material %}<p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ product.material }}</p>{% endif %}

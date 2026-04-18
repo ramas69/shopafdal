@@ -8,6 +8,9 @@ use App\Enum\ProductStatus;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +22,13 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[IsGranted('ROLE_ADMIN')]
 final class ProductController extends AbstractController
 {
+    private const UPLOAD_PUBLIC_PREFIX = '/uploads/products/';
+    private const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    public function __construct(
+        #[Autowire('%kernel.project_dir%/public/uploads/products')]
+        private string $uploadDir,
+    ) {}
     #[Route('', name: 'app_admin_products')]
     public function list(Request $request, ProductRepository $products): Response
     {
@@ -127,6 +137,7 @@ final class ProductController extends AbstractController
                 }
 
                 $this->syncVariants($product, $variantsInput, $em);
+                $this->syncImages($product, $request);
 
                 $em->flush();
                 $this->addFlash('success', $isNew ? 'Produit créé en brouillon.' : 'Produit mis à jour.');
@@ -139,6 +150,45 @@ final class ProductController extends AbstractController
             'is_new' => $isNew,
             'errors' => $errors,
         ]);
+    }
+
+    /**
+     * Handle image uploads + removals.
+     * - `images[]` files are moved to upload dir, paths appended
+     * - `remove_images[]` paths are filtered out + files deleted
+     */
+    private function syncImages(Product $product, Request $request): void
+    {
+        $current = $product->getImages();
+
+        $removed = (array) $request->request->all('remove_images');
+        foreach ($removed as $path) {
+            $current = array_values(array_filter($current, fn($p) => $p !== $path));
+            $absolute = $this->getParameter('kernel.project_dir') . '/public' . $path;
+            if (is_file($absolute) && str_starts_with($path, self::UPLOAD_PUBLIC_PREFIX)) {
+                @unlink($absolute);
+            }
+        }
+
+        /** @var UploadedFile[] $uploaded */
+        $uploaded = (array) $request->files->get('images', []);
+        foreach ($uploaded as $file) {
+            if (!$file instanceof UploadedFile) {
+                continue;
+            }
+            if (!in_array($file->getMimeType(), self::ALLOWED_MIME, true)) {
+                continue;
+            }
+            $filename = bin2hex(random_bytes(12)) . '.' . ($file->guessExtension() ?: 'jpg');
+            try {
+                $file->move($this->uploadDir, $filename);
+                $current[] = self::UPLOAD_PUBLIC_PREFIX . $filename;
+            } catch (FileException) {
+                // skip
+            }
+        }
+
+        $product->setImages(array_values($current));
     }
 
     /**
