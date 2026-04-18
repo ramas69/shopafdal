@@ -42,14 +42,160 @@ Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
 
 ---
 
-## Pages à concevoir
+## Architecture UI
 
-- [ ] Landing / login commerçants
-- [ ] Catalogue produits textile (grille + filtres)
-- [ ] Page produit + configuration commande
-- [ ] Panier / checkout B2B
-- [ ] Dashboard commandes (suivi, historique)
-- [ ] Admin (stocks, clients)
+### Shell d'application (layout authentifié)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Topbar   [Logo Afdal]      [Search]   [Notif] [Avatar]  │  h-16, border-b
+├──────────────┬───────────────────────────────────────────┤
+│              │                                            │
+│  Sidebar     │  Main content                              │
+│  w-64        │  max-w-7xl, p-6/p-8                        │
+│  (desktop)   │                                            │
+│              │  [Breadcrumb]                              │
+│  - Catalogue │  [Page title + actions]                    │
+│  - Commandes │  [Content sections]                        │
+│  - Antennes  │                                            │
+│  ───────     │                                            │
+│  - Paramètres│                                            │
+│              │                                            │
+└──────────────┴───────────────────────────────────────────┘
+```
+
+- **Mobile** (<768px) : sidebar devient drawer (Stimulus toggle), topbar garde logo + burger + avatar
+- **Tablet** (768–1023px) : sidebar collapsée en icônes (w-16)
+- **Desktop** (≥1024px) : sidebar complète (w-64)
+- Active nav item : `bg-[var(--color-muted)] border-l-2 border-[var(--color-accent)]`
+
+### Sidebar différenciée par rôle
+
+| Rôle | Items |
+|------|-------|
+| `CLIENT_MANAGER` | Catalogue · Mes commandes · Mes antennes · Paramètres |
+| `ADMIN` | Commandes à traiter · Produits · Clients (entreprises) · Invitations · Paramètres |
+
+---
+
+## Pages — spécifications
+
+### 1. Landing + Login (`/`, `/login`)
+- **Public** (pas de shell auth). Landing + login sur la même page ou séparés.
+- **Hero** : `max-w-2xl`, titre Lexend 5xl, sous-titre `text-secondary`, 2 CTA (Se connecter / Demander un accès → `mailto:`)
+- **Section "Proof"** (Trust & Authority) : 3 blocs (Sécurisé · Sur invitation · Sans paiement en ligne) avec icônes Heroicons SVG
+- **Formulaire login** : card `bg-white rounded-xl border shadow-sm p-8`, email + password + submit. Erreurs inline sous chaque champ. `aria-live` sur zone erreur.
+- **Pas de "créer un compte"** : c'est sur invitation uniquement → lien `mailto:contact@afdal.fr`
+- [x] Tokens `--color-primary` / `--color-accent` utilisés
+- [ ] À construire
+
+### 2. Catalogue produits (`/catalogue`)
+- **Header page** : titre "Catalogue" + compteur résultats
+- **Filtres** (sidebar secondaire gauche ou pills au-dessus) : Catégorie, Matière, Couleur, Recherche texte
+- **Grille produits** : `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6`
+- **Product card** : image 4:3, nom, catégorie en chip, hover = subtle lift (`hover:shadow-md transition-shadow duration-200`)
+- **Turbo Frame** sur la grille → filtres = URL params, pas de reload
+- **Empty state** : illustration SVG + "Aucun produit ne correspond" + bouton reset filtres
+- [ ] À construire
+
+### 3. Fiche produit + config commande (`/catalogue/{slug}`)
+- **Layout 2 colonnes** (desktop) : gauche = galerie images (lightbox Stimulus), droite = configurateur
+- **Configurateur** (formulaire) :
+  - Variantes (taille × couleur) en grid → sélectionne SKU
+  - Quantités par taille : inputs numériques groupés (`XS [0] S [0] M [0] L [0] XL [0]`)
+  - Zone marquage (optionnel) : select zone (poitrine, dos, manche) + upload logo PNG/SVG + taille
+  - Prix HT indicatif calculé live via Stimulus controller
+- **Sticky bar bas de page** (mobile) : total + CTA "Ajouter au panier"
+- **Desktop** : CTA en fin de colonne droite
+- [ ] À construire
+
+### 4. Panier + checkout B2B (`/panier`, `/commander`)
+- **Panier** : tableau produits (image · nom · variantes · qté · prix HT · action supprimer)
+- **Mobile** : cartes empilées au lieu du tableau
+- **Checkout** (1 seule étape, pas de paiement) :
+  - Étape 1 : Choix antenne destinataire (radio cards avec nom + adresse)
+  - Étape 2 : Notes libres (textarea)
+  - Étape 3 : Récap → CTA "Passer commande"
+- **Après soumission** : page confirmation avec numéro commande + lien dashboard
+- **Auto-save** du panier en session Symfony (pas de perte au refresh)
+- [ ] À construire
+
+### 5. Dashboard commandes client (`/commandes`, `/commandes/{id}`)
+- **Liste** : tableau (N° · Date · Antenne · Articles · Montant · Statut · Action)
+  - Badge statut : couleur par statut (DRAFT=slate · PLACED=sky · CONFIRMED=emerald · IN_PRODUCTION=amber · SHIPPED=indigo · DELIVERED=emerald-dark · CANCELLED=red)
+  - Filtres haut de page : statut, antenne, plage dates
+  - Pagination Turbo
+- **Détail** :
+  - Header : N° commande · statut · date
+  - Timeline verticale des statuts (cercles connectés, statut actuel en highlight)
+  - Liste articles (réutilise composant du panier en read-only)
+  - Infos livraison (antenne + notes)
+  - Actions selon statut (annuler si DRAFT/PLACED, télécharger BL si SHIPPED)
+- [ ] À construire
+
+### 6. Admin Afdal (`/admin/*`)
+- **Dashboard** (`/admin`) : 4 stat cards (Commandes à traiter · Clients actifs · Produits · CA estimé mois) + liste commandes à traiter (filtrée PLACED + CONFIRMED)
+- **Commandes** (`/admin/commandes`) : même vue que client mais toutes les commandes + filtre par entreprise
+- **Détail commande admin** : même layout + panneau "Actions admin" avec boutons transitions statut (Workflow component Symfony)
+- **Produits CRUD** (`/admin/produits`) : tableau + boutons Créer/Éditer/Désactiver, form multi-step avec upload images (VichUploader)
+- **Clients** (`/admin/clients`) : liste entreprises → détail = antennes + utilisateurs + historique commandes
+- **Invitations** (`/admin/invitations`) : form simple (email + company), liste invitations pending/acceptées avec actions renvoyer/révoquer
+- [ ] À construire
+
+---
+
+## Composants réutilisables
+
+Composants Twig à créer dans `templates/components/` (Twig Components ou simple `include`).
+
+| Composant | Fichier | Usage |
+|-----------|---------|-------|
+| `button` | `components/button.html.twig` | primary / secondary / ghost / destructive, size sm/md/lg, loading state |
+| `input` | `components/input.html.twig` | label + input + helper + error, types text/email/password/number |
+| `textarea` | `components/textarea.html.twig` | avec compteur caractères optionnel |
+| `select` | `components/select.html.twig` | native + styling Tailwind |
+| `checkbox` / `radio` | `components/choice.html.twig` | accessible (label for=) |
+| `card` | `components/card.html.twig` | container `bg-white rounded-xl border shadow-sm` |
+| `badge` | `components/badge.html.twig` | variants par statut commande |
+| `table` | `components/table.html.twig` | responsive (overflow-x-auto desktop, card stack mobile) |
+| `pagination` | `components/pagination.html.twig` | Turbo-friendly |
+| `modal` | `components/modal.html.twig` | Stimulus controller, focus trap, ESC, backdrop click |
+| `toast` | `components/toast.html.twig` | success/error/info, auto-dismiss 4s, aria-live=polite |
+| `breadcrumb` | `components/breadcrumb.html.twig` | uniquement pour profondeur ≥3 |
+| `empty-state` | `components/empty_state.html.twig` | icône SVG + titre + description + CTA |
+| `timeline` | `components/timeline.html.twig` | statuts commande (verticale) |
+| `product-card` | `components/product_card.html.twig` | grille catalogue |
+| `stat-card` | `components/stat_card.html.twig` | dashboard admin (label · nombre · variation) |
+| `avatar` | `components/avatar.html.twig` | initiales sur fond coloré (pas de photo nécessaire B2B) |
+| `sidebar-nav` | `components/sidebar_nav.html.twig` | nav principale, items conditionnels par rôle |
+
+---
+
+## Flows UX
+
+### Onboarding client VIP
+1. Admin crée invitation (`/admin/invitations` · email + company)
+2. Email envoyé avec lien `/register/{token}` (expire 7j)
+3. Client ouvre lien → formulaire (nom, mot de passe) + affiche nom de son entreprise
+4. Submit → compte créé + login auto → redirect `/catalogue`
+5. Empty state si aucune antenne → CTA "Ajouter une antenne" (obligatoire avant 1ère commande)
+
+### Passage de commande
+1. `/catalogue` → filtre/recherche → clique produit
+2. `/catalogue/{slug}` → configure variantes + quantités + marquage → "Ajouter au panier"
+3. Toast confirmation + compteur panier incrémenté
+4. `/panier` → vérifie → "Commander"
+5. `/commander` → choisit antenne + notes → "Passer commande"
+6. Page confirmation → email auto à l'admin Afdal + au client
+
+### Traitement commande admin
+1. Notification dashboard (badge sur "Commandes à traiter")
+2. Ouvre détail commande → bouton "Confirmer" (PLACED → CONFIRMED)
+3. Quand lance la prod → bouton "Mettre en production"
+4. Chaque transition envoie email auto au client
+5. Admin peut ajouter notes internes (visibles que côté admin)
+
+---
 
 ---
 
@@ -72,9 +218,32 @@ Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
 
 ---
 
-## Composants réutilisables
+## Patterns Tailwind partagés
 
-<!-- À lister quand on les crée -->
+```html
+<!-- Primary CTA -->
+<button class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)] focus-visible:outline-2 focus-visible:outline-[var(--color-ring)] focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+  Action
+</button>
+
+<!-- Card -->
+<div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+  ...
+</div>
+
+<!-- Input -->
+<label class="block">
+  <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Label</span>
+  <input class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]" />
+  <span class="text-xs text-[var(--color-secondary)] mt-1 block">Helper text</span>
+</label>
+
+<!-- Status badge -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">
+  <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+  Placée
+</span>
+```
 
 ---
 
