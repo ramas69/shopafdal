@@ -5,10 +5,68 @@
 {% block content %}
 <a href="{{ path('app_order_detail', {reference: order.reference}) }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Retour au détail</a>
 
-<div class="mb-8">
-    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Modification</div>
-    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] font-mono">{{ order.reference }}</h1>
-    <p class="text-sm text-[var(--color-secondary)] mt-1">Vous pouvez ajuster les quantités, retirer des lignes, changer l'antenne ou les notes tant qu'Afdal n'a pas confirmé.</p>
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Modification</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] font-mono">{{ order.reference }}</h1>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">Ajustez les quantités, retirez des lignes, ajoutez des articles, changez l'antenne ou les notes tant qu'Afdal n'a pas confirmé.</p>
+    </div>
+    <div data-controller="add-article"
+         data-add-article-action-url-value="{{ path('app_order_add_item', {reference: order.reference}) }}"
+         data-add-article-target-root="body">
+        <button type="button" data-action="click->add-article#open" class="btn btn-primary">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Ajouter un article
+        </button>
+
+        <script type="application/json" data-add-article-target="data">{{ available_products_json|raw }}</script>
+
+        <div data-add-article-target="backdrop"
+             data-action="click->add-article#backdropClick"
+             class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] items-center justify-center p-4"
+             style="display:none">
+            <div class="card w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" data-add-article-target="dialog">
+                <div class="flex items-center gap-3 p-5 border-b border-[var(--color-border-soft)]">
+                    <button type="button" data-action="click->add-article#showList"
+                            data-add-article-target="backBtn"
+                            class="hidden w-9 h-9 items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
+                            aria-label="Retour">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                    </button>
+                    <h2 data-add-article-target="title" class="font-display text-lg font-semibold text-[var(--color-foreground)]">Ajouter un article</h2>
+                    <button type="button" data-action="click->add-article#close"
+                            class="ml-auto w-9 h-9 inline-flex items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
+                            aria-label="Fermer">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div data-add-article-target="listPanel" class="flex-1 overflow-y-auto p-5">
+                    <div class="relative mb-4">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                        <input type="search" placeholder="Rechercher un produit..."
+                               data-action="input->add-article#filter"
+                               data-add-article-target="search"
+                               class="form-input pl-9">
+                    </div>
+                    <div data-add-article-target="grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                    <div data-add-article-target="empty" class="hidden text-center text-sm text-[var(--color-secondary)] py-8">Aucun produit trouvé.</div>
+                </div>
+
+                <form data-add-article-target="detailPanel"
+                      method="post"
+                      action="{{ path('app_order_add_item', {reference: order.reference}) }}"
+                      class="hidden flex-1 overflow-y-auto p-5 space-y-4">
+                    <input type="hidden" name="variant_id" data-add-article-target="variantInput">
+                    <div data-add-article-target="detailContent"></div>
+                    <div class="flex justify-end gap-3 pt-2 border-t border-[var(--color-border-soft)]">
+                        <button type="button" data-action="click->add-article#showList" class="btn btn-outline">Retour</button>
+                        <button type="submit" class="btn btn-primary">Ajouter à la commande</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <form method="post" class="space-y-6" data-controller="order-edit">
@@ -84,64 +142,4 @@
     </div>
 </form>
 
-{# === Bouton + modal Ajouter un article === #}
-<div class="mt-6" data-controller="add-article"
-     data-add-article-action-url-value="{{ path('app_order_add_item', {reference: order.reference}) }}">
-    <button type="button" data-action="click->add-article#open" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Ajouter un article
-    </button>
-
-    {# Products data (JSON for the Stimulus controller) #}
-    <script type="application/json" data-add-article-target="data">{{ available_products_json|raw }}</script>
-
-    {# Modal skeleton #}
-    <div data-add-article-target="backdrop"
-         data-action="click->add-article#backdropClick"
-         class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] items-center justify-center p-4"
-         style="display:none">
-        <div class="card w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" data-add-article-target="dialog">
-            <div class="flex items-center gap-3 p-5 border-b border-[var(--color-border-soft)]">
-                <button type="button" data-action="click->add-article#showList"
-                        data-add-article-target="backBtn"
-                        class="hidden w-9 h-9 items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
-                        aria-label="Retour">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
-                </button>
-                <h2 data-add-article-target="title" class="font-display text-lg font-semibold text-[var(--color-foreground)]">Ajouter un article</h2>
-                <button type="button" data-action="click->add-article#close"
-                        class="ml-auto w-9 h-9 inline-flex items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]"
-                        aria-label="Fermer">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            {# LIST view #}
-            <div data-add-article-target="listPanel" class="flex-1 overflow-y-auto p-5">
-                <div class="relative mb-4">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
-                    <input type="search" placeholder="Rechercher un produit..."
-                           data-action="input->add-article#filter"
-                           data-add-article-target="search"
-                           class="form-input pl-9">
-                </div>
-                <div data-add-article-target="grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
-                <div data-add-article-target="empty" class="hidden text-center text-sm text-[var(--color-secondary)] py-8">Aucun produit trouvé.</div>
-            </div>
-
-            {# DETAIL view (filled dynamically) #}
-            <form data-add-article-target="detailPanel"
-                  method="post"
-                  action="{{ path('app_order_add_item', {reference: order.reference}) }}"
-                  class="hidden flex-1 overflow-y-auto p-5 space-y-4">
-                <input type="hidden" name="variant_id" data-add-article-target="variantInput">
-                <div data-add-article-target="detailContent"></div>
-                <div class="flex justify-end gap-3 pt-2 border-t border-[var(--color-border-soft)]">
-                    <button type="button" data-action="click->add-article#showList" class="btn btn-outline">Retour</button>
-                    <button type="submit" class="btn btn-primary">Ajouter à la commande</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}

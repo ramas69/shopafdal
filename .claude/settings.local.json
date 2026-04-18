@@ -5,7 +5,8 @@
       "Bash(curl -s -o /dev/null -w \"admin anon: HTTP %{http_code}\\\\n\" http://127.0.0.1:8000/admin)",
       "Bash(php bin/console lint:twig templates/admin/company)",
       "Bash(php bin/console lint:twig templates/admin/invitation)",
-      "Bash(php bin/console lint:twig templates/admin/order)"
+      "Bash(php bin/console lint:twig templates/admin/order)",
+      "Bash(php bin/console lint:twig templates/order/edit.html.twig)"
     ]
   }
 }
