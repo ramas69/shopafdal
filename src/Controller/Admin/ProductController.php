@@ -171,12 +171,13 @@ final class ProductController extends AbstractController
         }
 
         /** @var UploadedFile[] $uploaded */
-        $uploaded = (array) $request->files->get('images', []);
+        $uploaded = $request->files->all('images');
         foreach ($uploaded as $file) {
-            if (!$file instanceof UploadedFile) {
+            if (!$file instanceof UploadedFile || !$file->isValid()) {
                 continue;
             }
-            if (!in_array($file->getMimeType(), self::ALLOWED_MIME, true)) {
+            $mime = $file->getMimeType();
+            if (!$mime || !in_array($mime, self::ALLOWED_MIME, true)) {
                 continue;
             }
             $filename = bin2hex(random_bytes(12)) . '.' . ($file->guessExtension() ?: 'jpg');
