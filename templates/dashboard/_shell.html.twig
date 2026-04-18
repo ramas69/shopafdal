@@ -78,17 +78,37 @@
 <div class="min-h-screen flex flex-col bg-[var(--color-background)]" data-controller="drawer">
     <header class="h-[61px] bg-white/80 backdrop-blur-xl sticky top-0 z-30 border-b border-[var(--color-border)]">
         <div class="h-full px-4 md:px-6 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-1">
                 <button type="button" data-action="drawer#open" aria-label="Ouvrir le menu"
                     class="lg:hidden p-2 -ml-2 rounded-md cursor-pointer hover:bg-[var(--color-slate-150)] text-[var(--color-navy-500)]">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
                     </svg>
                 </button>
-                <a href="{{ path('app_dashboard') }}" class="flex items-center gap-2">
+                <a href="{{ path('app_dashboard') }}" class="flex items-center gap-2 shrink-0">
                     <div class="w-8 h-8 rounded-lg bg-[var(--color-primary)] text-white flex items-center justify-center font-display font-bold">A</div>
                     <span class="font-display font-semibold text-[var(--color-navy-700)] hidden sm:inline">Afdal</span>
                 </a>
+
+                {# Global search #}
+                <div class="relative flex-1 max-w-xl ml-4 hidden md:block"
+                     data-controller="search"
+                     data-search-url-value="{{ path('app_search') }}">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                    </svg>
+                    <input type="search"
+                           placeholder="Rechercher commande, produit, client..."
+                           data-search-target="input"
+                           data-action="input->search#input focus->search#focus"
+                           class="w-full pl-9 pr-10 py-2 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)]/50 text-sm focus:border-[var(--color-primary)] focus:bg-white focus:outline-2 focus:outline-[var(--color-ring)]/30 focus:outline-offset-0 transition-colors">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-secondary)] pointer-events-none font-mono hidden lg:inline">⌘ K</span>
+
+                    <div data-search-target="dropdown"
+                         class="hidden absolute top-full left-0 right-0 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-[var(--color-border)] bg-white shadow-[var(--shadow-md)] z-40">
+                        <div data-search-target="results" class="py-2"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center gap-1 sm:gap-2">
