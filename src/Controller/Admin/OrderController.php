@@ -96,8 +96,11 @@ final class OrderController extends AbstractController
         $em->flush();
 
         // Notify the client manager who created the order
-        $type = $target === OrderStatus::CANCELLED ? Notification::TYPE_DESTRUCTIVE
-              : ($target === OrderStatus::DELIVERED ? Notification::TYPE_SUCCESS : Notification::TYPE_INFO);
+        $type = match ($target) {
+            OrderStatus::CANCELLED => Notification::TYPE_DESTRUCTIVE,
+            OrderStatus::DELIVERED => Notification::TYPE_SUCCESS,
+            default => Notification::TYPE_INFO,
+        };
 
         $notifications->notify(
             $order->getCreatedBy(),
