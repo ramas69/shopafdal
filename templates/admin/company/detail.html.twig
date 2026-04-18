@@ -1,0 +1,149 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}{{ company.name }} — Admin{% endblock %}
+
+{% block content %}
+<a href="{{ path('app_admin_companies') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Toutes les entreprises</a>
+
+<div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+    <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-xl bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center font-display font-bold text-2xl shrink-0">
+            {{ company.name|first|upper }}
+        </div>
+        <div>
+            <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Entreprise cliente</div>
+            <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ company.name }}</h1>
+            <p class="text-sm text-[var(--color-secondary)] mt-1">
+                {% if company.siret %}SIRET {{ company.siret }} · {% endif %}
+                Depuis le {{ company.createdAt|date('d/m/Y') }}
+            </p>
+        </div>
+    </div>
+</div>
+
+{# Stats #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div class="card p-5">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Antennes</div>
+        <div class="font-display text-3xl font-semibold text-[var(--color-foreground)]">{{ company.antennas|length }}</div>
+    </div>
+    <div class="card p-5">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Utilisateurs</div>
+        <div class="font-display text-3xl font-semibold text-[var(--color-foreground)]">{{ company.users|length }}</div>
+    </div>
+    <div class="card p-5">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Commandes</div>
+        <div class="font-display text-3xl font-semibold text-[var(--color-foreground)]">{{ totals.orders }}</div>
+    </div>
+    <div class="card p-5">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">CA total HT</div>
+        <div class="font-display text-3xl font-semibold text-[var(--color-primary)]">{{ totals.revenue|price }}</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {# Antennes + Commandes #}
+    <div class="lg:col-span-2 space-y-6">
+        <section class="card p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Antennes ({{ company.antennas|length }})</h2>
+            {% if company.antennas|length == 0 %}
+                <p class="text-sm text-[var(--color-secondary)]">Aucune antenne configurée.</p>
+            {% else %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for antenna in company.antennas %}
+                        <div class="p-4 rounded-lg border border-[var(--color-border-soft)]">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 shrink-0 rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-[var(--color-foreground)]">{{ antenna.name }}</div>
+                                    <div class="text-sm text-[var(--color-secondary)]">{{ antenna.fullAddress }}</div>
+                                    {% if antenna.phone %}
+                                        <div class="text-xs text-[var(--color-secondary)] mt-1">Tél : {{ antenna.phone }}</div>
+                                    {% endif %}
+                                    {% if antenna.contactName %}
+                                        <div class="text-xs text-[var(--color-secondary)] mt-1 pt-2 border-t border-[var(--color-border-soft)]">
+                                            <span class="font-medium text-[var(--color-foreground)]">{{ antenna.contactName }}</span>
+                                            {% if antenna.contactEmail %} · <a href="mailto:{{ antenna.contactEmail }}" class="link">{{ antenna.contactEmail }}</a>{% endif %}
+                                            {% if antenna.contactPhone %} · {{ antenna.contactPhone }}{% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Dernières commandes</h2>
+                <a href="{{ path('app_admin_orders') }}?company={{ company.id }}" class="text-xs font-medium text-[var(--color-primary)] hover:underline">Tout voir →</a>
+            </div>
+            {% if recent_orders is empty %}
+                <p class="text-sm text-[var(--color-secondary)]">Aucune commande passée.</p>
+            {% else %}
+                <ol class="space-y-1">
+                    {% for order in recent_orders %}
+                        {% set tile = status_tile_classes(order.status) %}
+                        <li class="relative flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-muted)] transition-colors">
+                            <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                               class="absolute inset-0 z-0 rounded-md" aria-label="{{ order.reference }}"></a>
+                            <div class="relative z-10 w-9 h-9 shrink-0 rounded-lg {{ tile[0] }} {{ tile[1] }} flex items-center justify-center pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
+                            </div>
+                            <div class="relative z-10 flex-1 min-w-0 pointer-events-none">
+                                <div class="font-mono font-semibold text-sm text-[var(--color-foreground)]">{{ order.reference }}</div>
+                                <div class="text-xs text-[var(--color-secondary)] flex items-center gap-2 flex-wrap">
+                                    <span>{{ order.antenna.name }}</span>
+                                    <span>·</span>
+                                    <span class="badge border {{ status_badge_class(order.status) }}">{{ order.status.label() }}</span>
+                                    <span>·</span>
+                                    <span>{{ order.totalQuantity }} pc</span>
+                                </div>
+                            </div>
+                            <div class="relative z-10 text-right pointer-events-none">
+                                <div class="font-display font-semibold text-sm text-[var(--color-foreground)]">{{ order.totalCents|price }}</div>
+                                <div class="text-xs text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </section>
+    </div>
+
+    {# Utilisateurs sidebar #}
+    <aside>
+        <section class="card p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Utilisateurs ({{ company.users|length }})</h2>
+            {% if company.users|length == 0 %}
+                <p class="text-sm text-[var(--color-secondary)] mb-4">Aucun utilisateur.</p>
+            {% else %}
+                <ul class="space-y-3 mb-4">
+                    {% for user in company.users %}
+                        <li class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center font-semibold text-xs shrink-0">
+                                {{ user.fullName|split(' ')|map(p => p|first)|join|slice(0, 2)|upper }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-medium text-sm text-[var(--color-foreground)] truncate">{{ user.fullName }}</div>
+                                <a href="mailto:{{ user.email }}" class="text-xs text-[var(--color-secondary)] hover:text-[var(--color-primary)] truncate block">{{ user.email }}</a>
+                            </div>
+                            {% if user.lastLoginAt %}
+                                <span class="text-[10px] text-[var(--color-secondary)] whitespace-nowrap">{{ user.lastLoginAt|date('d/m') }}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <a href="{{ path('app_admin_invitation_new') }}?company={{ company.id }}" class="btn btn-outline w-full text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Inviter un utilisateur
+            </a>
+        </section>
+    </aside>
+</div>
+{% endblock %}

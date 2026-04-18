@@ -1,0 +1,75 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Entreprises — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Entreprises</h1>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">{{ companies|length }} entreprise{{ companies|length > 1 ? 's' : '' }} cliente{{ companies|length > 1 ? 's' : '' }}</p>
+    </div>
+    <a href="{{ path('app_admin_invitation_new') }}" class="btn btn-primary">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Inviter un client
+    </a>
+</div>
+
+<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3" data-controller="autosubmit">
+    <div class="relative flex-1 min-w-[240px]">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+        <input type="search" name="q" value="{{ q }}" placeholder="Nom ou SIRET..."
+            data-action="input->autosubmit#submit"
+            class="form-input pl-9">
+    </div>
+    {% if q %}
+        <a href="{{ path('app_admin_companies') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
+    {% endif %}
+</form>
+
+{% if companies is empty %}
+    <div class="card p-12 text-center">
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucune entreprise</h2>
+        <p class="text-sm text-[var(--color-secondary)]">Les entreprises apparaîtront ici quand vous créerez des invitations.</p>
+    </div>
+{% else %}
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr>
+                        <th class="rounded-tl-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Entreprise</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">SIRET</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Antennes</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Utilisateurs</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Commandes</th>
+                        <th class="rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">CA total HT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                        <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
+                            <td class="px-5 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center font-display font-bold text-sm shrink-0">
+                                        {{ company.name|first|upper }}
+                                    </div>
+                                    <a href="{{ path('app_admin_company_detail', {id: company.id}) }}"
+                                       class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">
+                                        {{ company.name }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3 text-xs text-[var(--color-secondary)] font-mono">{{ company.siret ?? '—' }}</td>
+                            <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ company.antennas|length }}</td>
+                            <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ company.users|length }}</td>
+                            <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ orders_count[company.id] ?? 0 }}</td>
+                            <td class="px-5 py-3 text-right font-display font-semibold text-[var(--color-primary)]">{{ (revenues[company.id] ?? 0)|price }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
