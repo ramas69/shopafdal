@@ -3,8 +3,12 @@
 {% block title %}Admin — Dashboard{% endblock %}
 
 {% block content %}
+{% set fr_days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'] %}
+{% set fr_months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
+{% set today_fr = fr_days[('now'|date('w'))] ~ ' ' ~ ('now'|date('d')) ~ ' ' ~ fr_months[('now'|date('n')) - 1] %}
+
 <div class="mb-6">
-    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin · {{ "now"|date('EEEE d MMMM', 'fr') }}</div>
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin · {{ today_fr }}</div>
     <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
 </div>
 
@@ -100,7 +104,7 @@
     <div class="card p-6 lg:col-span-2">
         <div class="flex items-start justify-between mb-4">
             <div>
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Chiffre d'affaires — {{ "now"|date('MMMM', 'fr') }}</div>
+                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Chiffre d'affaires — {{ fr_months[('now'|date('n')) - 1]|capitalize }}</div>
                 <div class="flex items-baseline gap-3">
                     <div class="font-display text-3xl font-semibold text-[var(--color-primary)]">{{ month.revenue_cents|price }}</div>
                     {% if month.growth is not null %}
