@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Repository\OrderRepository;
+use App\Service\Cart;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -60,6 +61,19 @@ final class OrderController extends AbstractController
             'timeline' => $this->buildTimeline($order),
             'can_cancel' => in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true),
         ]);
+    }
+
+    #[Route('/{reference}/reorder', name: 'app_order_reorder', methods: ['POST'])]
+    public function reorder(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, Cart $cart): RedirectResponse
+    {
+        $this->assertOwns($order);
+        $added = 0;
+        foreach ($order->getItems() as $item) {
+            $cart->add($item->getVariant()->getId(), $item->getQuantity(), $item->getMarking());
+            $added += $item->getQuantity();
+        }
+        $this->addFlash('success', sprintf('Commande %s ajoutée au panier (%d pièces). Ajustez avant de valider.', $order->getReference(), $added));
+        return $this->redirectToRoute('app_cart');
     }
 
     #[Route('/{reference}/cancel', name: 'app_order_cancel', methods: ['POST'])]

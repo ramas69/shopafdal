@@ -365,6 +365,12 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 
 **Composants ajoutés** : Stimulus `drawer_controller.js`.
 
+**Reorder** (`POST /commandes/{reference}/reorder`) :
+- Bouton "Commander à nouveau" sur détail commande (disponible quel que soit le statut, même sur DELIVERED/CANCELLED)
+- Copie toutes les lignes de la commande dans le panier (variante + quantité + marquage préservés)
+- Redirige vers `/panier` avec flash succès → l'utilisateur peut ajuster avant de valider
+- N'écrase pas le panier existant : ajoute en plus
+
 ---
 
 ## Patterns Tailwind partagés
