@@ -17,9 +17,9 @@
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     {% set metric_cards = [
-        { label: 'Clients VIP', value: stats.companies, icon: 'users', iconBg: 'bg-[var(--color-primary)]/10', iconColor: 'text-[var(--color-primary)]' },
-        { label: 'Produits actifs', value: stats.products, icon: 'package', iconBg: 'bg-[var(--color-info)]/10', iconColor: 'text-[var(--color-info)]' },
-        { label: 'Commandes totales', value: stats.orders, icon: 'list', iconBg: 'bg-[var(--color-success)]/10', iconColor: 'text-[var(--color-success)]' },
+        { label: 'Clients VIP', value: stats.companies, icon: 'users', iconBg: 'bg-[var(--color-primary)]/10', iconColor: 'text-[var(--color-primary)]', highlight: false },
+        { label: 'Produits actifs', value: stats.products, icon: 'package', iconBg: 'bg-[var(--color-info)]/10', iconColor: 'text-[var(--color-info)]', highlight: false },
+        { label: 'Commandes totales', value: stats.orders, icon: 'list', iconBg: 'bg-[var(--color-success)]/10', iconColor: 'text-[var(--color-success)]', highlight: false },
         { label: 'À traiter', value: stats.to_process, icon: 'alert', iconBg: 'bg-[var(--color-warning)]/10', iconColor: 'text-[var(--color-warning)]', highlight: true }
     ] %}
     {% for card in metric_cards %}
