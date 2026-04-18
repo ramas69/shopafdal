@@ -239,6 +239,13 @@
   }
 
   /* Tom Select — Afdal theme override */
+  /* Tom Select copies classes from <select> to wrapper — reset .form-input on wrapper to avoid double border */
+  .ts-wrapper.form-input {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
   .ts-wrapper .ts-control {
     border-color: var(--color-border) !important;
     border-radius: var(--radius-md) !important;
