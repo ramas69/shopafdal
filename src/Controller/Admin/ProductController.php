@@ -175,8 +175,13 @@ final class ProductController extends AbstractController
     {
         $current = $product->getImages();
 
-        $removed = (array) $request->request->all('remove_images');
+        $removed = $request->request->all()['remove_images'] ?? [];
+        if (!is_array($removed)) {
+            $removed = [];
+        }
+
         foreach ($removed as $path) {
+            $path = (string) $path;
             $current = array_values(array_filter($current, fn($p) => $p !== $path));
             $absolute = $this->getParameter('kernel.project_dir') . '/public' . $path;
             if (is_file($absolute) && str_starts_with($path, self::UPLOAD_PUBLIC_PREFIX)) {
