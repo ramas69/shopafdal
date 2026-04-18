@@ -55,15 +55,34 @@
             <div>
                 <h2 class="text-sm font-medium text-[var(--color-foreground)] mb-3">Tailles & quantités</h2>
                 {% for v in variants_by_color %}
-                    <div class="space-y-2 {{ not loop.first ? 'hidden' : '' }}" data-quantities-target="colorPanel" data-color-index="{{ loop.index0 }}">
+                    <div class="space-y-1 {{ not loop.first ? 'hidden' : '' }}" data-quantities-target="colorPanel" data-color-index="{{ loop.index0 }}">
                         {% for size, info in v.sizes %}
-                            <div class="flex items-center justify-between gap-3 p-2 rounded-md hover:bg-[var(--color-muted)]">
-                                <span class="font-medium text-[var(--color-foreground)] w-12">{{ size }}</span>
-                                <span class="text-xs text-[var(--color-secondary)] flex-1 font-mono">{{ info.sku }}</span>
-                                <input type="number" name="quantities[{{ info.id }}]" min="0" value="0" step="1"
-                                    data-action="input->quantities#recompute"
-                                    data-quantities-target="qtyInput"
-                                    class="w-20 px-2 py-1.5 rounded-md border border-[var(--color-border)] bg-white text-right focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                            <div class="flex items-center gap-4 p-3 rounded-lg border border-[var(--color-border-soft)] hover:border-[var(--color-border)] hover:bg-[var(--color-muted)]/40 transition-colors">
+                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-md bg-[var(--color-muted)] font-display font-semibold text-[var(--color-foreground)] text-sm shrink-0">{{ size }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs text-[var(--color-secondary)] font-mono truncate">{{ info.sku }}</div>
+                                    <div class="text-xs text-[var(--color-secondary)]">Taille {{ size }}</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" tabindex="-1"
+                                        data-action="click->quantities#decrement"
+                                        data-quantities-target="decBtn"
+                                        aria-label="Diminuer"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg>
+                                    </button>
+                                    <input type="number" name="quantities[{{ info.id }}]" min="0" value="0" step="1"
+                                        data-action="input->quantities#recompute"
+                                        data-quantities-target="qtyInput"
+                                        class="form-input !w-16 text-center font-semibold text-[var(--color-foreground)]">
+                                    <button type="button" tabindex="-1"
+                                        data-action="click->quantities#increment"
+                                        data-quantities-target="incBtn"
+                                        aria-label="Augmenter"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    </button>
+                                </div>
                             </div>
                         {% endfor %}
                     </div>

@@ -27,13 +27,24 @@ export default class extends Controller {
     recompute() {
         let qty = 0;
         this.qtyInputTargets.forEach(input => {
-            // Only count visible inputs (inside non-hidden panel)
             if (input.closest('[data-quantities-target="colorPanel"]').classList.contains('hidden')) return;
             qty += parseInt(input.value || '0', 10);
         });
         const totalCents = qty * this.unitPriceValue;
         this.totalPriceTarget.textContent = this.formatPrice(totalCents);
         this.totalQtyTarget.textContent = qty;
+    }
+
+    increment(event) {
+        const input = event.currentTarget.parentElement.querySelector('input[type="number"]');
+        input.value = Math.max(0, parseInt(input.value || '0', 10) + 1);
+        this.recompute();
+    }
+
+    decrement(event) {
+        const input = event.currentTarget.parentElement.querySelector('input[type="number"]');
+        input.value = Math.max(0, parseInt(input.value || '0', 10) - 1);
+        this.recompute();
     }
 
     formatPrice(cents) {
