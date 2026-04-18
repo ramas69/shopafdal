@@ -3,24 +3,28 @@
 {% block title %}Catalogue — Afdal{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
-    <p class="text-[var(--color-secondary)]">Espace {{ app.user.company.name }}. Le catalogue produits arrive en Phase 3.</p>
+<div class="mb-10">
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Bonjour</div>
+    <h1 class="font-display text-4xl font-semibold text-[var(--color-primary)] tracking-tight">{{ app.user.fullName|split(' ')|first }}</h1>
+    <p class="text-[var(--color-secondary)] mt-1">Espace {{ app.user.company.name }}.</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Mes antennes</div>
-        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ app.user.company.antennas|length }}</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div class="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border-soft)]">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-3">Mes antennes</div>
+        <div class="font-display text-4xl font-semibold tracking-tight text-[var(--color-primary)]">{{ app.user.company.antennas|length }}</div>
     </div>
-    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Commandes totales</div>
-        <div class="text-3xl font-semibold text-[var(--color-primary)]">{{ app.user.company.orders|length }}</div>
+    <div class="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border-soft)]">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-3">Commandes totales</div>
+        <div class="font-display text-4xl font-semibold tracking-tight text-[var(--color-primary)]">{{ app.user.company.orders|length }}</div>
     </div>
-    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <div class="text-xs uppercase tracking-wide text-[var(--color-secondary)] mb-2">Statut compte</div>
-        <div class="text-lg font-medium text-emerald-700">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 align-middle"></span>
+    <div class="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border-soft)]">
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-3">Statut</div>
+        <div class="inline-flex items-center gap-2 font-display text-lg font-medium text-emerald-700">
+            <span class="relative flex w-2 h-2">
+                <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-60 animate-ping"></span>
+                <span class="relative inline-flex rounded-full w-2 h-2 bg-emerald-500"></span>
+            </span>
             Actif
         </div>
     </div>

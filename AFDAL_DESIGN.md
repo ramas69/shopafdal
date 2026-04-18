@@ -11,29 +11,41 @@ Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
 - Light ✓ Full · Dark ✓ Full
 - Performance : excellent
 
-### Couleurs
+### Couleurs (refresh moderne 2026-04-18)
 
-| Rôle | Hex | Variable CSS |
-|------|-----|--------------|
-| Primary | `#0F172A` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#334155` | `--color-secondary` |
-| Accent / CTA | `#0369A1` | `--color-accent` |
-| Background | `#F8FAFC` | `--color-background` |
-| Foreground | `#020617` | `--color-foreground` |
-| Muted | `#E8ECF1` | `--color-muted` |
-| Border | `#E2E8F0` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| Ring | `#0F172A` | `--color-ring` |
+| Rôle | Hex | Variable CSS | Note |
+|------|-----|--------------|------|
+| Primary | `#0A0A0A` | `--color-primary` | true near-black (ex slate-900) |
+| On Primary | `#FAFAFA` | `--color-on-primary` | off-white pour contraste doux |
+| Secondary | `#525252` | `--color-secondary` | neutral-600 |
+| Accent / CTA | `#0369A1` | `--color-accent` | sky-700 (validé client) |
+| Accent soft | `#E0F2FE` | `--color-accent-soft` | backgrounds légers |
+| Background | `#FAFAFA` | `--color-background` | neutral-50 |
+| Surface | `#FFFFFF` | `--color-surface` | cards / panneaux |
+| Foreground | `#0A0A0A` | `--color-foreground` | |
+| Muted | `#F5F5F5` | `--color-muted` | neutral-100 (plus doux) |
+| Border | `#E5E5E5` | `--color-border` | neutral-200 (hover/focus) |
+| Border soft | `#F0F0F0` | `--color-border-soft` | bordures par défaut (très subtiles) |
+| Destructive | `#DC2626` | `--color-destructive` | |
+| Ring | `#0A0A0A` | `--color-ring` | focus noir (plus contrasté) |
 
 ### Typographie
-- **Titres** : Lexend (300–700)
-- **Corps** : Source Sans 3 (300–700)
-- Mood : corporate, trustworthy, accessible, readable
+- **Titres** : Lexend (400–700) — inchangé, tracking serré (`-0.015em` → `-0.025em` sur h1)
+- **Corps** : **Inter** (400–700) — changé depuis Source Sans 3, c'est le standard UI moderne
+- Features OpenType Inter activés (`cv02 cv03 cv04 cv11`) : chiffres tabulaires + alternates contextuels
 
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700&display=swap');
 ```
+
+### Shadows (nouveau)
+Tokens CSS `--shadow-xs/sm/md/lg` avec offsets doux et opacité faible (0.03–0.08) — plus diffus, plus moderne.
+
+### Radii
+- `--radius-sm`: 0.375rem
+- `--radius-md`: 0.5rem (défaut)
+- `--radius-lg`: 0.75rem (cards)
+- `--radius-xl`: 1rem (sections)
 
 ### À éviter
 - Design playful / gradients purple-pink (AI vibes)
@@ -380,6 +392,47 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 - UI détail : bouton "Exporter CSV" à côté de "Commander à nouveau"
 - Sécurité : `assertOwns()` côté single + filtre `company = user.company` côté multi (impossible d'exporter des commandes d'une autre entreprise même en manipulant les IDs)
 - **Route conflict fix** : `{reference}` contraint par regex `CMD-[0-9]{4}-[0-9]+` (extrait en constante `REF_PATTERN`) pour ne pas intercepter `/commandes/export.csv`
+
+### Refresh moderne (2026-04-18)
+
+**Direction** : Linear/Vercel — près-noir, typographie tendue, bordures très douces, whitespace généreux, shadows diffuses.
+
+**Changements** :
+- Primary passé de `#0F172A` (slate-900) à `#0A0A0A` (true near-black) pour un rendu plus moderne
+- Font body : **Inter** (standard UI actuel) remplace Source Sans 3 — titres Lexend conservés, avec tracking serré
+- Ajout tokens `--color-surface` (card backgrounds distincts du bg principal), `--color-border-soft` (bordures quasi invisibles par défaut), `--color-accent-soft` (fonds accent subtils)
+- Shadows système CSS vars `--shadow-xs/sm/md/lg` avec offsets doux
+- Radii centralisés `--radius-sm/md/lg/xl`
+- Classes utilitaires `.card` / `.btn-primary` / `.btn-secondary` dans `@layer components`
+
+**Landing v2** (`home/index.html.twig`) :
+- Hero centré 5xl→7xl avec Lexend tracking tight
+- Radial gradient accent en background (wash subtil)
+- Pulse dot animé dans le badge "sur invitation"
+- Proof section 3 cards avec icônes Heroicons (Sécurisé / Multi-antennes / Sans paiement)
+- Footer minimaliste
+- Header léger avec lien login en "→"
+
+**Shell v4** :
+- Topbar h-14 (avant h-16), backdrop-blur-xl + bg semi-transparent
+- Bordures passées à `--color-border-soft` (plus douces)
+- Sidebar : active state en fond `--color-primary` + texte on-primary (plus assertive, plus moderne) — remplace l'ancien bg-muted + border-l
+- Avatar + déconnexion séparés par un divider vertical
+- Logout en bouton icône carré (pas de label en large)
+- Flash messages avec icônes check/warning inline
+
+**Cards catalogue** :
+- Ratio 4:3 avec gradient neutral + initiale 7xl (au lieu de 4xl) pour plus d'impact
+- Chip catégorie en overlay backdrop-blur
+- Hover : border passe en primary noir + shadow-md (au lieu de translate)
+- Layout 3 colonnes max (au lieu de 4) pour plus de respiration
+- Footer card avec "À partir de" + prix séparés par une bordure soft
+
+**Stat cards (dashboards)** :
+- Metric Value en Lexend 4xl tracking tight (plus bold, plus moderne)
+- Labels uppercase tracking-wide (style Vercel)
+- "À traiter" en couleur accent pour attirer l'œil admin
+- Client : badge "Actif" avec pulse dot animé
 
 ---
 

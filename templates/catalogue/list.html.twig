@@ -3,36 +3,33 @@
 {% block title %}Catalogue — Afdal{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Catalogue</h1>
+<div class="mb-10">
+    <h1 class="font-display text-4xl font-semibold text-[var(--color-primary)] mb-2 tracking-tight">Catalogue</h1>
     <p class="text-[var(--color-secondary)]">{{ products|length }} produit{{ products|length > 1 ? 's' : '' }} disponible{{ products|length > 1 ? 's' : '' }}.</p>
 </div>
 
-<form method="get" class="mb-6 flex flex-wrap items-end gap-3 bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-4">
-    <label class="flex-1 min-w-[200px]">
-        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Recherche</span>
-        <input type="search" name="q" value="{{ q }}" placeholder="Nom, description..."
-            class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-    </label>
-    <label>
-        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Catégorie</span>
-        <select name="category" class="px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-            <option value="">Toutes</option>
-            {% for c in categories %}
-                <option value="{{ c }}" {{ current_category == c ? 'selected' }}>{{ c }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+<form method="get" class="mb-8 flex flex-wrap items-center gap-2">
+    <div class="relative flex-1 min-w-[240px]">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+        <input type="search" name="q" value="{{ q }}" placeholder="Rechercher un produit..."
+            class="w-full pl-10 pr-3 py-2.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-sm transition-colors focus:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-ring)] focus-visible:outline-offset-1">
+    </div>
+    <select name="category" class="px-3 py-2.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-sm focus:border-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+        <option value="">Toutes catégories</option>
+        {% for c in categories %}
+            <option value="{{ c }}" {{ current_category == c ? 'selected' }}>{{ c }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-150 hover:bg-[#1F1F1F]">
         Filtrer
     </button>
     {% if q or current_category %}
-        <a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)]">Réinitialiser</a>
+        <a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] px-2">Réinitialiser</a>
     {% endif %}
 </form>
 
 {% if products is empty %}
-    <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
+    <div class="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border-soft)] shadow-[var(--shadow-xs)] p-12 text-center">
         <div class="w-16 h-16 rounded-full bg-[var(--color-muted)] flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -42,20 +39,25 @@
         <p class="text-sm text-[var(--color-secondary)]">Essayez de modifier vos filtres ou la recherche.</p>
     </div>
 {% else %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for product in products %}
-            <a href="{{ path('app_catalogue_detail', {slug: product.slug}) }}" class="group bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-                <div class="aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative overflow-hidden">
-                    <span class="font-display text-4xl font-bold text-slate-300">{{ product.name|first|upper }}</span>
-                </div>
-                <div class="p-4">
+            <a href="{{ path('app_catalogue_detail', {slug: product.slug}) }}" class="group relative bg-[var(--color-surface)] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border border-[var(--color-border-soft)] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-md)]">
+                <div class="aspect-[4/3] relative overflow-hidden bg-gradient-to-br from-neutral-50 to-neutral-100">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="font-display text-7xl font-bold text-neutral-200 transition-transform duration-500 group-hover:scale-110">{{ product.name|first|upper }}</span>
+                    </div>
                     {% if product.category %}
-                        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">{{ product.category }}</div>
+                        <div class="absolute top-3 left-3 inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--color-surface)]/90 backdrop-blur text-xs font-medium text-[var(--color-secondary)]">{{ product.category }}</div>
                     {% endif %}
-                    <h3 class="font-semibold text-[var(--color-primary)] mb-1 group-hover:text-[var(--color-accent)] transition-colors">{{ product.name }}</h3>
-                    <div class="flex items-center justify-between mt-3">
-                        <span class="text-sm text-[var(--color-secondary)]">{{ product.variants|length }} variantes</span>
-                        <span class="font-semibold text-[var(--color-foreground)]">{{ product.basePriceCents|price }}</span>
+                </div>
+                <div class="p-5">
+                    <h3 class="font-display font-semibold text-[var(--color-primary)] text-lg mb-1 tracking-tight">{{ product.name }}</h3>
+                    {% if product.material %}
+                        <div class="text-sm text-[var(--color-secondary)] mb-4">{{ product.material }}</div>
+                    {% endif %}
+                    <div class="flex items-baseline justify-between pt-3 border-t border-[var(--color-border-soft)]">
+                        <span class="text-xs text-[var(--color-secondary)]">À partir de</span>
+                        <span class="font-display font-semibold text-lg text-[var(--color-primary)]">{{ product.basePriceCents|price }}</span>
                     </div>
                 </div>
             </a>
