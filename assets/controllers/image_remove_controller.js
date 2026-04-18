@@ -4,6 +4,7 @@ export default class extends Controller {
     static targets = ['input', 'overlay'];
 
     connect() {
+        console.log('[image-remove] connected', this.element, 'overlay:', this.overlayTarget);
         this.element.dataset.marked = 'false';
     }
 
@@ -14,15 +15,18 @@ export default class extends Controller {
         const marked = this.element.dataset.marked === 'true';
         const next = !marked;
 
+        console.log('[image-remove] toggle', { marked, next, overlay: this.overlayTarget });
+
         this.element.dataset.marked = next ? 'true' : 'false';
         this.inputTarget.disabled = !next;
 
-        // Inline styles — bypass any Tailwind compilation issue
-        this.overlayTarget.style.opacity = next ? '1' : '0';
-        this.overlayTarget.style.pointerEvents = next ? 'auto' : 'none';
+        this.overlayTarget.style.setProperty('opacity', next ? '1' : '0', 'important');
+        this.overlayTarget.style.setProperty('pointer-events', next ? 'auto' : 'none', 'important');
 
-        // Visual ring on the wrapper via inline outline
-        this.element.style.outline = next ? '2px solid #E82538' : '';
-        this.element.style.outlineOffset = next ? '2px' : '';
+        this.element.style.setProperty('outline', next ? '3px solid #E82538' : 'none', 'important');
+        this.element.style.setProperty('outline-offset', next ? '2px' : '0', 'important');
+
+        console.log('[image-remove] after toggle, overlay computed opacity:',
+            window.getComputedStyle(this.overlayTarget).opacity);
     }
 }

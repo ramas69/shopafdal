@@ -136,11 +136,12 @@
         {% if not is_new and product.images|length > 0 %}
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
                 {% for img in product.images %}
-                    <button type="button"
-                            data-controller="image-remove"
-                            data-action="click->image-remove#toggle"
-                            title="Cliquer pour basculer « à retirer »"
-                            class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square block w-full cursor-pointer hover:shadow-md transition-shadow text-left p-0">
+                    <div data-controller="image-remove"
+                         data-action="click->image-remove#toggle"
+                         title="Cliquer pour basculer « à retirer »"
+                         role="button"
+                         tabindex="0"
+                         class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square cursor-pointer hover:shadow-md transition-shadow">
                         <input type="hidden" name="remove_images[]" value="{{ img }}" data-image-remove-target="input" disabled>
                         <img src="{{ img }}" alt="" class="w-full h-full object-cover pointer-events-none">
 
@@ -160,7 +161,7 @@
                         {% if loop.first %}
                             <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide pointer-events-none">Principal</span>
                         {% endif %}
-                    </button>
+                    </div>
                 {% endfor %}
             </div>
             <p class="text-xs text-[var(--color-secondary)] mb-3">Cliquez sur la croix en haut à droite d'une image pour la marquer « À retirer ». Elle sera supprimée à l'enregistrement.</p>
