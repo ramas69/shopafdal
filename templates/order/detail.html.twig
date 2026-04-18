@@ -57,8 +57,25 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
+        <turbo-frame id="order-timeline-{{ order.reference }}"
+                     src="{{ path('app_order_detail', {reference: order.reference}) }}"
+                     {% if order.status.value not in ['delivered', 'cancelled'] %}
+                     data-controller="poll"
+                     data-poll-interval-value="15000"
+                     {% endif %}>
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-            <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-4">Suivi</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-[var(--color-primary)]">Suivi</h2>
+                {% if order.status.value not in ['delivered', 'cancelled'] %}
+                    <span class="inline-flex items-center gap-1.5 text-xs text-[var(--color-secondary)]">
+                        <span class="relative flex w-1.5 h-1.5">
+                            <span class="absolute inline-flex w-full h-full rounded-full bg-[var(--color-success)] opacity-60 animate-ping"></span>
+                            <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-[var(--color-success)]"></span>
+                        </span>
+                        Mise à jour auto
+                    </span>
+                {% endif %}
+            </div>
             {% if order.status.value == 'cancelled' %}
                 <div class="flex items-start gap-3 p-4 rounded-md bg-red-50 border border-red-200">
                     <div class="w-8 h-8 rounded-full bg-[var(--color-destructive)] flex items-center justify-center flex-shrink-0">
@@ -95,6 +112,7 @@
                 </ol>
             {% endif %}
         </section>
+        </turbo-frame>
 
         <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
             <h2 class="text-sm font-semibold text-[var(--color-primary)] px-6 py-4 border-b border-[var(--color-border)]">Articles</h2>
