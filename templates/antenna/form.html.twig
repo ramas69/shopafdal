@@ -51,7 +51,7 @@
     </div>
 
     <label class="block">
-        <span class="form-label">Téléphone</span>
+        <span class="form-label">Téléphone (antenne)</span>
         <span class="relative mt-1.5 flex">
             <input type="tel" name="phone" value="{{ is_new ? '' : (antenna.phone ?? '') }}"
                 placeholder="01 23 45 67 89"
@@ -61,6 +61,44 @@
             </span>
         </span>
     </label>
+
+    <div class="pt-4 border-t border-[var(--color-border-soft)]">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">Contact responsable</h2>
+        <p class="text-xs text-[var(--color-secondary)] mb-4">Personne physique à contacter pour la livraison (optionnel).</p>
+
+        <div class="space-y-4">
+            <label class="block">
+                <span class="form-label">Nom</span>
+                <input type="text" name="contact_name" value="{{ is_new ? '' : (antenna.contactName ?? '') }}"
+                    placeholder="Prénom Nom"
+                    class="form-input mt-1.5">
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="form-label">Email</span>
+                    <input type="email" name="contact_email" value="{{ is_new ? '' : (antenna.contactEmail ?? '') }}"
+                        placeholder="contact@entreprise.fr"
+                        class="form-input mt-1.5 {{ errors.contact_email is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    {% if errors.contact_email is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.contact_email }}</span>{% endif %}
+                </label>
+                <label class="block">
+                    <span class="form-label">Téléphone direct</span>
+                    <input type="tel" name="contact_phone" value="{{ is_new ? '' : (antenna.contactPhone ?? '') }}"
+                        placeholder="06 12 34 56 78"
+                        class="form-input mt-1.5">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-[var(--color-border-soft)]">
+        <label class="block">
+            <span class="form-label">Notes internes</span>
+            <p class="text-xs text-[var(--color-secondary)] mb-2">Code d'accès, horaires livraison, instructions… Visible uniquement par votre entreprise.</p>
+            <textarea name="notes" rows="3" placeholder="Ex. Livraison entre 9h et 17h. Code porte 1234."
+                class="form-input">{{ is_new ? '' : (antenna.notes ?? '') }}</textarea>
+        </label>
+    </div>
 
     <div class="flex gap-3 pt-2">
         <button type="submit" class="btn btn-primary">

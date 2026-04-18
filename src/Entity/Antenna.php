@@ -36,6 +36,18 @@ class Antenna
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $phone = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $notes = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $contactName = null;
+
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $contactEmail = null;
+
+    #[ORM\Column(length: 30, nullable: true)]
+    private ?string $contactPhone = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -59,6 +71,14 @@ class Antenna
     public function setCountry(string $v): self { $this->country = $v; return $this; }
     public function getPhone(): ?string { return $this->phone; }
     public function setPhone(?string $v): self { $this->phone = $v; return $this; }
+    public function getNotes(): ?string { return $this->notes; }
+    public function setNotes(?string $v): self { $this->notes = $v; return $this; }
+    public function getContactName(): ?string { return $this->contactName; }
+    public function setContactName(?string $v): self { $this->contactName = $v; return $this; }
+    public function getContactEmail(): ?string { return $this->contactEmail; }
+    public function setContactEmail(?string $v): self { $this->contactEmail = $v; return $this; }
+    public function getContactPhone(): ?string { return $this->contactPhone; }
+    public function setContactPhone(?string $v): self { $this->contactPhone = $v; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
 
     public function getFullAddress(): string

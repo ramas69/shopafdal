@@ -48,6 +48,9 @@ final class CheckoutController extends AbstractController
 
         $errors = [];
         $selectedAntennaId = (int) $request->request->get('antenna_id', 0);
+        if ($selectedAntennaId === 0 && !$request->isMethod('POST')) {
+            $selectedAntennaId = (int) $request->getSession()->get('preselected_antenna_id', 0);
+        }
         $notes = (string) $request->request->get('notes', '');
 
         if ($request->isMethod('POST')) {
@@ -78,6 +81,7 @@ final class CheckoutController extends AbstractController
                 $em->persist($order);
                 $em->flush();
                 $cart->clear();
+                $request->getSession()->remove('preselected_antenna_id');
 
                 return $this->redirectToRoute('app_checkout_confirmation', ['reference' => $order->getReference()]);
             }

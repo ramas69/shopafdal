@@ -16,16 +16,41 @@
             <p class="text-sm text-[var(--color-secondary)] mt-1">{{ antenna.fullAddress }}{% if antenna.phone %} · {{ antenna.phone }}{% endif %}</p>
         </div>
     </div>
-    <a href="{{ path('app_antenna_edit', {id: antenna.id}) }}" class="btn btn-outline">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
-        Modifier
-    </a>
+    <div class="flex flex-wrap gap-2">
+        <form method="post" action="{{ path('app_antenna_order', {id: antenna.id}) }}">
+            <button type="submit" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272"/></svg>
+                Commander pour cette antenne
+            </button>
+        </form>
+        <a href="{{ path('app_antenna_export', {id: antenna.id}) }}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Exporter CSV
+        </a>
+        <a href="{{ path('app_antenna_edit', {id: antenna.id}) }}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Modifier
+        </a>
+    </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+{# Stats cards #}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="card p-5">
         <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Commandes</div>
         <div class="font-display text-3xl font-semibold tracking-tight text-[var(--color-foreground)]">{{ stats.orders }}</div>
+        {% if sibling_count > 0 %}
+            <p class="text-xs text-[var(--color-secondary)] mt-1">
+                {% if stats.orders > sibling_orders_avg %}
+                    <span class="text-[var(--color-success)]">▲ +{{ (stats.orders - sibling_orders_avg)|round(1) }}</span>
+                {% elseif stats.orders < sibling_orders_avg %}
+                    <span class="text-[var(--color-destructive)]">▼ {{ (stats.orders - sibling_orders_avg)|round(1) }}</span>
+                {% else %}
+                    <span>=</span>
+                {% endif %}
+                vs moyenne des {{ sibling_count }} autre{{ sibling_count > 1 ? 's' : '' }} antenne{{ sibling_count > 1 ? 's' : '' }} ({{ sibling_orders_avg }})
+            </p>
+        {% endif %}
     </div>
     <div class="card p-5">
         <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Pièces totales</div>
@@ -35,13 +60,142 @@
         <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Total HT commandé</div>
         <div class="font-display text-3xl font-semibold tracking-tight text-[var(--color-primary)]">{{ stats.total_cents|price }}</div>
     </div>
+    {% if last_order %}
+        <a href="{{ path('app_order_detail', {reference: last_order.reference}) }}" class="card p-5 block hover:shadow-[var(--shadow-md)] transition-all">
+            <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Dernière commande</div>
+            <div class="font-mono font-semibold text-[var(--color-foreground)] mb-1">{{ last_order.reference }}</div>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="badge border {{ status_badge_class(last_order.status) }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(last_order.status) }}"></span>
+                    {{ last_order.status.label() }}
+                </span>
+                <span class="text-[var(--color-secondary)]">{{ (last_order.placedAt ?? last_order.createdAt)|date('d/m/Y') }}</span>
+            </div>
+        </a>
+    {% else %}
+        <div class="card p-5">
+            <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">Dernière commande</div>
+            <div class="text-sm text-[var(--color-secondary)]">Aucune commande pour l'instant.</div>
+        </div>
+    {% endif %}
 </div>
 
+{# Contact + notes (sidebar) + mini graph + top products #}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    {# Colonne gauche : Mini graph + top products #}
+    <div class="lg:col-span-2 space-y-6">
+        <div class="card p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Évolution sur 6 mois</h2>
+                    <p class="text-xs text-[var(--color-secondary)] mt-0.5">Nombre de commandes par mois</p>
+                </div>
+            </div>
+            <div class="flex items-end gap-2 h-40">
+                {% for m in monthly %}
+                    {% set pct = (m.count / max_monthly * 100)|round %}
+                    <div class="flex-1 flex flex-col items-center gap-2 group">
+                        <div class="relative flex-1 w-full flex items-end">
+                            <div class="w-full rounded-t-md bg-[var(--color-primary-light)] group-hover:bg-[var(--color-primary)] transition-colors" style="height: {{ pct }}%"></div>
+                            {% if m.count > 0 %}
+                                <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity">{{ m.count }}</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-[10px] text-[var(--color-secondary)] uppercase tracking-wide">{{ m.label }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Top produits commandés</h2>
+            {% if top_products is empty %}
+                <p class="text-sm text-[var(--color-secondary)]">Aucun produit commandé pour l'instant.</p>
+            {% else %}
+                <ul class="space-y-3">
+                    {% for tp in top_products %}
+                        <li class="flex items-center justify-between gap-3 p-2 rounded-md hover:bg-[var(--color-muted)]">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] text-xs font-bold shrink-0">{{ loop.index }}</span>
+                                <div class="min-w-0">
+                                    <a href="{{ path('app_catalogue_detail', {slug: tp.slug}) }}" class="font-medium text-[var(--color-foreground)] hover:text-[var(--color-primary)] truncate block">{{ tp.product_name }}</a>
+                                    <div class="text-xs text-[var(--color-secondary)] flex items-center gap-2 mt-0.5">
+                                        <span class="w-2.5 h-2.5 rounded-full border border-[var(--color-border)]" style="background-color: {{ tp.color_hex }}"></span>
+                                        {{ tp.color }} · {{ tp.size }}
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="font-display font-semibold text-[var(--color-foreground)]">{{ tp.total_qty }} pc</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Colonne droite : Contact + Notes internes #}
+    <div class="space-y-6">
+        {% if antenna.contactName or antenna.contactEmail or antenna.contactPhone %}
+            <div class="card p-6">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-3">Contact responsable</h2>
+                {% if antenna.contactName %}
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                        <span class="text-sm font-medium text-[var(--color-foreground)]">{{ antenna.contactName }}</span>
+                    </div>
+                {% endif %}
+                {% if antenna.contactEmail %}
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                        <a href="mailto:{{ antenna.contactEmail }}" class="link text-sm truncate">{{ antenna.contactEmail }}</a>
+                    </div>
+                {% endif %}
+                {% if antenna.contactPhone %}
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
+                        <a href="tel:{{ antenna.contactPhone }}" class="text-sm text-[var(--color-foreground)]">{{ antenna.contactPhone }}</a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if antenna.notes %}
+            <div class="card p-6">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-3">Notes internes</h2>
+                <p class="text-sm text-[var(--color-body)] whitespace-pre-line">{{ antenna.notes }}</p>
+            </div>
+        {% else %}
+            <div class="p-4 rounded-lg border border-dashed border-[var(--color-border)] text-center">
+                <p class="text-xs text-[var(--color-secondary)]">Pas de notes internes.</p>
+                <a href="{{ path('app_antenna_edit', {id: antenna.id}) }}" class="text-xs text-[var(--color-primary)] hover:underline">Ajouter des notes</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Timeline commandes avec filtres #}
 <div class="card p-6">
-    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-6">Historique des commandes</h2>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)]">Historique des commandes</h2>
+        <form method="get" class="flex flex-wrap items-end gap-2" data-controller="autosubmit">
+            <select name="status" data-action="change->autosubmit#submitNow" class="form-input !w-auto text-xs py-1.5">
+                <option value="">Tous statuts</option>
+                {% for s in statuses %}
+                    <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" name="from" value="{{ current_from }}" data-action="change->autosubmit#submitNow"
+                class="form-input !w-auto text-xs py-1.5" title="Du">
+            <input type="date" name="to" value="{{ current_to }}" data-action="change->autosubmit#submitNow"
+                class="form-input !w-auto text-xs py-1.5" title="Au">
+            {% if current_status or current_from or current_to %}
+                <a href="{{ path('app_antenna_detail', {id: antenna.id}) }}" class="text-xs text-[var(--color-secondary)] hover:text-[var(--color-foreground)] pb-2">Réinit.</a>
+            {% endif %}
+        </form>
+    </div>
 
     {% if orders is empty %}
-        <p class="text-sm text-[var(--color-secondary)]">Aucune commande pour cette antenne pour le moment.</p>
+        <p class="text-sm text-[var(--color-secondary)]">Aucune commande ne correspond aux filtres.</p>
     {% else %}
         <ol class="timeline">
             {% for order in orders %}
@@ -66,9 +220,6 @@
                             {{ order.items|length }} ligne{{ order.items|length > 1 ? 's' : '' }} ·
                             <span class="font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</span>
                         </p>
-                        {% if order.notes %}
-                            <p class="text-xs text-[var(--color-secondary)] italic">« {{ order.notes|slice(0, 120) }}{{ order.notes|length > 120 ? '…' : '' }} »</p>
-                        {% endif %}
                     </div>
                 </li>
             {% endfor %}
