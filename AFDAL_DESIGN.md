@@ -55,7 +55,20 @@ Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
 
 ## Décisions prises
 
-<!-- On remplit au fur et à mesure -->
+### Phase 0 — Setup (2026-04-18)
+- **Stack** : Symfony 7.4 LTS (support jusqu'à fin 2028) + PHP ≥8.2
+- **Pourquoi 7.4 et non 8.0** : 7.4 a les mêmes features que 8.0 (perf container DI, cache réécrit, FrankenPHP natif) mais en LTS. Symfony 8.0 n'est pas LTS → expire juillet 2026, forcerait 4 upgrades en 2 ans. PHP 8.2 plus portable sur mutualisé qu'exiger PHP 8.4.
+- **Webapp pack** complet : Doctrine ORM, Twig, Security, Mailer, Validator, Form, Serializer, Messenger (transport Doctrine), AssetMapper + Turbo + Stimulus
+- **Tailwind v4** via `symfonycasts/tailwind-bundle` (config CSS native, plus de `tailwind.config.js`)
+- **Tokens design** dans `assets/styles/app.css` via directive `@theme` (couleurs + fonts Lexend/Source Sans 3)
+- **Fonts** : Google Fonts chargées dans `base.html.twig` avec `preconnect`
+- **PostgreSQL 16** via Docker Compose (fourni par le webapp pack) + Mailpit pour emails de dev
+- **Favicon** : SVG custom (lettre A blanche sur fond `--color-primary`) — pas d'emoji
+
+### Portabilité o2switch
+- Pas de Node requis (AssetMapper + Tailwind bundle buildent en PHP pur)
+- PHP 8.2 dispo partout sur o2switch
+- PostgreSQL illimité via phpPgAdmin (standard PG, `pg_dump`/`pg_restore` fonctionnent)
 
 ---
 

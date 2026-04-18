@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Afdal — Plateforme B2B{% endblock %}
+
+{% block body %}
+<main class="min-h-screen flex items-center justify-center px-6">
+    <div class="max-w-2xl w-full">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-muted)] text-[var(--color-secondary)] text-sm mb-6">
+            <span class="w-2 h-2 rounded-full bg-[var(--color-accent)]"></span>
+            Setup Symfony 7.4 · Tailwind v4 · Design tokens OK
+        </div>
+
+        <h1 class="text-5xl md:text-6xl font-semibold tracking-tight text-[var(--color-primary)] mb-4">
+            Afdal
+        </h1>
+        <p class="text-lg text-[var(--color-secondary)] mb-8">
+            Plateforme B2B de commandes textile. Accès sur invitation.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+            <a href="#" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
+                Se connecter
+            </a>
+            <a href="#" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-[var(--color-border)] text-[var(--color-foreground)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-muted)]">
+                Demander un accès
+            </a>
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-[var(--color-border)] grid grid-cols-5 gap-3">
+            {% for color in ['primary', 'secondary', 'accent', 'muted', 'destructive'] %}
+                <div>
+                    <div class="h-12 rounded-md border border-[var(--color-border)]" style="background-color: var(--color-{{ color }})"></div>
+                    <p class="mt-2 text-xs text-[var(--color-secondary)]">{{ color }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+{% endblock %}
