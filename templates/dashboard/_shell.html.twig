@@ -71,35 +71,55 @@
                         {% endif %}
                     </button>
                     <div data-dropdown-target="menu"
-                        class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 card p-0 overflow-hidden z-40 max-h-[70vh] flex flex-col">
-                        <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-soft)]">
-                            <span class="font-display font-semibold text-[var(--color-foreground)]">Notifications</span>
+                        class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 flex flex-col max-h-[calc(100vh-6rem)] rounded-lg border border-[var(--color-slate-150)] bg-white shadow-[var(--shadow-soft)] overflow-hidden z-40">
+                        <div class="flex items-center justify-between px-4 py-3 bg-[var(--color-muted)] border-b border-[var(--color-border-soft)]">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-display font-semibold text-[var(--color-foreground)]">Notifications</h3>
+                                {% if unread_count > 0 %}
+                                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-[var(--color-accent)] text-white">{{ unread_count }}</span>
+                                {% endif %}
+                            </div>
                             {% if unread_count > 0 %}
                                 <form method="post" action="{{ path('app_notifications_read_all') }}">
-                                    <button type="submit" class="text-xs text-[var(--color-primary)] hover:underline">Tout marquer lu</button>
+                                    <button type="submit" class="text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-focus)] transition-colors">Tout marquer lu</button>
                                 </form>
                             {% endif %}
                         </div>
-                        <div class="overflow-y-auto flex-1">
+                        <div class="overflow-y-auto flex-1 divide-y divide-[var(--color-border-soft)]">
                             {% if recent_notifications is empty %}
-                                <div class="px-4 py-8 text-center text-sm text-[var(--color-secondary)]">Aucune notification.</div>
+                                <div class="px-4 py-12 text-center">
+                                    <div class="w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center mx-auto mb-3">
+                                        <svg class="w-6 h-6 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+                                    </div>
+                                    <p class="font-medium text-[var(--color-foreground)] text-sm">Aucune notification</p>
+                                    <p class="text-xs text-[var(--color-secondary)] mt-1">Vous serez averti ici.</p>
+                                </div>
                             {% else %}
                                 {% for n in recent_notifications %}
-                                    {% set dot_class = {'info': 'bg-sky-500', 'success': 'bg-emerald-500', 'warning': 'bg-amber-500', 'destructive': 'bg-red-500'}[n.type] ?? 'bg-slate-400' %}
+                                    {% set tile_classes = {'info': 'bg-sky-50 text-sky-600', 'success': 'bg-emerald-50 text-emerald-600', 'warning': 'bg-amber-50 text-amber-600', 'destructive': 'bg-red-50 text-red-600'}[n.type] ?? 'bg-slate-50 text-slate-600' %}
                                     <a href="{{ path('app_notification_read', {id: n.id}) }}"
-                                       class="block px-4 py-3 border-b border-[var(--color-border-soft)] hover:bg-[var(--color-muted)] transition-colors {{ not n.read ? 'bg-[var(--color-primary-light)]/30' : '' }}">
-                                        <div class="flex items-start gap-3">
-                                            <span class="mt-1.5 w-2 h-2 rounded-full {{ dot_class }} shrink-0"></span>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-center justify-between gap-2">
-                                                    <div class="font-medium text-sm text-[var(--color-foreground)] truncate">{{ n.title }}</div>
-                                                    <div class="text-[11px] text-[var(--color-secondary)] shrink-0">{{ n.createdAt|date('d/m H:i') }}</div>
-                                                </div>
-                                                {% if n.message %}
-                                                    <div class="text-xs text-[var(--color-secondary)] mt-0.5 line-clamp-2">{{ n.message }}</div>
-                                                {% endif %}
-                                            </div>
+                                       class="relative flex items-start gap-3 px-4 py-3 hover:bg-[var(--color-muted)] transition-colors {{ not n.read ? 'bg-[var(--color-primary-light)]/40' : '' }}">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ tile_classes }}">
+                                            {% if n.type == 'success' %}
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                            {% elseif n.type == 'warning' %}
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                                            {% elseif n.type == 'destructive' %}
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                            {% else %}
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31"/></svg>
+                                            {% endif %}
                                         </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-medium text-sm text-[var(--color-foreground)] truncate">{{ n.title }}</div>
+                                            {% if n.message %}
+                                                <div class="text-xs text-[var(--color-secondary)] mt-0.5 line-clamp-2">{{ n.message }}</div>
+                                            {% endif %}
+                                            <div class="text-[11px] text-[var(--color-secondary)] mt-1.5">{{ n.createdAt|date('d/m à H:i') }}</div>
+                                        </div>
+                                        {% if not n.read %}
+                                            <span class="absolute top-4 right-3 w-2 h-2 rounded-full bg-[var(--color-primary)]" aria-label="Non lu"></span>
+                                        {% endif %}
                                     </a>
                                 {% endfor %}
                             {% endif %}
