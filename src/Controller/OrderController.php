@@ -200,10 +200,26 @@ final class OrderController extends AbstractController
             return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
         }
 
+        $availableProducts = $productsRepo->findPublished();
+        $productsJson = array_map(fn($p) => [
+            'id' => $p->getId(),
+            'name' => $p->getName(),
+            'category' => $p->getCategory() ?? '',
+            'price' => $p->getBasePriceCents(),
+            'image' => $p->getImages()[0] ?? null,
+            'variants' => array_values(array_map(fn($v) => [
+                'id' => $v->getId(),
+                'size' => $v->getSize(),
+                'color' => $v->getColor(),
+                'hex' => $v->getColorHex(),
+                'sku' => $v->getSku(),
+            ], $p->getVariants()->toArray())),
+        ], $availableProducts);
+
         return $this->render('order/edit.html.twig', [
             'order' => $order,
             'antennas' => $companyAntennas,
-            'available_products' => $productsRepo->findPublished(),
+            'available_products_json' => json_encode($productsJson, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ]);
     }
 

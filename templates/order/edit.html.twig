@@ -93,22 +93,7 @@
     </button>
 
     {# Products data (JSON for the Stimulus controller) #}
-    <script type="application/json" data-add-article-target="data">
-    {{ available_products|map(p => {
-        id: p.id,
-        name: p.name,
-        category: p.category ?? '',
-        price: p.basePriceCents,
-        image: p.images|length > 0 ? p.images|first : null,
-        variants: p.variants|map(v => {
-            id: v.id,
-            size: v.size,
-            color: v.color,
-            hex: v.colorHex,
-            sku: v.sku
-        })|values
-    })|json_encode|raw }}
-    </script>
+    <script type="application/json" data-add-article-target="data">{{ available_products_json|raw }}</script>
 
     {# Modal skeleton #}
     <div data-add-article-target="backdrop"
