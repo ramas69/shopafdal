@@ -371,6 +371,16 @@ Composants Twig à créer dans `templates/components/` (Twig Components ou simpl
 - Redirige vers `/panier` avec flash succès → l'utilisateur peut ajuster avant de valider
 - N'écrase pas le panier existant : ajoute en plus
 
+**Export CSV** :
+- Service `App\Service\OrderExporter` : génère StreamedResponse CSV (UTF-8 BOM + `;` séparateur = Excel FR natif)
+- Colonnes : Référence, Date, Statut, Antenne, Ville, SKU, Produit, Catégorie, Couleur, Taille, Quantité, Prix HT unitaire, Total ligne, Marquage zone/taille, Notes
+- 1 ligne CSV = 1 `OrderItem` (pas 1 `Order`) → exploitable directement en Excel pour calculs/tri
+- Routes : `GET /commandes/export.csv` (multi : `?ids[]=` ou fallback filtres liste), `GET /commandes/{reference}/export.csv` (single)
+- UI liste : checkbox par ligne + "Tout cocher" dans header + barre sticky "X sélectionnées / Exporter la sélection" (Stimulus `selection_controller.js`)
+- UI détail : bouton "Exporter CSV" à côté de "Commander à nouveau"
+- Sécurité : `assertOwns()` côté single + filtre `company = user.company` côté multi (impossible d'exporter des commandes d'une autre entreprise même en manipulant les IDs)
+- **Route conflict fix** : `{reference}` contraint par regex `CMD-[0-9]{4}-[0-9]+` (extrait en constante `REF_PATTERN`) pour ne pas intercepter `/commandes/export.csv`
+
 ---
 
 ## Patterns Tailwind partagés

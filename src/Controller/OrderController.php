@@ -8,12 +8,14 @@ use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
 use App\Repository\OrderRepository;
 use App\Service\Cart;
+use App\Service\OrderExporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -21,6 +23,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_CLIENT_MANAGER')]
 final class OrderController extends AbstractController
 {
+    private const REF_PATTERN = 'CMD-[0-9]{4}-[0-9]+';
+
     #[Route('', name: 'app_orders')]
     public function list(Request $request, OrderRepository $orders, AntennaRepository $antennas): Response
     {
@@ -52,7 +56,7 @@ final class OrderController extends AbstractController
         ]);
     }
 
-    #[Route('/{reference}', name: 'app_order_detail')]
+    #[Route('/{reference}', name: 'app_order_detail', requirements: ['reference' => self::REF_PATTERN])]
     public function detail(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order): Response
     {
         $this->assertOwns($order);
@@ -63,7 +67,46 @@ final class OrderController extends AbstractController
         ]);
     }
 
-    #[Route('/{reference}/reorder', name: 'app_order_reorder', methods: ['POST'])]
+    #[Route('/export.csv', name: 'app_orders_export', methods: ['GET'])]
+    public function exportMultiple(Request $request, OrderRepository $orders, OrderExporter $exporter): StreamedResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $company = $user->getCompany();
+
+        $ids = array_filter(array_map('intval', (array) $request->query->all('ids')));
+
+        $qb = $orders->createQueryBuilder('o')
+            ->andWhere('o.company = :company')
+            ->setParameter('company', $company)
+            ->orderBy('o.createdAt', 'DESC');
+
+        if (!empty($ids)) {
+            $qb->andWhere('o.id IN (:ids)')->setParameter('ids', $ids);
+        } else {
+            // fallback to current filters from list (keeps export consistent with what's displayed)
+            $status = (string) $request->query->get('status', '');
+            $antennaId = (int) $request->query->get('antenna', 0);
+            if ($status !== '') {
+                $qb->andWhere('o.status = :status')->setParameter('status', OrderStatus::from($status));
+            }
+            if ($antennaId > 0) {
+                $qb->andWhere('o.antenna = :antenna')->setParameter('antenna', $antennaId);
+            }
+        }
+
+        $filename = sprintf('commandes-%s.csv', (new \DateTimeImmutable())->format('Y-m-d'));
+        return $exporter->toCsv($qb->getQuery()->getResult(), $filename);
+    }
+
+    #[Route('/{reference}/export.csv', name: 'app_order_export', methods: ['GET'], requirements: ['reference' => self::REF_PATTERN])]
+    public function exportOne(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, OrderExporter $exporter): StreamedResponse
+    {
+        $this->assertOwns($order);
+        return $exporter->toCsv([$order], $order->getReference() . '.csv');
+    }
+
+    #[Route('/{reference}/reorder', name: 'app_order_reorder', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]
     public function reorder(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, Cart $cart): RedirectResponse
     {
         $this->assertOwns($order);
@@ -76,7 +119,7 @@ final class OrderController extends AbstractController
         return $this->redirectToRoute('app_cart');
     }
 
-    #[Route('/{reference}/cancel', name: 'app_order_cancel', methods: ['POST'])]
+    #[Route('/{reference}/cancel', name: 'app_order_cancel', methods: ['POST'], requirements: ['reference' => self::REF_PATTERN])]
     public function cancel(#[MapEntity(mapping: ['reference' => 'reference'])] Order $order, EntityManagerInterface $em): RedirectResponse
     {
         $this->assertOwns($order);
