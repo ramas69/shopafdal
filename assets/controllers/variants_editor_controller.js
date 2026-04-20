@@ -16,6 +16,29 @@ export default class extends Controller {
         this._refreshEmpty();
     }
 
+    duplicate(event) {
+        const sourceRow = event.currentTarget.closest('[data-variants-editor-target="row"]');
+        if (!sourceRow) return;
+
+        const index = this._nextIndex();
+        const html = this.templateTarget.innerHTML.replaceAll('__INDEX__', index);
+        sourceRow.insertAdjacentHTML('afterend', html);
+        const newRow = sourceRow.nextElementSibling;
+
+        const fields = ['size', 'color', 'color_hex', 'sku'];
+        for (const f of fields) {
+            const src = sourceRow.querySelector(`[name$="[${f}]"]`);
+            const dst = newRow.querySelector(`[name$="[${f}]"]`);
+            if (src && dst) dst.value = src.value;
+        }
+
+        const skuInput = newRow.querySelector('[name$="[sku]"]');
+        if (skuInput?.value) skuInput.value = `${skuInput.value}-COPY`;
+
+        this._refreshEmpty();
+        newRow.querySelector('[name$="[size]"]')?.focus();
+    }
+
     _nextIndex() {
         return this.rowTargets.length;
     }

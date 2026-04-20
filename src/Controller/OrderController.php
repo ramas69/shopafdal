@@ -16,6 +16,7 @@ use App\Service\Cart;
 use App\Service\NotificationService;
 use App\Service\OrderEventLogger;
 use App\Service\OrderExporter;
+use App\Service\PricingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -41,6 +42,8 @@ final class OrderController extends AbstractController
 
         $status = (string) $request->query->get('status', '');
         $antennaId = (int) $request->query->get('antenna', 0);
+        $from = (string) $request->query->get('from', '');
+        $to = (string) $request->query->get('to', '');
 
         $qb = $orders->createQueryBuilder('o')
             ->andWhere('o.company = :company')
@@ -53,6 +56,12 @@ final class OrderController extends AbstractController
         if ($antennaId > 0) {
             $qb->andWhere('o.antenna = :antenna')->setParameter('antenna', $antennaId);
         }
+        if ($from !== '') {
+            $qb->andWhere('o.createdAt >= :from')->setParameter('from', new \DateTimeImmutable($from));
+        }
+        if ($to !== '') {
+            $qb->andWhere('o.createdAt < :to')->setParameter('to', (new \DateTimeImmutable($to))->modify('+1 day'));
+        }
 
         return $this->render('order/list.html.twig', [
             'orders' => $qb->getQuery()->getResult(),
@@ -60,6 +69,8 @@ final class OrderController extends AbstractController
             'antennas' => $antennas->findBy(['company' => $company], ['name' => 'ASC']),
             'current_status' => $status,
             'current_antenna' => $antennaId,
+            'current_from' => $from,
+            'current_to' => $to,
         ]);
     }
 
@@ -67,6 +78,7 @@ final class OrderController extends AbstractController
     public function detail(
         #[MapEntity(mapping: ['reference' => 'reference'])] Order $order,
         OrderEventRepository $eventsRepo,
+        \App\Repository\OrderMessageRepository $messagesRepo,
     ): Response {
         $this->assertOwns($order);
         // Hide admin internal notes from clients
@@ -74,11 +86,14 @@ final class OrderController extends AbstractController
             $eventsRepo->findForOrder($order),
             fn($e) => $e->getType() !== \App\Entity\OrderEvent::TYPE_ADMIN_NOTE
         ));
+        $messages = $messagesRepo->findForOrder($order);
+        $messagesRepo->markAllReadForClient($order);
         return $this->render('order/detail.html.twig', [
             'order' => $order,
             'timeline' => $this->buildTimeline($order),
             'can_cancel' => in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true),
             'events' => $events,
+            'messages' => $messages,
         ]);
     }
 
@@ -215,13 +230,16 @@ final class OrderController extends AbstractController
             'name' => $p->getName(),
             'category' => $p->getCategory() ?? '',
             'price' => $p->getBasePriceCents(),
-            'image' => $p->getImages()[0] ?? null,
+            'image' => $p->getPrimaryImage(),
             'variants' => array_values(array_map(fn($v) => [
                 'id' => $v->getId(),
                 'size' => $v->getSize(),
                 'color' => $v->getColor(),
                 'hex' => $v->getColorHex(),
                 'sku' => $v->getSku(),
+                'stock' => $v->getStock(),
+                'out' => $v->isOutOfStock(),
+                'low' => $v->isLowStock(),
             ], $p->getVariants()->toArray())),
         ], $availableProducts);
 
@@ -253,6 +271,7 @@ final class OrderController extends AbstractController
         EntityManagerInterface $em,
         NotificationService $notifications,
         OrderEventLogger $events,
+        PricingService $pricing,
     ): RedirectResponse {
         $this->assertOwns($order);
         if ($order->getStatus() !== OrderStatus::PLACED) {
@@ -280,6 +299,19 @@ final class OrderController extends AbstractController
                 continue;
             }
 
+            $stock = $variant->getStock();
+            if ($stock !== null && $qty > $stock) {
+                $this->addFlash('error', sprintf(
+                    'Stock insuffisant pour %s · %s · %s (%d demandé, %d dispo).',
+                    $variant->getProduct()->getName(),
+                    $variant->getColor(),
+                    $variant->getSize(),
+                    $qty,
+                    $stock,
+                ));
+                return $this->redirectToRoute('app_order_edit', ['reference' => $order->getReference()]);
+            }
+
             $label = sprintf('%s · %s · %s',
                 $variant->getProduct()->getName(),
                 $variant->getColor(),
@@ -297,10 +329,11 @@ final class OrderController extends AbstractController
                 }
             }
             if (!$merged) {
+                $unit = $pricing->resolveUnitPrice($variant->getProduct(), $order->getCompany(), $qty);
                 $item = (new OrderItem())
                     ->setVariant($variant)
                     ->setQuantity($qty)
-                    ->setUnitPriceCents($variant->getProduct()->getBasePriceCents())
+                    ->setUnitPriceCents($unit)
                     ->setMarking($marking);
                 $order->addItem($item);
                 $em->persist($item);

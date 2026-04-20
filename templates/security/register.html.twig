@@ -1,62 +1,59 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/auth.html.twig' %}
 
 {% block title %}Inscription — Afdal{% endblock %}
 
-{% block body %}
-<main class="min-h-screen flex items-center justify-center px-6 py-12">
-    <div class="w-full max-w-md">
-        <div class="flex items-center gap-2 mb-8">
-            <div class="w-10 h-10 rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)] flex items-center justify-center font-display font-bold text-xl">A</div>
-            <span class="font-display font-semibold text-xl text-[var(--color-foreground)]">Afdal</span>
+{% block auth_content %}
+<div class="text-center lg:text-left mb-2">
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-navy-600)] tracking-tight">Créer votre compte</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-2 leading-relaxed text-left">
+        Invitation pour <span class="font-medium text-[var(--color-foreground)]">{{ invitation.email }}</span>
+        {% if invitation.isAdminInvitation() %}
+            en tant qu'<span class="font-medium text-[var(--color-primary)]">employé Afdal (admin)</span>
+        {% else %}
+            chez <span class="font-medium text-[var(--color-foreground)]">{{ invitation.company.name }}</span>
+        {% endif %}
+    </p>
+</div>
+
+<div class="mt-8">
+    {% if errors._global is defined %}
+        <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200/80 text-sm text-[var(--color-destructive)]" role="alert">
+            {{ errors._global }}
         </div>
+    {% endif %}
 
-        <div class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-8">
-            <h1 class="text-2xl font-semibold text-[var(--color-primary)] mb-1">Créer votre compte</h1>
-            <p class="text-sm text-[var(--color-secondary)] mb-6">
-                Invitation pour <span class="font-medium text-[var(--color-foreground)]">{{ invitation.email }}</span>
-                chez <span class="font-medium text-[var(--color-foreground)]">{{ invitation.company.name }}</span>
-            </p>
-
-            {% if errors._global is defined %}
-                <div class="mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-sm text-[var(--color-destructive)]" role="alert">
-                    {{ errors._global }}
-                </div>
+    <form method="post" class="space-y-4">
+        <label class="block">
+            <span class="form-label">Nom complet <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="text" name="full_name" value="{{ full_name }}" required autofocus
+                class="form-input {{ errors.full_name is defined ? 'border-[var(--color-destructive)]' : '' }}">
+            {% if errors.full_name is defined %}
+                <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.full_name }}</span>
             {% endif %}
+        </label>
 
-            <form method="post" class="space-y-4">
-                <label class="block">
-                    <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Nom complet <span class="text-[var(--color-destructive)]">*</span></span>
-                    <input type="text" name="full_name" value="{{ full_name }}" required autofocus
-                        class="w-full px-3 py-2 rounded-md border {{ errors.full_name is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-                    {% if errors.full_name is defined %}
-                        <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.full_name }}</span>
-                    {% endif %}
-                </label>
+        <label class="block">
+            <span class="form-label">Mot de passe <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="password" name="password" required minlength="8" autocomplete="new-password"
+                class="form-input {{ errors.password is defined ? 'border-[var(--color-destructive)]' : '' }}">
+            <span class="text-xs text-[var(--color-secondary)] mt-1 block">Minimum 8 caractères</span>
+            {% if errors.password is defined %}
+                <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.password }}</span>
+            {% endif %}
+        </label>
 
-                <label class="block">
-                    <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Mot de passe <span class="text-[var(--color-destructive)]">*</span></span>
-                    <input type="password" name="password" required minlength="8" autocomplete="new-password"
-                        class="w-full px-3 py-2 rounded-md border {{ errors.password is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-                    <span class="text-xs text-[var(--color-secondary)] mt-1 block">Minimum 8 caractères</span>
-                    {% if errors.password is defined %}
-                        <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.password }}</span>
-                    {% endif %}
-                </label>
+        <label class="block">
+            <span class="form-label">Confirmer le mot de passe <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="password" name="password_confirm" required autocomplete="new-password"
+                class="form-input {{ errors.password_confirm is defined ? 'border-[var(--color-destructive)]' : '' }}">
+            {% if errors.password_confirm is defined %}
+                <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.password_confirm }}</span>
+            {% endif %}
+        </label>
 
-                <label class="block">
-                    <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Confirmer le mot de passe <span class="text-[var(--color-destructive)]">*</span></span>
-                    <input type="password" name="password_confirm" required autocomplete="new-password"
-                        class="w-full px-3 py-2 rounded-md border {{ errors.password_confirm is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
-                    {% if errors.password_confirm is defined %}
-                        <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.password_confirm }}</span>
-                    {% endif %}
-                </label>
-
-                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-                    Créer mon compte
-                </button>
-            </form>
-        </div>
-    </div>
-</main>
+        <button type="submit" class="btn btn-primary w-full justify-center mt-2 h-11 font-medium">
+            Créer mon compte
+        </button>
+    </form>
+</div>
 {% endblock %}

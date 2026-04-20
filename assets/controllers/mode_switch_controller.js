@@ -1,11 +1,12 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['existing', 'new'];
+    static targets = ['existing', 'new', 'afdal'];
 
     switch(event) {
         const mode = event.target.value;
-        this.existingTarget.classList.toggle('hidden', mode !== 'existing');
-        this.newTarget.classList.toggle('hidden', mode !== 'new');
+        if (this.hasExistingTarget) this.existingTarget.classList.toggle('hidden', mode !== 'existing');
+        if (this.hasNewTarget) this.newTarget.classList.toggle('hidden', mode !== 'new');
+        if (this.hasAfdalTarget) this.afdalTarget.classList.toggle('hidden', mode !== 'afdal');
     }
 }

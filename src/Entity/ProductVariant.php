@@ -47,4 +47,8 @@ class ProductVariant
     public function setSku(string $v): self { $this->sku = $v; return $this; }
     public function getStock(): ?int { return $this->stock; }
     public function setStock(?int $v): self { $this->stock = $v; return $this; }
+
+    public function isStockTracked(): bool { return $this->stock !== null; }
+    public function isOutOfStock(): bool { return $this->stock !== null && $this->stock <= 0; }
+    public function isLowStock(int $threshold = 5): bool { return $this->stock !== null && $this->stock > 0 && $this->stock <= $threshold; }
 }

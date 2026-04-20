@@ -3,118 +3,210 @@
 {% block title %}{{ product.name }} — Catalogue{% endblock %}
 
 {% block content %}
-<a href="{{ path('app_catalogue') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] inline-flex items-center gap-1 mb-6">
-    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-    </svg>
-    Retour au catalogue
-</a>
+<nav class="flex items-center gap-2 text-xs text-[var(--color-secondary)] mb-8">
+    <a href="{{ path('app_catalogue') }}" class="hover:text-[var(--color-primary)] transition-colors inline-flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+        Catalogue
+    </a>
+    {% if product.category %}
+        <span class="text-[var(--color-border)]">/</span>
+        <span>{{ product.category }}</span>
+    {% endif %}
+</nav>
 
-<form method="post" action="{{ path('app_catalogue_add', {slug: product.slug}) }}"
-      class="grid grid-cols-1 lg:grid-cols-2 gap-8"
-      data-controller="quantities"
-      data-quantities-unit-price-value="{{ product.basePriceCents }}">
-    <div>
-        {% if product.images|length > 0 %}
-            <div class="aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 mb-3" data-controller="gallery">
-                <img data-gallery-target="main" src="{{ product.images|first }}" alt="{{ product.name }}"
-                     class="w-full h-full object-cover">
-            </div>
-            {% if product.images|length > 1 %}
-                <div class="grid grid-cols-5 gap-2">
-                    {% for img in product.images %}
-                        <button type="button"
-                                data-action="click->gallery#select"
-                                data-gallery-target="thumb"
-                                data-src="{{ img }}"
-                                class="aspect-square rounded-lg overflow-hidden border-2 {{ loop.first ? 'border-[var(--color-primary)]' : 'border-transparent' }} hover:border-[var(--color-primary)] transition-colors cursor-pointer">
-                            <img src="{{ img }}" alt="" class="w-full h-full object-cover">
-                        </button>
-                    {% endfor %}
+<form method="post" enctype="multipart/form-data" action="{{ path('app_catalogue_add', {slug: product.slug}) }}"
+      class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14"
+      data-controller="quantities gallery"
+      data-gallery-default-src-value="{{ product.primaryImage }}"
+      data-quantities-unit-price-value="{{ negotiated_price_cents ?? product.basePriceCents }}"
+      data-quantities-base-price-value="{{ product.basePriceCents }}"
+      data-quantities-negotiated-value="{{ negotiated_price_cents is not null ? 'true' : 'false' }}"
+      data-quantities-tiers-value="{{ price_tiers|json_encode }}">
+
+    {# ─────────── COLONNE GAUCHE : image + thumbs ─────────── #}
+    <div class="min-w-0">
+        <div class="rounded-2xl bg-white ring-1 ring-[var(--color-border-soft)] p-3 sm:p-4">
+            {% if product.imagePaths|length > 0 %}
+                <div class="relative rounded-xl overflow-hidden bg-[var(--color-muted)]/30" style="aspect-ratio: 1/1;">
+                    <img data-gallery-target="main" src="{{ product.primaryImage }}" alt="{{ product.name }}"
+                         class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300">
+                </div>
+                {% if product.imagePaths|length > 1 %}
+                    <div class="mt-3 flex gap-2 overflow-x-auto is-scrollbar-hidden -mx-1 px-1">
+                        {% for img in product.images %}
+                            <button type="button"
+                                    data-action="click->gallery#select"
+                                    data-gallery-target="thumb"
+                                    data-src="{{ img.path }}"
+                                    class="relative shrink-0 w-16 h-20 rounded-lg overflow-hidden bg-[var(--color-muted)]/40 ring-2 ring-offset-2 ring-offset-white {{ loop.first ? 'ring-[var(--color-primary)]' : 'ring-transparent hover:ring-[var(--color-border)]' }} transition-all cursor-pointer">
+                                <img src="{{ img.path }}" alt="" class="absolute inset-0 w-full h-full object-cover">
+                                {% if img.color %}
+                                    <span class="absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm" title="{{ img.color }}" style="background-color: {{ (product.variants|filter(v => v.color == img.color)|first).colorHex ?? '#fff' }}"></span>
+                                {% endif %}
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="rounded-xl bg-gradient-to-br from-[var(--color-muted)]/60 to-[var(--color-muted)]/30 flex items-center justify-center" style="aspect-ratio: 1/1;">
+                    <span class="font-display text-9xl font-bold text-white">{{ product.name|first|upper }}</span>
                 </div>
             {% endif %}
-        {% else %}
-            <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-4">
-                <span class="font-display text-7xl font-bold text-slate-300">{{ product.name|first|upper }}</span>
-            </div>
-        {% endif %}
+        </div>
     </div>
 
-    <div>
-        {% if product.category %}
-            <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">{{ product.category }}</div>
-        {% endif %}
-        <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">{{ product.name }}</h1>
-        {% if product.material %}
-            <p class="text-sm text-[var(--color-secondary)] mb-4">{{ product.material }}</p>
-        {% endif %}
-        {% if product.description %}
-            <p class="text-[var(--color-foreground)] mb-6">{{ product.description }}</p>
-        {% endif %}
-
-        <div class="text-2xl font-semibold text-[var(--color-primary)] mb-6">{{ product.basePriceCents|price }} <span class="text-sm font-normal text-[var(--color-secondary)]">HT / pièce</span></div>
-
-        <div class="space-y-6">
-            <div>
-                <h2 class="text-sm font-medium text-[var(--color-foreground)] mb-3">Couleur</h2>
-                <div class="flex flex-wrap gap-3" role="radiogroup" aria-label="Couleur">
-                    {% for v in variants_by_color %}
-                        <label class="cursor-pointer" data-quantities-target="colorLabel">
-                            <input type="radio" name="color" value="{{ loop.index0 }}" class="sr-only peer" {{ loop.first ? 'checked' }}
-                                data-action="change->quantities#selectColor"
-                                data-quantities-target="colorInput">
-                            <div class="flex items-center gap-2 px-3 py-2 rounded-md border border-[var(--color-border)] bg-white peer-checked:border-[var(--color-primary)] peer-checked:bg-[var(--color-muted)] transition-colors duration-200 hover:bg-[var(--color-muted)]">
-                                <span class="w-5 h-5 rounded-full border border-[var(--color-border)]" style="background-color: {{ v.hex }}"></span>
-                                <span class="text-sm font-medium">{{ v.color }}</span>
-                            </div>
-                        </label>
-                    {% endfor %}
-                </div>
+    {# ─────────── COLONNE DROITE : infos + matrice + marquage ─────────── #}
+    <div class="min-w-0 flex flex-col">
+        {# Titre + favori #}
+        <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="min-w-0">
+                {% if product.category %}
+                    <div class="text-[11px] font-semibold text-[var(--color-secondary)] uppercase tracking-[0.15em] mb-3">{{ product.category }}</div>
+                {% endif %}
+                <h1 class="font-display text-3xl sm:text-4xl font-semibold text-[var(--color-foreground)] leading-[1.1] tracking-tight">{{ product.name }}</h1>
+                {% if product.material %}
+                    <p class="mt-2 text-sm text-[var(--color-secondary)]">{{ product.material }}</p>
+                {% endif %}
             </div>
+            <button type="button"
+                data-controller="favorite-button"
+                data-favorite-button-url-value="{{ path('app_favorites_toggle', {id: product.id}) }}"
+                data-favorite-button-favorited-value="{{ is_favorited ? 'true' : 'false' }}"
+                data-action="click->favorite-button#toggle"
+                aria-pressed="{{ is_favorited ? 'true' : 'false' }}"
+                title="{{ is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                class="shrink-0 w-11 h-11 rounded-full bg-white ring-1 ring-[var(--color-border)] hover:ring-[var(--color-destructive)] flex items-center justify-center transition-all cursor-pointer {{ is_favorited ? 'text-[var(--color-destructive)]' : 'text-[var(--color-secondary)]' }}">
+                <svg data-favorite-button-target="icon" class="w-5 h-5" fill="{{ is_favorited ? 'currentColor' : 'none' }}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+                </svg>
+                <span data-favorite-button-target="label" class="sr-only">{{ is_favorited ? 'Favori' : 'Ajouter aux favoris' }}</span>
+            </button>
+        </div>
 
-            <div>
-                <h2 class="text-sm font-medium text-[var(--color-foreground)] mb-3">Tailles & quantités</h2>
-                {% for v in variants_by_color %}
-                    <div class="space-y-1 {{ not loop.first ? 'hidden' : '' }}" data-quantities-target="colorPanel" data-color-index="{{ loop.index0 }}">
-                        {% for size, info in v.sizes %}
-                            <div class="flex items-center gap-4 p-3 rounded-lg border border-[var(--color-border-soft)] hover:border-[var(--color-border)] hover:bg-[var(--color-muted)]/40 transition-colors">
-                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-md bg-[var(--color-muted)] font-display font-semibold text-[var(--color-foreground)] text-sm shrink-0">{{ size }}</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs text-[var(--color-secondary)] font-mono truncate">{{ info.sku }}</div>
-                                    <div class="text-xs text-[var(--color-secondary)]">Taille {{ size }}</div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button type="button" tabindex="-1"
-                                        data-action="click->quantities#decrement"
-                                        data-quantities-target="decBtn"
-                                        aria-label="Diminuer"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg>
-                                    </button>
-                                    <input type="number" name="quantities[{{ info.id }}]" min="0" value="0" step="1"
-                                        data-action="input->quantities#recompute"
-                                        data-quantities-target="qtyInput"
-                                        class="form-input !w-16 text-center font-semibold text-[var(--color-foreground)]">
-                                    <button type="button" tabindex="-1"
-                                        data-action="click->quantities#increment"
-                                        data-quantities-target="incBtn"
-                                        aria-label="Augmenter"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                                    </button>
-                                </div>
+        {# Prix #}
+        <div class="mb-8 pb-6 border-b border-[var(--color-border-soft)]">
+            {% if negotiated_price_cents is not null %}
+                <div class="inline-flex items-center gap-2 mb-2 text-[11px] uppercase tracking-[0.12em] text-emerald-700 font-semibold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Tarif négocié
+                </div>
+                <div class="flex items-baseline gap-3 mb-1">
+                    <span class="font-display text-4xl font-semibold text-[var(--color-foreground)] tracking-tight">{{ negotiated_price_cents|price }}</span>
+                    <span class="text-sm text-[var(--color-secondary)]">HT / pièce</span>
+                </div>
+                <div class="text-xs text-[var(--color-secondary)]"><span class="line-through">{{ product.basePriceCents|price }}</span> tarif standard</div>
+            {% else %}
+                <div class="flex items-baseline gap-3 mb-3">
+                    <span class="font-display text-4xl font-semibold text-[var(--color-foreground)] tracking-tight">{{ product.basePriceCents|price }}</span>
+                    <span class="text-sm text-[var(--color-secondary)]">HT / pièce</span>
+                </div>
+                {% if price_tiers|length > 0 %}
+                    <div class="flex flex-wrap gap-2">
+                        {% for t in price_tiers %}
+                            <div class="inline-flex items-baseline gap-1.5 px-3 py-1.5 rounded-full bg-white ring-1 ring-[var(--color-border-soft)] text-xs">
+                                <span class="text-[var(--color-secondary)]">dès</span>
+                                <span class="font-semibold text-[var(--color-foreground)]">{{ t.min_qty }}</span>
+                                <span class="text-[var(--color-border)]">·</span>
+                                <span class="font-semibold text-[var(--color-primary)]">{{ t.unit_cents|price }}</span>
                             </div>
                         {% endfor %}
                     </div>
-                {% endfor %}
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {# Matrice — style lineone #}
+        <div class="mb-6">
+            <div class="flex items-baseline justify-between mb-4">
+                <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)]">Tailles & quantités</h2>
+                <span class="text-xs text-[var(--color-secondary)]">Quantité par couleur et taille</span>
             </div>
 
-            <details class="bg-white rounded-md border border-[var(--color-border)] p-4">
-                <summary class="cursor-pointer text-sm font-medium text-[var(--color-foreground)]">Ajouter un marquage (optionnel)</summary>
-                <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-2xl bg-white ring-1 ring-[var(--color-border-soft)] p-2 sm:p-3 shadow-[0_1px_3px_rgba(15,23,42,0.02)]">
+                <div class="is-scrollbar-hidden overflow-x-auto">
+                    <table class="w-full text-left" style="border-collapse: separate; border-spacing: 0 4px;">
+                        <thead>
+                            <tr>
+                                <th class="whitespace-nowrap rounded-l-xl bg-[var(--color-muted)]/60 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-secondary)]">Couleur</th>
+                                {% for s in all_sizes %}
+                                    <th class="whitespace-nowrap bg-[var(--color-muted)]/60 px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-secondary)] min-w-[72px]">{{ s }}</th>
+                                {% endfor %}
+                                <th class="whitespace-nowrap rounded-r-xl bg-[var(--color-muted)]/60 px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-secondary)]">Ligne</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in variants_by_color %}
+                                {% set color_img = product.imageForColor(v.color) %}
+                                <tr data-quantities-target="row"
+                                    {% if color_img and color_img != product.primaryImage %}
+                                        data-color-image="{{ color_img }}"
+                                        data-action="mouseenter->gallery#peek mouseleave->gallery#restore"
+                                    {% endif %}
+                                    class="group transition-colors">
+                                    <td class="whitespace-nowrap rounded-l-xl bg-white group-hover:bg-[var(--color-primary-light)]/40 px-4 py-3 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-6 h-6 rounded-full ring-2 ring-white shadow-[0_0_0_1px_var(--color-border)] shrink-0" style="background-color: {{ v.hex ?: '#fff' }}"></span>
+                                            <span class="text-sm font-semibold text-[var(--color-foreground)]">{{ v.color }}</span>
+                                        </div>
+                                    </td>
+                                    {% for s in all_sizes %}
+                                        {% set info = v.sizes[s]|default(null) %}
+                                        <td class="bg-white group-hover:bg-[var(--color-primary-light)]/40 px-1.5 py-2 text-center align-middle transition-colors">
+                                            {% if info is null %}
+                                                <span class="text-[var(--color-secondary)]/30">—</span>
+                                            {% elseif info.out %}
+                                                <div class="flex flex-col items-center gap-1">
+                                                    <input type="number" disabled value="0"
+                                                           class="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-muted)]/40 text-center text-sm font-semibold opacity-40 cursor-not-allowed">
+                                                    <span class="text-[10px] text-[var(--color-destructive)] font-medium">Rupture</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="flex flex-col items-center gap-1">
+                                                    <input type="number" name="quantities[{{ info.id }}]" min="0" value="0" step="1"
+                                                        {% if info.stock is not null %}max="{{ info.stock }}"{% endif %}
+                                                        data-action="input->quantities#recompute"
+                                                        data-quantities-target="qtyInput"
+                                                        class="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-white text-center text-sm font-semibold text-[var(--color-foreground)] hover:border-[var(--color-secondary)] focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-ring)]/20 focus:outline-offset-0 transition-colors">
+                                                    {% if info.low %}
+                                                        <span class="text-[10px] text-amber-700 font-medium">{{ info.stock }} restant{{ info.stock > 1 ? 's' : '' }}</span>
+                                                    {% elseif info.stock is not null %}
+                                                        <span class="text-[10px] text-[var(--color-secondary)]">{{ info.stock }} dispo</span>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="whitespace-nowrap rounded-r-xl bg-white group-hover:bg-[var(--color-primary-light)]/40 px-4 py-3 text-right font-semibold text-sm text-[var(--color-foreground)] tabular-nums transition-colors" data-quantities-target="rowTotal">0</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Marquage #}
+        <details class="group rounded-2xl bg-white ring-1 ring-[var(--color-border-soft)] overflow-hidden">
+            <summary class="cursor-pointer px-5 py-4 flex items-center justify-between gap-4 list-none hover:bg-[var(--color-muted)]/30 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center shrink-0">
+                        <svg class="w-4.5 h-4.5 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" style="width:1.125rem;height:1.125rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                    </span>
+                    <div>
+                        <div class="text-sm font-semibold text-[var(--color-foreground)]">Ajouter un logo / marquage</div>
+                        <div class="text-xs text-[var(--color-secondary)]">Optionnel · validation BAT après commande</div>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-[var(--color-secondary)] transition-transform group-open:rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+            </summary>
+
+            <div class="px-5 pb-5 pt-2 space-y-4 border-t border-[var(--color-border-soft)]" data-controller="bat-upload">
+                <div class="grid grid-cols-2 gap-3">
                     <label>
-                        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1 block">Zone</span>
-                        <select name="marking_zone" class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white">
+                        <span class="text-[11px] font-semibold text-[var(--color-secondary)] uppercase tracking-[0.12em] mb-1.5 block">Zone</span>
+                        <select name="marking_zone" class="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-sm focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-ring)]/25 focus:outline-offset-0 transition-colors">
                             <option value="">Aucun</option>
                             <option value="poitrine">Poitrine</option>
                             <option value="dos">Dos</option>
@@ -122,8 +214,8 @@
                         </select>
                     </label>
                     <label>
-                        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1 block">Taille</span>
-                        <select name="marking_size" class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white">
+                        <span class="text-[11px] font-semibold text-[var(--color-secondary)] uppercase tracking-[0.12em] mb-1.5 block">Taille</span>
+                        <select name="marking_size" class="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-white text-sm focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-ring)]/25 focus:outline-offset-0 transition-colors">
                             <option value="A6">A6</option>
                             <option value="A5">A5</option>
                             <option value="A4" selected>A4</option>
@@ -131,21 +223,76 @@
                         </select>
                     </label>
                 </div>
-            </details>
 
-            <div class="bg-[var(--color-muted)] rounded-md p-4 flex items-center justify-between">
                 <div>
-                    <div class="text-xs text-[var(--color-secondary)] uppercase tracking-wide">Total</div>
-                    <div class="text-2xl font-semibold text-[var(--color-primary)]">
-                        <span data-quantities-target="totalPrice">0,00 €</span>
+                    <div class="text-[11px] font-semibold text-[var(--color-secondary)] uppercase tracking-[0.12em] mb-1.5">Logo</div>
+                    <p class="text-xs text-[var(--color-secondary)] mb-3">JPG, PNG, WebP, SVG ou PDF · Afdal validera le BAT après commande.</p>
+
+                    <input type="file" name="marking_logo" accept=".jpg,.jpeg,.png,.webp,.svg,.pdf,image/*,application/pdf"
+                           data-bat-upload-target="input"
+                           data-action="change->bat-upload#select"
+                           class="sr-only">
+
+                    <button type="button"
+                            data-bat-upload-target="dropzone"
+                            data-action="click->bat-upload#pick"
+                            class="w-full flex flex-col items-center justify-center gap-1.5 p-5 rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/30 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all cursor-pointer">
+                        <svg class="w-6 h-6 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+                        <span class="text-sm font-medium text-[var(--color-foreground)]">Choisir un logo</span>
+                    </button>
+
+                    <div data-bat-upload-target="preview" class="hidden mt-3 rounded-2xl border border-[var(--color-border)] bg-white p-4">
+                        <div class="flex items-start gap-3">
+                            <div data-bat-upload-target="thumb" class="w-16 h-16 shrink-0 rounded-xl overflow-hidden border border-[var(--color-border-soft)] bg-[var(--color-muted)] flex items-center justify-center"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)] font-semibold mb-0.5">Aperçu · joint à la commande</div>
+                                <div data-bat-upload-target="filename" class="text-sm font-medium text-[var(--color-foreground)] truncate"></div>
+                                <div data-bat-upload-target="filesize" class="text-xs text-[var(--color-secondary)]"></div>
+                            </div>
+                            <button type="button" data-action="click->bat-upload#clear"
+                                    class="shrink-0 w-8 h-8 rounded-lg text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-destructive)] flex items-center justify-center transition-colors"
+                                    aria-label="Retirer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="text-xs text-[var(--color-secondary)]"><span data-quantities-target="totalQty">0</span> pièce(s)</div>
                 </div>
-                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-                    Ajouter au panier
-                </button>
             </div>
+        </details>
+
+        {# Total + CTA — inline en bas de la colonne droite #}
+        <div class="mt-6 rounded-2xl bg-[var(--color-primary)] text-white px-5 py-4 flex items-center justify-between gap-4 shadow-[0_10px_30px_-12px_rgba(23,92,211,0.45)]">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-0.5">Total</div>
+                <div class="flex items-baseline gap-2">
+                    <span data-quantities-target="totalPrice" class="font-display text-2xl font-semibold tracking-tight">0,00 €</span>
+                    <span class="text-xs text-white/60">HT</span>
+                </div>
+                <div class="text-xs text-white/70 truncate mt-0.5">
+                    <span data-quantities-target="totalQty">0</span> pièce(s) · <span data-quantities-target="unitPrice" class="font-medium text-white">{{ (negotiated_price_cents ?? product.basePriceCents)|price }}</span>/pc
+                </div>
+                <div data-quantities-target="savings" class="hidden mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-300">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/></svg>
+                    <span>−<span data-quantities-target="savingsAmount">0,00 €</span> <span class="opacity-70">(<span data-quantities-target="savingsPct">0</span>%)</span></span>
+                </div>
+                <div data-quantities-target="nextTier" class="hidden mt-0.5 text-[11px] text-amber-300">
+                    + <span data-quantities-target="nextTierDelta" class="font-semibold">0</span> pc → <span data-quantities-target="nextTierPrice" class="font-semibold">—</span>/pc
+                </div>
+            </div>
+            <button type="submit" class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-[var(--color-primary)] font-medium text-sm cursor-pointer transition-all duration-200 hover:bg-[var(--color-primary-focus)] hover:text-white">
+                Ajouter au panier
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+            </button>
         </div>
+
     </div>
+
+    {# Description — full-width sous les deux colonnes #}
+    {% if product.description %}
+        <section class="lg:col-span-2 rounded-2xl bg-white ring-1 ring-[var(--color-border-soft)] p-6 sm:p-8">
+            <div class="text-[11px] font-semibold text-[var(--color-secondary)] uppercase tracking-[0.15em] mb-3">Description</div>
+            <p class="text-[var(--color-body)] leading-relaxed whitespace-pre-line max-w-4xl">{{ product.description }}</p>
+        </section>
+    {% endif %}
 </form>
 {% endblock %}

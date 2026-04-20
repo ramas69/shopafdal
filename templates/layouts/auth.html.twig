@@ -1,0 +1,223 @@
+{# Layout auth — 2 colonnes strictes 50% / 50% (grille), comme Lineone login-2 #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="relative min-h-[100dvh] w-full overflow-x-hidden bg-white">
+    {# Logo fixe : au-dessus de la colonne gauche uniquement (comme la maquette) #}
+    <div class="pointer-events-none fixed top-0 left-0 z-30 hidden lg:block w-[50vw] p-6 xl:p-8 xl:px-10">
+        <div class="pointer-events-auto inline-flex">
+            <a href="{{ path('app_home') }}" class="inline-flex items-center gap-3 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)]">
+                {% include '_partials/brand_logo.html.twig' with { class: 'h-14 xl:h-16 w-auto max-h-[4.5rem]' } %}
+            </a>
+        </div>
+    </div>
+
+    {# Grille : exactement 2 colonnes égales à partir de lg #}
+    <div class="min-h-[100dvh] w-full grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-1">
+        {# Colonne gauche : fond #f0f6ff → canvas, halos, trait lumineux ; carte verre pour l’illustration #}
+        <aside class="relative hidden lg:flex min-h-0 min-w-0 w-full flex-col items-center justify-center bg-gradient-to-br from-[#f0f6ff] via-[var(--color-canvas)] to-white px-8 py-16 xl:px-12 xl:py-20 overflow-hidden lg:pt-28">
+            <div class="pointer-events-none absolute inset-0 opacity-[0.45] auth-panel-grid-light" aria-hidden="true"></div>
+            <div class="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[min(55%,22rem)] aspect-square rounded-full bg-gradient-to-br from-[var(--color-primary)]/18 via-indigo-400/12 to-violet-500/10 blur-3xl" aria-hidden="true"></div>
+            <div class="pointer-events-none absolute -left-28 bottom-0 w-80 h-80 rounded-full bg-[var(--color-primary)]/10 blur-3xl" aria-hidden="true"></div>
+            <div class="pointer-events-none absolute top-1/4 left-1/4 w-px h-32 bg-gradient-to-b from-transparent via-[var(--color-primary)]/20 to-transparent rotate-12" aria-hidden="true"></div>
+
+            <div class="relative w-full h-full max-h-[min(72vh,30rem)] flex flex-col items-center justify-center gap-10">
+                {# Carte verre : rounded-3xl, blanc semi-transparent, flou, ombre bleutée #}
+                <div class="w-full max-w-md xl:max-w-lg rounded-3xl bg-white/55 backdrop-blur-md p-6 xl:p-8 shadow-[0_1px_0_0_rgb(255_255_255/85%),0_28px_56px_-16px_rgb(23_92_211/18%),0_0_0_1px_rgb(23_92_211/6%)]">
+                    {% block auth_illustration %}
+                        <svg class="auth-journey w-full h-auto max-h-[min(60vh,26rem)]" viewBox="0 0 640 520" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="aj-shirt" x1="260" y1="160" x2="380" y2="320" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#175CD3"/>
+                                    <stop offset="1" stop-color="#4F46E5"/>
+                                </linearGradient>
+                                <radialGradient id="aj-glow" cx="320" cy="240" r="180" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#175CD3" stop-opacity="0.18"/>
+                                    <stop offset="1" stop-color="#175CD3" stop-opacity="0"/>
+                                </radialGradient>
+                                <filter id="aj-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.12"/>
+                                </filter>
+                            </defs>
+
+                            {# Halo central #}
+                            <circle cx="320" cy="260" r="220" fill="url(#aj-glow)"/>
+
+                            {# Orbite pointillée #}
+                            <circle cx="320" cy="260" r="185" stroke="#C7D7F5" stroke-width="1.5" stroke-dasharray="3 6" fill="none" opacity="0.7"/>
+
+                            {# Lignes de connexion (tracées séquentiellement) #}
+                            <g stroke="#175CD3" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.35">
+                                <line class="aj-line aj-line-1" x1="320" y1="260" x2="320" y2="85"/>
+                                <line class="aj-line aj-line-2" x1="320" y1="260" x2="495" y2="260"/>
+                                <line class="aj-line aj-line-3" x1="320" y1="260" x2="320" y2="435"/>
+                                <line class="aj-line aj-line-4" x1="320" y1="260" x2="145" y2="260"/>
+                            </g>
+
+                            {# T-shirt central #}
+                            <g filter="url(#aj-shadow)" transform="translate(320 260)">
+                                <path d="M -62 -50 L -32 -74 Q -18 -86 0 -86 Q 18 -86 32 -74 L 62 -50 L 48 -28 L 38 -36 L 38 62 Q 38 74 26 74 L -26 74 Q -38 74 -38 62 L -38 -36 L -48 -28 Z"
+                                      fill="url(#aj-shirt)"/>
+                                <path d="M -14 -80 Q 0 -68 14 -80" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.55"/>
+                                {# Empreinte logo au centre du T-shirt (anime) #}
+                                <circle class="aj-shirt-badge" cx="0" cy="10" r="16" fill="white" opacity="0"/>
+                                <path class="aj-shirt-check" d="M -7 10 L -2 15 L 8 3" stroke="#175CD3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0"/>
+                            </g>
+
+                            {# Node 1 — Catalogue (haut) — wrapper outer = positionnement, inner = scale CSS #}
+                            <g transform="translate(320 85)">
+                                <g class="aj-node aj-node-1">
+                                    <circle r="34" fill="white" stroke="#E2E8F0" stroke-width="1.5" filter="url(#aj-shadow)"/>
+                                    <g transform="translate(-12 -12)" stroke="#175CD3" stroke-width="2.2" stroke-linecap="round" fill="none">
+                                        <rect x="0" y="0" width="10" height="10" rx="1.5"/>
+                                        <rect x="14" y="0" width="10" height="10" rx="1.5"/>
+                                        <rect x="0" y="14" width="10" height="10" rx="1.5"/>
+                                        <rect x="14" y="14" width="10" height="10" rx="1.5"/>
+                                    </g>
+                                </g>
+                                <text x="0" y="60" text-anchor="middle" fill="#0F172A" font-size="12" font-weight="600" font-family="Inter, system-ui, sans-serif">Catalogue</text>
+                            </g>
+
+                            {# Node 2 — Marquage (droite) #}
+                            <g transform="translate(495 260)">
+                                <g class="aj-node aj-node-2">
+                                    <circle r="34" fill="white" stroke="#E2E8F0" stroke-width="1.5" filter="url(#aj-shadow)"/>
+                                    <g stroke="#175CD3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                                        <path d="M -4 -14 L 4 -14 L 6 -4 L -6 -4 Z" fill="#175CD3" fill-opacity="0.1"/>
+                                        <line x1="-12" y1="-4" x2="12" y2="-4"/>
+                                        <rect x="-8" y="-4" width="16" height="6" rx="1"/>
+                                        <line x1="-14" y1="8" x2="14" y2="8"/>
+                                        <line x1="-10" y1="14" x2="10" y2="14"/>
+                                    </g>
+                                </g>
+                                <text x="0" y="60" text-anchor="middle" fill="#0F172A" font-size="12" font-weight="600" font-family="Inter, system-ui, sans-serif">Marquage</text>
+                            </g>
+
+                            {# Node 3 — BAT validé (bas) #}
+                            <g transform="translate(320 435)">
+                                <g class="aj-node aj-node-3">
+                                    <circle r="34" fill="white" stroke="#E2E8F0" stroke-width="1.5" filter="url(#aj-shadow)"/>
+                                    <circle r="14" fill="#10B981"/>
+                                    <path d="M -6 0 L -2 5 L 7 -4" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </g>
+                                <text x="0" y="60" text-anchor="middle" fill="#0F172A" font-size="12" font-weight="600" font-family="Inter, system-ui, sans-serif">BAT validé</text>
+                            </g>
+
+                            {# Node 4 — Livraison (gauche) #}
+                            <g transform="translate(145 260)">
+                                <g class="aj-node aj-node-4">
+                                    <circle r="34" fill="white" stroke="#E2E8F0" stroke-width="1.5" filter="url(#aj-shadow)"/>
+                                    <g transform="translate(-14 -8)" stroke="#175CD3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                                        <rect x="0" y="0" width="18" height="14" rx="1.5"/>
+                                        <path d="M 18 4 L 24 4 L 28 9 L 28 14 L 18 14 Z"/>
+                                        <circle cx="6" cy="16" r="2.5" fill="white"/>
+                                        <circle cx="22" cy="16" r="2.5" fill="white"/>
+                                    </g>
+                                </g>
+                                <text x="0" y="60" text-anchor="middle" fill="#0F172A" font-size="12" font-weight="600" font-family="Inter, system-ui, sans-serif">Livraison</text>
+                            </g>
+                        </svg>
+                        <style>
+                            .auth-journey .aj-line {
+                                stroke-dasharray: 175;
+                                stroke-dashoffset: 175;
+                                opacity: 0;
+                                animation: aj-draw-line 4s ease-out infinite;
+                            }
+                            .auth-journey .aj-line-1 { animation-delay: 0s; }
+                            .auth-journey .aj-line-2 { animation-delay: 0.8s; }
+                            .auth-journey .aj-line-3 { animation-delay: 1.6s; }
+                            .auth-journey .aj-line-4 { animation-delay: 2.4s; }
+
+                            .auth-journey .aj-node {
+                                transform-origin: center;
+                                transform-box: fill-box;
+                                animation: aj-pulse-node 4s ease-in-out infinite;
+                            }
+                            .auth-journey .aj-node-1 { animation-delay: 0.2s; }
+                            .auth-journey .aj-node-2 { animation-delay: 1.0s; }
+                            .auth-journey .aj-node-3 { animation-delay: 1.8s; }
+                            .auth-journey .aj-node-4 { animation-delay: 2.6s; }
+
+                            .auth-journey .aj-shirt-badge {
+                                animation: aj-badge-appear 4s ease-in-out infinite;
+                                animation-delay: 1.8s;
+                                transform-origin: center;
+                                transform-box: fill-box;
+                            }
+                            .auth-journey .aj-shirt-check {
+                                animation: aj-check-appear 4s ease-in-out infinite;
+                                animation-delay: 2s;
+                            }
+
+                            @keyframes aj-draw-line {
+                                0% { stroke-dashoffset: 175; opacity: 0; }
+                                5% { opacity: 0.6; }
+                                15% { stroke-dashoffset: 0; opacity: 0.8; }
+                                60% { stroke-dashoffset: 0; opacity: 0.35; }
+                                100% { stroke-dashoffset: 0; opacity: 0.35; }
+                            }
+                            @keyframes aj-pulse-node {
+                                0%, 100% { transform: scale(0.98); filter: drop-shadow(0 2px 6px rgba(23, 92, 211, 0)); }
+                                8% { transform: scale(1.08); filter: drop-shadow(0 6px 16px rgba(23, 92, 211, 0.35)); }
+                                20% { transform: scale(1); filter: drop-shadow(0 2px 6px rgba(23, 92, 211, 0.12)); }
+                            }
+                            @keyframes aj-badge-appear {
+                                0%, 45% { opacity: 0; transform: scale(0.5); }
+                                55% { opacity: 1; transform: scale(1.1); }
+                                70%, 100% { opacity: 1; transform: scale(1); }
+                            }
+                            @keyframes aj-check-appear {
+                                0%, 50% { opacity: 0; }
+                                60%, 100% { opacity: 1; }
+                            }
+
+                            @media (prefers-reduced-motion: reduce) {
+                                .auth-journey .aj-line,
+                                .auth-journey .aj-node,
+                                .auth-journey .aj-shirt-badge,
+                                .auth-journey .aj-shirt-check {
+                                    animation: none;
+                                }
+                                .auth-journey .aj-line { stroke-dashoffset: 0; opacity: 0.5; }
+                                .auth-journey .aj-shirt-badge { opacity: 1; }
+                                .auth-journey .aj-shirt-check { opacity: 1; }
+                            }
+                        </style>
+                    {% endblock %}
+                </div>
+                {# Accroche sous l’image #}
+                <div class="text-center max-w-sm px-2">
+                    <p class="font-display text-lg xl:text-xl font-semibold text-[var(--color-foreground)] tracking-tight leading-snug">
+                        Vos commandes textile,<br><span class="text-[var(--color-primary)]">pilotées en un seul endroit.</span>
+                    </p>
+                    <p class="mt-3 text-sm text-[var(--color-secondary)] leading-relaxed">
+                        Catalogue, suivi et antennes — pour les équipes qui achètent en B2B.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        {# Colonne droite : dégradé léger + halo bleu haut-droite ; contenu max 22rem #}
+        <main class="relative flex min-h-[100dvh] min-w-0 w-full flex-col bg-gradient-to-b from-white via-[var(--color-navy-50)]/35 to-white lg:min-h-0 lg:h-full lg:border-l lg:border-[var(--color-border-soft)]">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_110%_90%_at_100%_-5%,rgb(23_92_211/7%),transparent_52%)]" aria-hidden="true"></div>
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_100%_15%,rgb(99_102_241/5%),transparent_45%)]" aria-hidden="true"></div>
+            <div class="flex w-full max-w-[26rem] mx-auto grow flex-col justify-center px-6 sm:px-8 py-12 relative z-[1]">
+                <div class="lg:hidden flex justify-center mb-8">
+                    <a href="{{ path('app_home') }}" class="inline-flex rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)]">
+                        {% include '_partials/brand_logo.html.twig' with { class: 'h-16 w-auto max-h-[4.25rem]' } %}
+                    </a>
+                </div>
+
+                {% block auth_content %}{% endblock %}
+            </div>
+
+            <div class="shrink-0 pb-8 px-6 text-center">
+                <p class="text-xs text-[var(--color-secondary)]">
+                    &copy; {{ "now"|date('Y') }} Afdal · B2B
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

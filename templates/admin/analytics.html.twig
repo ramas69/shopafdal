@@ -1,0 +1,141 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Analytics — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-end justify-between gap-4 flex-wrap">
+    <div>
+        <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Tableau de bord</div>
+        <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Analytics</h1>
+    </div>
+    <a href="{{ path('app_admin_exports') }}" class="btn btn-outline text-sm">Exports CSV</a>
+</div>
+
+<section class="mb-6" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem;">
+    {# CA total — indigo #}
+    {% set ca_parts = (totals.revenue_cents|price)|split(',') %}
+    <div class="card p-4 sm:p-5">
+        <div class="flex w-12 h-12 items-center justify-center rounded-xl shrink-0" style="background-color: #6366F1; box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5), 0 8px 10px -6px rgba(99, 102, 241, 0.5);">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.538 0 2.873.87 3.536 2.143"/></svg>
+        </div>
+        <p class="mt-16 text-[var(--color-secondary)]">CA total</p>
+        <p class="mt-2 font-medium text-[var(--color-foreground)]">
+            <span class="text-2xl">{{ ca_parts[0] }}</span><span class="text-base">,{{ ca_parts[1]|default('00 €') }}</span>
+        </p>
+        <p class="mt-1 text-xs text-[var(--color-secondary)]">hors annulées</p>
+    </div>
+
+    {# Commandes — amber #}
+    <div class="card p-4 sm:p-5">
+        <div class="flex w-12 h-12 items-center justify-center rounded-xl shrink-0" style="background-color: #F59E0B; box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.5), 0 8px 10px -6px rgba(245, 158, 11, 0.5);">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </div>
+        <p class="mt-16 text-[var(--color-secondary)]">Commandes</p>
+        <p class="mt-2 font-medium text-[var(--color-foreground)]">
+            <span class="text-2xl">{{ totals.orders_count }}</span>
+        </p>
+        <p class="mt-1 text-xs text-[var(--color-secondary)]">toutes entreprises</p>
+    </div>
+
+    {# Ticket moyen — sky #}
+    {% set pm_parts = (totals.avg_ticket_cents|price)|split(',') %}
+    <div class="card p-4 sm:p-5">
+        <div class="flex w-12 h-12 items-center justify-center rounded-xl shrink-0" style="background-color: #0EA5E9; box-shadow: 0 20px 25px -5px rgba(14, 165, 233, 0.5), 0 8px 10px -6px rgba(14, 165, 233, 0.5);">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p class="mt-16 text-[var(--color-secondary)]">Ticket moyen</p>
+        <p class="mt-2 font-medium text-[var(--color-foreground)]">
+            <span class="text-2xl">{{ pm_parts[0] }}</span><span class="text-base">,{{ pm_parts[1]|default('00 €') }}</span>
+        </p>
+        <p class="mt-1 text-xs text-[var(--color-secondary)]">par commande</p>
+    </div>
+
+    {# Livrées — emerald #}
+    <div class="card p-4 sm:p-5">
+        <div class="flex w-12 h-12 items-center justify-center rounded-xl shrink-0" style="background-color: #10B981; box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.5), 0 8px 10px -6px rgba(16, 185, 129, 0.5);">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </div>
+        <p class="mt-16 text-[var(--color-secondary)]">Livrées</p>
+        <p class="mt-2 font-medium text-[var(--color-foreground)]">
+            <span class="text-2xl">{{ totals.delivered_count }}</span>
+        </p>
+        <p class="mt-1 text-xs text-[var(--color-secondary)]">commandes terminées</p>
+    </div>
+</section>
+
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div class="card p-6 lg:col-span-2" data-controller="chart"
+         data-chart-type-value="bar"
+         data-chart-minimal-value="true"
+         data-chart-payload-value="{{ {
+             labels: monthly|map(r => r.month|slice(5, 2)),
+             datasets: [{
+                 data: monthly|map(r => r.revenue / 100),
+                 backgroundColor: monthly|map(r => r.projected ? '#C7D2FE' : '#6366F1'),
+             }]
+         }|json_encode }}">
+        <div class="flex items-end justify-between mb-4 gap-4">
+            <h2 class="font-display font-semibold text-[var(--color-foreground)]">CA · 6 derniers mois + 6 prochains</h2>
+            <div class="flex items-center gap-3 text-xs text-[var(--color-secondary)]">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background:#6366F1"></span>Réalisé</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background:#C7D2FE"></span>Projeté</span>
+            </div>
+        </div>
+        <div class="relative h-72">
+            <canvas data-chart-target="canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="card p-6" data-controller="chart"
+         data-chart-type-value="doughnut"
+         data-chart-payload-value="{{ {
+             labels: status_dist|map(r => status_labels[r.status]|default(r.status)),
+             datasets: [{
+                 data: status_dist|map(r => r.count),
+                 backgroundColor: ['#0EA5E9', '#8B5CF6', '#F59E0B', '#10B981', '#F43F5E'],
+             }]
+         }|json_encode }}">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-4">Statuts actifs</h2>
+        <div class="relative h-64">
+            <canvas data-chart-target="canvas"></canvas>
+        </div>
+    </div>
+</section>
+
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6" data-controller="chart"
+         data-chart-type-value="bar"
+         data-chart-payload-value="{{ {
+             labels: top_products|map(r => r.name),
+             datasets: [{
+                 label: 'Pièces',
+                 data: top_products|map(r => r.qty),
+                 backgroundColor: '#0A0A0A',
+             }]
+         }|json_encode }}"
+         data-chart-horizontal-value="true">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-4">Top 10 produits</h2>
+        <div class="relative h-80"><canvas data-chart-target="canvas"></canvas></div>
+    </div>
+
+    <div class="card p-6">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-4">Top 10 entreprises</h2>
+        <ol class="space-y-2">
+            {% for c in top_companies %}
+                <li class="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[var(--color-muted)]">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-6 h-6 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-semibold flex items-center justify-center shrink-0">{{ loop.index }}</span>
+                        <div class="min-w-0">
+                            <div class="font-medium text-[var(--color-foreground)] truncate">{{ c.name }}</div>
+                            <div class="text-xs text-[var(--color-secondary)]">{{ c.orders_count }} commande{{ c.orders_count > 1 ? 's' : '' }}</div>
+                        </div>
+                    </div>
+                    <div class="font-semibold text-sm text-[var(--color-primary)] whitespace-nowrap">{{ c.revenue|price }}</div>
+                </li>
+            {% else %}
+                <li class="text-sm text-[var(--color-secondary)] text-center py-4">Aucune donnée</li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+{% endblock %}

@@ -21,3 +21,12 @@
 
 # Design template reference (not to be deployed)
 /lineone-html/
+
+# User-uploaded files (logos BAT, produits) — persisted on server only
+/public/uploads/markings/*
+/public/uploads/products/*
+!/public/uploads/markings/.gitkeep
+!/public/uploads/products/.gitkeep
+
+# macOS
+.DS_Store

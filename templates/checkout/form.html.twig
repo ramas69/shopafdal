@@ -3,14 +3,17 @@
 {% block title %}Finaliser la commande — Afdal{% endblock %}
 
 {% block content %}
-<a href="{{ path('app_cart') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] mb-4 inline-block">&larr; Retour au panier</a>
-<h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Finaliser la commande</h1>
-<p class="text-[var(--color-secondary)] mb-8">Choisissez l'antenne destinataire et validez.</p>
+<a href="{{ path('app_cart') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] mb-6 inline-block transition-colors">&larr; Retour au panier</a>
+<div class="page-header">
+    <p class="page-header__eyebrow">Commande</p>
+    <h1 class="page-header__title">Finaliser la commande</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Choisissez l'antenne destinataire et validez.</p>
+</div>
 
 <form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
-        <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Antenne de livraison</h2>
+        <section class="card rounded-2xl p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Antenne de livraison</h2>
             <div class="space-y-2" role="radiogroup" aria-label="Antenne">
                 {% for antenna in antennas %}
                     <label class="flex items-start gap-3 p-4 rounded-md border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-muted)] transition-colors duration-200 has-[:checked]:border-[var(--color-primary)] has-[:checked]:bg-[var(--color-muted)]">
@@ -28,15 +31,15 @@
             {% endif %}
         </section>
 
-        <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Notes (optionnel)</h2>
+        <section class="card rounded-2xl p-6">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Notes (optionnel)</h2>
             <textarea name="notes" rows="3" placeholder="Instructions particulières, délai souhaité..."
                 class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">{{ notes }}</textarea>
         </section>
     </div>
 
-    <aside class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6 h-fit lg:sticky lg:top-20">
-        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Récapitulatif</h2>
+    <aside class="card rounded-2xl p-6 h-fit lg:sticky lg:top-20">
+        <h2 class="font-display text-base font-semibold text-[var(--color-foreground)] mb-4">Récapitulatif</h2>
         <div class="divide-y divide-[var(--color-border)] mb-4">
             {% for line in lines %}
                 <div class="py-2 flex justify-between gap-3 text-sm">
@@ -52,6 +55,10 @@
             <span class="text-sm text-[var(--color-secondary)]">Total HT</span>
             <span class="text-xl font-semibold text-[var(--color-primary)]">{{ total_cents|price }}</span>
         </div>
+        <label class="flex items-start gap-2 mb-3 text-xs text-[var(--color-secondary)] cursor-pointer">
+            <input type="checkbox" name="cgv_accepted" value="1" required class="form-checkbox !w-4 !h-4 mt-0.5 shrink-0">
+            <span>J'accepte les <a href="{{ path('app_legal_cgv') }}" target="_blank" class="text-[var(--color-primary)] hover:underline font-medium">Conditions Générales de Vente</a> d'Afdal.</span>
+        </label>
         <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
             Passer commande
         </button>

@@ -1,0 +1,23 @@
+{% extends 'layouts/auth.html.twig' %}
+
+{% block title %}Mot de passe oublié — Afdal{% endblock %}
+
+{% block auth_content %}
+<div class="text-center">
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-navy-600)] tracking-tight">Mot de passe oublié</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-2">Indiquez votre email : nous vous enverrons un lien pour en choisir un nouveau.</p>
+</div>
+
+<div class="mt-10 space-y-6">
+    {% for msg in app.flashes('reset_password_error') %}
+        <div class="rounded-lg border border-[var(--color-destructive)]/30 bg-[var(--color-destructive)]/5 p-3 text-sm text-[var(--color-destructive)]">{{ msg }}</div>
+    {% endfor %}
+
+    {{ form_start(requestForm, {'attr': {'class': 'space-y-4'}}) }}
+        {{ form_row(requestForm.email, {'attr': {'class': 'form-input'}, 'label_attr': {'class': 'form-label'}}) }}
+        <button type="submit" class="btn btn-primary w-full justify-center">Envoyer le lien</button>
+    {{ form_end(requestForm) }}
+
+    <a href="{{ path('app_login') }}" class="block text-center text-xs text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors">&larr; Retour à la connexion</a>
+</div>
+{% endblock %}

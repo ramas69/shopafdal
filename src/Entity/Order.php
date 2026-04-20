@@ -65,6 +65,15 @@ class Order
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $carrier = null;
+
+    #[ORM\Column(length: 80, nullable: true)]
+    private ?string $trackingNumber = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $estimatedDeliveryAt = null;
+
     /** @var Collection<int, OrderItem> */
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $items;
@@ -128,6 +137,30 @@ class Order
     }
 
     public function getUpdatedAt(): ?\DateTimeImmutable { return $this->updatedAt; }
+
+    public function getCarrier(): ?string { return $this->carrier; }
+    public function setCarrier(?string $v): self { $this->carrier = $v ?: null; return $this; }
+    public function getTrackingNumber(): ?string { return $this->trackingNumber; }
+    public function setTrackingNumber(?string $v): self { $this->trackingNumber = $v ?: null; return $this; }
+    public function getEstimatedDeliveryAt(): ?\DateTimeImmutable { return $this->estimatedDeliveryAt; }
+    public function setEstimatedDeliveryAt(?\DateTimeImmutable $v): self { $this->estimatedDeliveryAt = $v; return $this; }
+    public function setShippedAt(?\DateTimeImmutable $v): self { $this->shippedAt = $v; return $this; }
+
+    public function getTrackingUrl(): ?string
+    {
+        if (!$this->carrier || !$this->trackingNumber) {
+            return null;
+        }
+        $t = rawurlencode($this->trackingNumber);
+        return match (strtolower($this->carrier)) {
+            'chronopost' => 'https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=' . $t,
+            'colissimo' => 'https://www.laposte.fr/outils/suivre-vos-envois?code=' . $t,
+            'dpd' => 'https://www.dpd.fr/trace/' . $t,
+            'ups' => 'https://www.ups.com/track?tracknum=' . $t,
+            default => null,
+        };
+    }
+
     public function getItems(): Collection { return $this->items; }
 
     public function addItem(OrderItem $item): self

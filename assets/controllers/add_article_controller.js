@@ -153,10 +153,31 @@ export default class extends Controller {
                                 ${allSizes.map(s => {
                                     const v = group.sizes[s];
                                     if (!v) return '<td class="px-1 py-1 text-center text-[var(--color-secondary)]/40">—</td>';
+                                    if (v.out) {
+                                        return `<td class="px-1 py-1 text-center">
+                                            <div class="flex flex-col items-center gap-0.5">
+                                                <input type="number" disabled value="0" class="form-input !w-16 text-center font-semibold opacity-50 cursor-not-allowed bg-[var(--color-muted)]">
+                                                <span class="text-[10px] text-[var(--color-destructive)] font-medium">Rupture</span>
+                                            </div>
+                                        </td>`;
+                                    }
+                                    const maxAttr = v.stock == null ? '' : `max="${v.stock}"`;
+                                    let stockLabel = '';
+                                    if (v.stock != null) {
+                                        if (v.low) {
+                                            const plural = v.stock > 1 ? 's' : '';
+                                            stockLabel = `<span class="text-[10px] text-amber-700 font-medium">${v.stock} restant${plural}</span>`;
+                                        } else {
+                                            stockLabel = `<span class="text-[10px] text-[var(--color-secondary)]">${v.stock} dispo</span>`;
+                                        }
+                                    }
                                     return `<td class="px-1 py-1">
-                                        <input type="number" name="quantities[${v.id}]" min="0" value="0" step="1"
-                                               data-action="input->add-article#recomputeSubtotal"
-                                               class="form-input !w-16 text-center font-semibold">
+                                        <div class="flex flex-col items-center gap-0.5">
+                                            <input type="number" name="quantities[${v.id}]" min="0" value="0" step="1" ${maxAttr}
+                                                   data-action="input->add-article#recomputeSubtotal"
+                                                   class="form-input !w-16 text-center font-semibold">
+                                            ${stockLabel}
+                                        </div>
                                     </td>`;
                                 }).join('')}
                             </tr>

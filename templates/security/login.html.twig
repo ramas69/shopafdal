@@ -1,82 +1,75 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/auth.html.twig' %}
 
 {% block title %}Connexion — Afdal{% endblock %}
 
-{% block body %}
-<div class="min-h-screen flex grow bg-[var(--color-background)]">
-    <main class="grid w-full grow grid-cols-1 place-items-center">
-        <div class="w-full max-w-[26rem] p-4 sm:px-5">
-            <div class="text-center">
-                <a href="{{ path('app_home') }}" class="inline-flex">
-                    <div class="w-16 h-16 rounded-2xl bg-[var(--color-primary)] text-white flex items-center justify-center font-display font-bold text-3xl shadow-[var(--shadow-md)]">A</div>
-                </a>
-                <div class="mt-4">
-                    <h2 class="text-2xl font-semibold text-[var(--color-navy-700)]">Bienvenue</h2>
-                    <p class="text-[var(--color-navy-400)] text-sm mt-1">Connectez-vous pour accéder à votre espace</p>
-                </div>
-            </div>
-
-            <div class="card mt-5 rounded-lg p-5 lg:p-7">
-                {% if error %}
-                    <div class="mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-sm text-[var(--color-error)] flex items-start gap-2" role="alert">
-                        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
-                        <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
-                    </div>
-                {% endif %}
-
-                <form method="post" class="space-y-4">
-                    <label class="block">
-                        <span class="form-label">Email</span>
-                        <span class="relative flex">
-                            <input type="email" name="_username" value="{{ last_username }}" required autofocus autocomplete="email"
-                                placeholder="votre@email.com"
-                                class="form-input peer pl-9 hover:z-10 focus:z-10">
-                            <span class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-[var(--color-navy-300)] peer-focus:text-[var(--color-primary)]">
-                                <svg class="h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                            </span>
-                        </span>
-                    </label>
-
-                    <label class="block">
-                        <span class="form-label">Mot de passe</span>
-                        <span class="relative flex">
-                            <input type="password" name="_password" required autocomplete="current-password"
-                                placeholder="••••••••"
-                                class="form-input peer pl-9 hover:z-10 focus:z-10">
-                            <span class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-[var(--color-navy-300)] peer-focus:text-[var(--color-primary)]">
-                                <svg class="h-5 w-5 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                            </span>
-                        </span>
-                    </label>
-
-                    <div class="flex items-center justify-between">
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="_remember_me" class="form-checkbox">
-                            <span class="text-sm text-[var(--color-navy-500)]">Se souvenir de moi</span>
-                        </label>
-                    </div>
-
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-                    <button type="submit" class="btn btn-primary mt-2 w-full">
-                        Se connecter
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center text-xs">
-                    <p>
-                        <span class="text-[var(--color-navy-400)]">Pas encore de compte ?</span>
-                        <a href="mailto:contact@afdal.fr" class="link font-medium ml-1">Demandez une invitation</a>
-                    </p>
-                </div>
-            </div>
-
-            <div class="mt-8 flex justify-center text-xs text-[var(--color-navy-400)]">
-                <a href="#" class="hover:text-[var(--color-navy-700)]">Mentions légales</a>
-                <div class="mx-3 my-1 w-px bg-[var(--color-border)]"></div>
-                <a href="#" class="hover:text-[var(--color-navy-700)]">Conditions d'utilisation</a>
-            </div>
-        </div>
-    </main>
+{% block auth_content %}
+<div class="text-center">
+    <p class="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
+        Espace professionnel
+    </p>
+    <h1 class="mt-3 font-display text-[1.65rem] sm:text-3xl font-semibold text-[var(--color-foreground)] tracking-[-0.02em]">
+        Heureux de vous revoir
+    </h1>
+    <p class="mt-2.5 text-sm text-[var(--color-secondary)] leading-relaxed max-w-[18rem] mx-auto">
+        Saisissez vos identifiants pour accéder à votre espace client ou administrateur.
+    </p>
 </div>
+
+<div class="mt-9 rounded-2xl border border-slate-200/90 bg-white/90 p-7 sm:p-8 shadow-[0_4px_6px_-1px_rgb(15_23_42/5%),0_20px_40px_-16px_rgb(23_92_211/14%),inset_0_1px_0_0_rgb(255_255_255/90%)] backdrop-blur-[2px]">
+    {% if error %}
+        <div class="mb-6 p-3.5 rounded-xl bg-red-50/90 border border-red-200/70 text-sm text-[var(--color-error)] flex items-start gap-2.5" role="alert">
+            <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+            <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
+        </div>
+    {% endif %}
+
+    <form method="post" class="auth-form-login space-y-4" id="login-form">
+        <label class="relative flex group">
+            <span class="sr-only">Adresse e-mail</span>
+            <input type="email" name="_username" value="{{ last_username }}" required autofocus autocomplete="email"
+                placeholder="Adresse e-mail professionnelle"
+                class="form-input peer w-full rounded-xl bg-[var(--color-navy-50)] px-3.5 py-3 pl-11 text-[0.9375rem] ring-1 ring-slate-200/80 ring-inset placeholder:text-[var(--color-navy-400)] transition-all duration-200 hover:bg-white hover:ring-slate-300/90 focus:bg-white focus:ring-2 focus:ring-[var(--color-primary)]/25 focus:ring-offset-0">
+            <span class="pointer-events-none absolute flex h-full w-11 items-center justify-center text-[var(--color-navy-400)] group-focus-within:text-[var(--color-primary)] transition-colors">
+                <svg class="h-[1.15rem] w-[1.15rem]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </span>
+        </label>
+
+        <label class="relative flex group">
+            <span class="sr-only">Mot de passe</span>
+            <input type="password" name="_password" required autocomplete="current-password"
+                placeholder="Mot de passe"
+                class="form-input peer w-full rounded-xl bg-[var(--color-navy-50)] px-3.5 py-3 pl-11 text-[0.9375rem] ring-1 ring-slate-200/80 ring-inset placeholder:text-[var(--color-navy-400)] transition-all duration-200 hover:bg-white hover:ring-slate-300/90 focus:bg-white focus:ring-2 focus:ring-[var(--color-primary)]/25 focus:ring-offset-0">
+            <span class="pointer-events-none absolute flex h-full w-11 items-center justify-center text-[var(--color-navy-400)] group-focus-within:text-[var(--color-primary)] transition-colors">
+                <svg class="h-[1.15rem] w-[1.15rem]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </span>
+        </label>
+
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-0.5">
+            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" name="_remember_me" class="form-checkbox shrink-0">
+                <span class="text-sm text-[var(--color-navy-600)] whitespace-nowrap">Se souvenir</span>
+            </label>
+            <a href="{{ path('app_forgot_password_request') }}" class="text-sm font-medium text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors whitespace-nowrap">
+                Mot de passe oublié ?
+            </a>
+        </div>
+
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        <button type="submit" class="btn btn-primary mt-2 w-full justify-center h-12 rounded-xl text-[0.9375rem] font-semibold shadow-[var(--shadow-glow-primary)]">
+            Se connecter
+        </button>
+    </form>
+</div>
+
+<p class="mt-8 text-center text-sm text-[var(--color-secondary)] leading-relaxed">
+    Pas encore d’accès ?
+    <a href="mailto:contact@afdal.fr" class="font-semibold text-[var(--color-primary)] hover:underline underline-offset-2 decoration-[var(--color-primary)]/30">Demander une invitation</a>
+</p>
+
+<nav class="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-[var(--color-navy-400)]">
+    <a href="{{ path('app_legal_mentions') }}" class="hover:text-[var(--color-foreground)] transition-colors">Mentions légales</a>
+    <span class="text-[var(--color-border)] select-none" aria-hidden="true">·</span>
+    <a href="{{ path('app_legal_cgv') }}" class="hover:text-[var(--color-foreground)] transition-colors">Conditions générales</a>
+</nav>
 {% endblock %}

@@ -35,8 +35,8 @@ class Product
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $basePriceCents = 0;
 
-    /** @var string[] */
-    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    /** @var array<int, array{path: string, color: ?string}> */
+    #[ORM\Column(type: 'json')]
     private array $images = [];
 
     #[ORM\Column(enumType: ProductStatus::class, options: ['default' => 'draft'])]
@@ -71,8 +71,58 @@ class Product
     public function setMaterial(?string $v): self { $this->material = $v; return $this; }
     public function getBasePriceCents(): int { return $this->basePriceCents; }
     public function setBasePriceCents(int $v): self { $this->basePriceCents = $v; return $this; }
-    public function getImages(): array { return $this->images; }
-    public function setImages(array $v): self { $this->images = array_values($v); return $this; }
+    /** @return array<int, array{path: string, color: ?string}> */
+    public function getImages(): array
+    {
+        $out = [];
+        foreach ($this->images as $item) {
+            if (is_string($item)) {
+                $out[] = ['path' => $item, 'color' => null];
+            } elseif (is_array($item) && isset($item['path'])) {
+                $out[] = ['path' => (string) $item['path'], 'color' => $item['color'] ?? null];
+            }
+        }
+        return $out;
+    }
+
+    public function setImages(array $v): self
+    {
+        $normalized = [];
+        foreach ($v as $item) {
+            if (is_string($item) && $item !== '') {
+                $normalized[] = ['path' => $item, 'color' => null];
+            } elseif (is_array($item) && !empty($item['path'])) {
+                $normalized[] = ['path' => (string) $item['path'], 'color' => ($item['color'] ?? null) ?: null];
+            }
+        }
+        $this->images = $normalized;
+        return $this;
+    }
+
+    /** @return string[] */
+    public function getImagePaths(): array
+    {
+        return array_map(fn($i) => $i['path'], $this->getImages());
+    }
+
+    public function getPrimaryImage(): ?string
+    {
+        $images = $this->getImages();
+        return $images[0]['path'] ?? null;
+    }
+
+    public function getImageForColor(?string $color): ?string
+    {
+        if ($color === null) {
+            return $this->getPrimaryImage();
+        }
+        foreach ($this->getImages() as $img) {
+            if ($img['color'] !== null && strcasecmp($img['color'], $color) === 0) {
+                return $img['path'];
+            }
+        }
+        return $this->getPrimaryImage();
+    }
     public function getStatus(): ProductStatus { return $this->status; }
     public function getPublishedAt(): ?\DateTimeImmutable { return $this->publishedAt; }
     public function isPublished(): bool { return $this->status === ProductStatus::PUBLISHED; }
@@ -97,5 +147,32 @@ class Product
             $variant->setProduct($this);
         }
         return $this;
+    }
+
+    /** True si toutes les variantes tracked sont en rupture (et au moins une est tracked). */
+    public function isAllOutOfStock(): bool
+    {
+        $tracked = 0;
+        $out = 0;
+        foreach ($this->variants as $v) {
+            if (!$v->isStockTracked()) {
+                continue;
+            }
+            $tracked++;
+            if ($v->isOutOfStock()) {
+                $out++;
+            }
+        }
+        return $tracked > 0 && $tracked === $out;
+    }
+
+    public function hasLowStockVariant(): bool
+    {
+        foreach ($this->variants as $v) {
+            if ($v->isLowStock()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

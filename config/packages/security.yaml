@@ -15,6 +15,7 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            entry_point: App\Security\HomeEntryPoint
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -34,6 +35,9 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/cgv, roles: PUBLIC_ACCESS }
+        - { path: ^/mentions-legales, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/, roles: ROLE_CLIENT_MANAGER }

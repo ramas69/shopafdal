@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Enum\CompanyRole;
+use App\Enum\UserRole;
 use App\Repository\InvitationRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -19,8 +21,11 @@ class Invitation
     private string $email;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private Company $company;
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Company $company = null;
+
+    #[ORM\Column(length: 30, enumType: UserRole::class, options: ['default' => 'ROLE_CLIENT_MANAGER'])]
+    private UserRole $targetRole = UserRole::CLIENT_MANAGER;
 
     #[ORM\Column(length: 64)]
     private string $token;
@@ -37,6 +42,9 @@ class Invitation
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(length: 10, enumType: CompanyRole::class, options: ['default' => 'member'])]
+    private CompanyRole $companyRole = CompanyRole::MEMBER;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -47,8 +55,11 @@ class Invitation
     public function getId(): ?int { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function setEmail(string $v): self { $this->email = strtolower($v); return $this; }
-    public function getCompany(): Company { return $this->company; }
-    public function setCompany(Company $v): self { $this->company = $v; return $this; }
+    public function getCompany(): ?Company { return $this->company; }
+    public function setCompany(?Company $v): self { $this->company = $v; return $this; }
+    public function getTargetRole(): UserRole { return $this->targetRole; }
+    public function setTargetRole(UserRole $v): self { $this->targetRole = $v; return $this; }
+    public function isAdminInvitation(): bool { return $this->targetRole === UserRole::ADMIN; }
     public function getToken(): string { return $this->token; }
     public function getExpiresAt(): \DateTimeImmutable { return $this->expiresAt; }
     public function setExpiresAt(\DateTimeImmutable $v): self { $this->expiresAt = $v; return $this; }
@@ -57,6 +68,8 @@ class Invitation
     public function getRevokedAt(): ?\DateTimeImmutable { return $this->revokedAt; }
     public function setRevokedAt(?\DateTimeImmutable $v): self { $this->revokedAt = $v; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getCompanyRole(): CompanyRole { return $this->companyRole; }
+    public function setCompanyRole(CompanyRole $r): self { $this->companyRole = $r; return $this; }
 
     public function isPending(): bool
     {

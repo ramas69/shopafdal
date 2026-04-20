@@ -6,8 +6,11 @@ use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Enum\ProductStatus;
 use App\Repository\CompanyRepository;
+use App\Repository\MarkingAssetRepository;
+use App\Repository\OrderMessageRepository;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
+use App\Repository\ProductVariantRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -37,6 +40,9 @@ final class DashboardController extends AbstractController
         CompanyRepository $companies,
         ProductRepository $products,
         OrderRepository $orders,
+        MarkingAssetRepository $markings,
+        OrderMessageRepository $messages,
+        ProductVariantRepository $variants,
         EntityManagerInterface $em,
     ): Response {
         $now = new \DateTimeImmutable();
@@ -48,16 +54,137 @@ final class DashboardController extends AbstractController
             'daily_chart' => $this->computeDailyChart($conn, $now),
             'max_daily' => $this->maxDaily($this->computeDailyChart($conn, $now)),
             'urgent_orders' => $this->urgentOrders($orders, $now, 5),
-            'pipeline' => $this->computePipeline($conn),
             'recent_orders' => $orders->createQueryBuilder('o')->orderBy('o.createdAt', 'DESC')->setMaxResults(8)->getQuery()->getResult(),
             'top_clients' => $this->topClients($conn, $now),
             'stuck_orders' => $this->stuckOrders($orders, $now),
             'inactive_companies' => $this->inactiveCompanies($conn, $now),
+            'pending_bats' => $markings->findPendingForReview(8),
+            'pending_bats_count' => $markings->countPendingForReview(),
+            'rejected_bats' => $this->rejectedBatsWaitingReupload($conn, $now),
+            'rejected_bats_count' => $this->rejectedBatsWaitingReuploadCount($conn, $now),
+            'unread_messages_count' => $messages->countUnreadForAdmin(),
+            'unread_threads' => $this->unreadMessageThreads($conn),
+            'late_deliveries' => $this->lateDeliveries($conn, $now),
+            'late_deliveries_count' => $this->lateDeliveriesCount($conn, $now),
+            'low_stock_variants' => $this->lowStockVariants($conn),
+            'low_stock_count' => $this->lowStockCount($conn),
             'totals' => [
                 'companies' => $companies->count([]),
                 'products' => $products->count(['status' => ProductStatus::PUBLISHED]),
             ],
         ]);
+    }
+
+    /** @return array<int, array<string,mixed>> BAT rejetés dont aucune version ultérieure n'a été uploadée, > 7 jours */
+    private function rejectedBatsWaitingReupload(Connection $conn, \DateTimeImmutable $now): array
+    {
+        $cutoff = $now->modify('-7 days');
+        return $conn->fetchAllAssociative(
+            "SELECT m.id, m.version, m.reviewed_at, m.feedback, o.reference, c.name AS company_name
+             FROM marking_assets m
+             JOIN order_items oi ON oi.id = m.order_item_id
+             JOIN orders o ON o.id = oi.order_id
+             JOIN companies c ON c.id = o.company_id
+             WHERE m.status = 'rejected'
+               AND m.reviewed_at < :cutoff
+               AND NOT EXISTS (
+                   SELECT 1 FROM marking_assets m2
+                   WHERE m2.order_item_id = m.order_item_id AND m2.version > m.version
+               )
+             ORDER BY m.reviewed_at ASC
+             LIMIT 5",
+            ['cutoff' => $cutoff->format(self::SQL_DATE_FORMAT)]
+        );
+    }
+
+    private function rejectedBatsWaitingReuploadCount(Connection $conn, \DateTimeImmutable $now): int
+    {
+        $cutoff = $now->modify('-7 days');
+        return (int) $conn->fetchOne(
+            "SELECT COUNT(*)
+             FROM marking_assets m
+             WHERE m.status = 'rejected'
+               AND m.reviewed_at < :cutoff
+               AND NOT EXISTS (
+                   SELECT 1 FROM marking_assets m2
+                   WHERE m2.order_item_id = m.order_item_id AND m2.version > m.version
+               )",
+            ['cutoff' => $cutoff->format(self::SQL_DATE_FORMAT)]
+        );
+    }
+
+    /** @return array<int, array<string,mixed>> Derniers threads avec messages admin non lus */
+    private function unreadMessageThreads(Connection $conn): array
+    {
+        return $conn->fetchAllAssociative(
+            "SELECT o.reference, c.name AS company_name,
+                    COUNT(m.id) AS unread_count,
+                    MAX(m.created_at) AS last_message_at
+             FROM order_messages m
+             JOIN orders o ON o.id = m.order_id
+             JOIN companies c ON c.id = o.company_id
+             WHERE m.read_by_admin_at IS NULL
+             GROUP BY o.id, o.reference, c.name
+             ORDER BY last_message_at DESC
+             LIMIT 5"
+        );
+    }
+
+    /** @return array<int, array<string,mixed>> Commandes dont ETA est passée et non livrées */
+    private function lateDeliveries(Connection $conn, \DateTimeImmutable $now): array
+    {
+        return $conn->fetchAllAssociative(
+            "SELECT o.reference, o.status, o.estimated_delivery_at, o.carrier, o.tracking_number,
+                    c.name AS company_name,
+                    DATEDIFF(:now, o.estimated_delivery_at) AS days_late
+             FROM orders o
+             JOIN companies c ON c.id = o.company_id
+             WHERE o.estimated_delivery_at IS NOT NULL
+               AND o.estimated_delivery_at < :now
+               AND o.status NOT IN ('delivered', 'cancelled')
+             ORDER BY o.estimated_delivery_at ASC
+             LIMIT 5",
+            ['now' => $now->format(self::SQL_DATE_FORMAT)]
+        );
+    }
+
+    private function lateDeliveriesCount(Connection $conn, \DateTimeImmutable $now): int
+    {
+        return (int) $conn->fetchOne(
+            "SELECT COUNT(*)
+             FROM orders o
+             WHERE o.estimated_delivery_at IS NOT NULL
+               AND o.estimated_delivery_at < :now
+               AND o.status NOT IN ('delivered', 'cancelled')",
+            ['now' => $now->format(self::SQL_DATE_FORMAT)]
+        );
+    }
+
+    /** @return array<int, array<string,mixed>> Variantes de produits publiés avec stock ≤ 5 */
+    private function lowStockVariants(Connection $conn): array
+    {
+        return $conn->fetchAllAssociative(
+            "SELECT v.id, v.stock, v.size, v.color, v.sku, p.id AS product_id, p.name AS product_name
+             FROM product_variants v
+             JOIN products p ON p.id = v.product_id
+             WHERE p.status = 'published'
+               AND v.stock IS NOT NULL
+               AND v.stock <= 5
+             ORDER BY v.stock ASC, p.name ASC
+             LIMIT 6"
+        );
+    }
+
+    private function lowStockCount(Connection $conn): int
+    {
+        return (int) $conn->fetchOne(
+            "SELECT COUNT(*)
+             FROM product_variants v
+             JOIN products p ON p.id = v.product_id
+             WHERE p.status = 'published'
+               AND v.stock IS NOT NULL
+               AND v.stock <= 5"
+        );
     }
 
     /** @return array<string,int> */
@@ -166,26 +293,6 @@ final class DashboardController extends AbstractController
             ->getQuery()->getResult();
     }
 
-    /** @return array<int, array{status:OrderStatus,count:int}> */
-    private function computePipeline(Connection $conn): array
-    {
-        $rows = $conn->fetchAllAssociative(
-            "SELECT status, COUNT(*) AS count FROM orders
-             WHERE status NOT IN ('delivered', 'cancelled')
-             GROUP BY status"
-        );
-        $map = [];
-        foreach ($rows as $r) {
-            $map[(string) $r['status']] = (int) $r['count'];
-        }
-        return [
-            ['status' => OrderStatus::PLACED, 'count' => $map['placed'] ?? 0],
-            ['status' => OrderStatus::CONFIRMED, 'count' => $map['confirmed'] ?? 0],
-            ['status' => OrderStatus::IN_PRODUCTION, 'count' => $map['in_production'] ?? 0],
-            ['status' => OrderStatus::SHIPPED, 'count' => $map['shipped'] ?? 0],
-        ];
-    }
-
     /** @return array<int, array<string,mixed>> */
     private function topClients(Connection $conn, \DateTimeImmutable $now): array
     {
@@ -222,7 +329,7 @@ final class DashboardController extends AbstractController
              LEFT JOIN orders o ON o.company_id = c.id
              GROUP BY c.id, c.name
              HAVING MAX(o.created_at) IS NULL OR MAX(o.created_at) < :cutoff
-             ORDER BY last_order ASC NULLS LAST
+             ORDER BY last_order IS NULL, last_order ASC
              LIMIT 5',
             ['cutoff' => $now->modify('-60 days')->format(self::SQL_DATE_FORMAT)]
         );

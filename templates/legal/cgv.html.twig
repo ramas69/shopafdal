@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conditions Générales de Vente — Afdal{% endblock %}
+
+{% block body %}
+<div class="min-h-[100dvh] bg-[var(--color-background)] py-10 sm:py-14 px-4">
+    <div class="max-w-3xl mx-auto">
+        <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" class="inline-flex text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors mb-8">&larr; Retour</a>
+        <div class="card rounded-2xl p-8 sm:p-10">
+            <header class="mb-8">
+                <h1 class="font-display text-2xl sm:text-3xl font-semibold text-[var(--color-foreground)] tracking-tight">Conditions Générales de Vente</h1>
+                <p class="text-sm text-[var(--color-secondary)] mt-2">Version 1.0 — applicable à compter du 01/01/2026</p>
+            </header>
+
+            <section class="space-y-8 text-[var(--color-body)] text-[15px] leading-relaxed">
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">1. Objet</h2>
+                    <p>Les présentes CGV régissent les relations commerciales entre la société Afdal (ci-après « le Prestataire ») et ses clients professionnels (ci-après « le Client ») pour la fourniture de vêtements et accessoires personnalisés.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">2. Commandes</h2>
+                    <p>Toute commande passée via la plateforme implique l'acceptation sans réserve des présentes CGV. Les commandes ne sont définitives qu'après confirmation écrite du Prestataire.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">3. Tarifs</h2>
+                    <p>Les prix sont exprimés en euros hors taxes. Les tarifs dégressifs volume s'appliquent par produit selon les paliers affichés. Les tarifs négociés prévalent sur le barème public.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">4. BAT (Bon À Tirer)</h2>
+                    <p>Pour toute commande avec marquage, le Client doit fournir un logo conforme (JPG, PNG, WebP, SVG ou PDF). Le Prestataire se réserve le droit de refuser un BAT non conforme et d'exiger une nouvelle version. La production ne démarre qu'après validation du BAT.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">5. Paiement</h2>
+                    <p>Le règlement s'effectue à 30 jours fin de mois par virement bancaire, sauf conditions particulières négociées. Tout retard de paiement entraîne des pénalités au taux légal en vigueur.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">6. Livraison</h2>
+                    <p>Les délais de livraison sont indicatifs. Le Prestataire s'engage à informer le Client du transporteur et du numéro de suivi dès l'expédition. Le Client dispose de 48h après réception pour signaler toute non-conformité.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">7. Réclamations & Retours</h2>
+                    <p>Les articles personnalisés ne sont ni repris ni échangés, sauf défaut de fabrication avéré. Toute réclamation doit être formulée par écrit dans les 48h suivant la livraison.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">8. Responsabilité</h2>
+                    <p>La responsabilité du Prestataire est strictement limitée au montant de la commande concernée. Aucun préjudice indirect ne saurait être indemnisé.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">9. Données personnelles</h2>
+                    <p>Les données collectées sont traitées conformément au RGPD. Le Client dispose d'un droit d'accès, de rectification et de suppression.</p>
+                </div>
+
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">10. Droit applicable & juridiction</h2>
+                    <p>Les présentes CGV sont soumises au droit français. En cas de litige, compétence exclusive est donnée aux tribunaux du ressort du siège social du Prestataire.</p>
+                </div>
+
+                <p class="text-xs text-[var(--color-secondary)] italic pt-4 border-t border-[var(--color-border-soft)]">Ce texte est un modèle minimal. Avant mise en production, faites-le valider par votre conseil juridique.</p>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

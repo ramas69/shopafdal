@@ -7,279 +7,432 @@
 {% set fr_months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
 {% set today_fr = fr_days[('now'|date('w'))] ~ ' ' ~ ('now'|date('d')) ~ ' ' ~ fr_months[('now'|date('n')) - 1] %}
 
-<div class="mb-6">
-    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin · {{ today_fr }}</div>
-    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Bonjour {{ app.user.fullName|split(' ')|first }}</h1>
+{# En-tête — style Lineone (titre + sous-texte date) #}
+<div class="mb-4 sm:mb-5">
+    <p class="text-xs font-medium uppercase tracking-wider text-[var(--color-secondary)]">{{ today_fr }}</p>
+    <h1 class="mt-1 font-display text-xl sm:text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
+        Bonjour, {{ app.user.fullName|split(' ')|first }}
+    </h1>
+    <p class="mt-1 text-sm text-[var(--color-secondary)]">Vue d’ensemble des commandes et du chiffre d’affaires.</p>
 </div>
 
-{# === Focus aujourd'hui === #}
-<section class="mb-6">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <a href="{{ path('app_admin_orders') }}" class="card p-5 block hover:shadow-[var(--shadow-md)] transition-all">
-            <div class="flex items-start justify-between mb-2">
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide">Nouvelles aujourd'hui</div>
-                <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 3.75H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V13.5M15 3.75h3.375c.621 0 1.125.504 1.125 1.125V13.5h-4.5V3.75Z"/></svg>
-                </div>
-            </div>
-            <div class="font-display text-3xl font-semibold text-[var(--color-primary)]">{{ today.new }}</div>
-        </a>
-
-        <a href="{{ path('app_admin_orders', {status: 'placed'}) }}" class="card p-5 block hover:shadow-[var(--shadow-md)] transition-all">
-            <div class="flex items-start justify-between mb-2">
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide">À confirmer</div>
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                </div>
-            </div>
-            <div class="font-display text-3xl font-semibold text-[var(--color-foreground)]">{{ today.to_confirm }}</div>
-        </a>
-
-        <a href="{{ path('app_admin_orders') }}" class="card p-5 block hover:shadow-[var(--shadow-md)] transition-all">
-            <div class="flex items-start justify-between mb-2">
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide">À expédier</div>
-                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25"/></svg>
-                </div>
-            </div>
-            <div class="font-display text-3xl font-semibold text-[var(--color-foreground)]">{{ today.to_ship }}</div>
-        </a>
-
-        <a href="{{ path('app_admin_orders', {status: 'placed'}) }}" class="card p-5 block hover:shadow-[var(--shadow-md)] transition-all {{ today.urgent > 0 ? 'ring-2 ring-[var(--color-destructive)]/30' : '' }}">
-            <div class="flex items-start justify-between mb-2">
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide">Urgentes (>24h)</div>
-                <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
-                </div>
-            </div>
-            <div class="font-display text-3xl font-semibold {{ today.urgent > 0 ? 'text-[var(--color-destructive)]' : 'text-[var(--color-foreground)]' }}">{{ today.urgent }}</div>
-        </a>
-    </div>
-</section>
-
-{# === Urgences + CA mois === #}
-<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    {# Urgences #}
-    <div class="card p-6 lg:col-span-1">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Urgences</h2>
-                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Placées depuis +24h</p>
-            </div>
-            {% if urgent_orders|length > 0 %}
-                <span class="badge border bg-red-50 text-red-700 border-red-200">{{ urgent_orders|length }}</span>
-            {% endif %}
+{# —— Alertes critiques (visible uniquement s'il y en a) —— #}
+{% set has_alerts = late_deliveries_count > 0 or low_stock_count > 0 or rejected_bats_count > 0 or unread_threads|length > 0 or stuck_orders|length > 0 %}
+{% if has_alerts %}
+<section class="mb-4 sm:mb-5">
+    <div class="flex items-center gap-2.5 mb-3">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style="background: linear-gradient(135deg, #F59E0B, #EF4444); box-shadow: 0 4px 10px -4px rgba(239,68,68,0.45);">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+        </span>
+        <div>
+            <h2 class="font-display text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wide leading-tight">À traiter en priorité</h2>
+            <p class="text-[11px] text-[var(--color-secondary)] leading-tight">Actions urgentes à réaliser maintenant</p>
         </div>
-        {% if urgent_orders is empty %}
-            <div class="text-center py-8">
-                <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-2">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+    </div>
+
+    {% macro alert_card(title, count, palette, icon_svg, items, footer_note) %}
+        <article class="group relative overflow-hidden rounded-xl bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]" style="box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <span class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg, {{ palette.from }} 0%, {{ palette.to }} 100%);" aria-hidden="true"></span>
+            <div class="flex items-center justify-between gap-3 mb-3 pl-1">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }}); box-shadow: 0 4px 10px -4px {{ palette.from }}66;">
+                        {{ icon_svg|raw }}
+                    </span>
+                    <h3 class="text-sm font-semibold text-[var(--color-foreground)] truncate">{{ title }}</h3>
                 </div>
-                <p class="text-sm font-medium text-[var(--color-foreground)]">Tout est à jour</p>
-                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Aucune commande en attente.</p>
+                <span class="inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-full text-xs font-bold text-white shrink-0" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }});">{{ count }}</span>
             </div>
-        {% else %}
-            <ul class="space-y-2">
-                {% for order in urgent_orders %}
-                    {% set elapsed_hours = ((date('now').timestamp - order.placedAt.timestamp) / 3600)|round %}
-                    <li>
-                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
-                           class="flex items-center justify-between gap-2 p-3 rounded-md border border-[var(--color-border-soft)] hover:border-[var(--color-destructive)] hover:bg-red-50/40 transition-colors">
-                            <div class="min-w-0">
-                                <div class="font-mono font-semibold text-sm text-[var(--color-foreground)]">{{ order.reference }}</div>
-                                <div class="text-xs text-[var(--color-secondary)] truncate">{{ order.company.name }} · {{ order.totalQuantity }} pc</div>
+            <ul class="divide-y divide-[var(--color-border-soft)] pl-1">
+                {% for item in items %}
+                    <li class="py-2 first:pt-0 last:pb-0">
+                        <a href="{{ item.url }}" class="flex items-center justify-between gap-3 text-xs hover:text-[var(--color-primary)] transition-colors">
+                            <div class="min-w-0 flex-1 flex items-center gap-2">
+                                {% if item.primary %}<span class="font-mono font-semibold text-[var(--color-foreground)] shrink-0">{{ item.primary }}</span>{% endif %}
+                                <span class="text-[var(--color-secondary)] truncate">{{ item.secondary }}</span>
                             </div>
-                            <div class="text-right shrink-0">
-                                <div class="text-xs font-semibold text-[var(--color-destructive)]">{{ elapsed_hours }}h</div>
-                                <div class="text-[10px] text-[var(--color-secondary)]">{{ order.placedAt|date('d/m H:i') }}</div>
-                            </div>
+                            <span class="font-semibold whitespace-nowrap shrink-0" style="color: {{ palette.from }};">{{ item.meta }}</span>
                         </a>
                     </li>
                 {% endfor %}
             </ul>
+            {% if footer_note %}
+                <p class="mt-2.5 pl-1 text-[10px] text-[var(--color-secondary)] italic">{{ footer_note }}</p>
+            {% endif %}
+        </article>
+    {% endmacro %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% if late_deliveries_count > 0 %}
+            {% set items = [] %}
+            {% for d in late_deliveries %}
+                {% set items = items|merge([{url: path('app_admin_order_detail', {reference: d.reference}), primary: d.reference, secondary: d.company_name, meta: '+' ~ d.days_late ~ 'j'}]) %}
+            {% endfor %}
+            {{ _self.alert_card(
+                'Livraisons en retard',
+                late_deliveries_count,
+                {from: '#EF4444', to: '#F43F5E'},
+                '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25"/></svg>',
+                items,
+                null
+            ) }}
+        {% endif %}
+
+        {% if rejected_bats_count > 0 %}
+            {% set items = [] %}
+            {% for b in rejected_bats %}
+                {% set items = items|merge([{url: path('app_admin_order_detail', {reference: b.reference}), primary: b.reference, secondary: 'v' ~ b.version ~ ' · ' ~ b.company_name, meta: b.reviewed_at|date('d/m')}]) %}
+            {% endfor %}
+            {{ _self.alert_card(
+                'BAT refusés sans réponse',
+                rejected_bats_count,
+                {from: '#E11D48', to: '#BE123C'},
+                '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>',
+                items,
+                'Refusé depuis +7j sans nouvelle version uploadée.'
+            ) }}
+        {% endif %}
+
+        {% if low_stock_count > 0 %}
+            {% set items = [] %}
+            {% for v in low_stock_variants %}
+                {% set items = items|merge([{url: path('app_admin_product_edit', {id: v.product_id}), primary: null, secondary: v.product_name ~ ' · ' ~ v.color ~ ' · ' ~ v.size, meta: v.stock == 0 ? 'Rupture' : v.stock ~ ' restants'}]) %}
+            {% endfor %}
+            {{ _self.alert_card(
+                'Ruptures stock imminentes',
+                low_stock_count,
+                {from: '#F59E0B', to: '#D97706'},
+                '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5-.625 1.08a1.125 1.125 0 0 0-1.8 0l-6.462 8.62c-.107.144-.156.32-.156.5V20.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-10.05c0-.18-.049-.356-.156-.5Z"/></svg>',
+                items,
+                null
+            ) }}
+        {% endif %}
+
+        {% if stuck_orders|length > 0 %}
+            {% set items = [] %}
+            {% for order in stuck_orders|slice(0, 5) %}
+                {% set items = items|merge([{url: path('app_admin_order_detail', {reference: order.reference}), primary: order.reference, secondary: order.company.name, meta: order.placedAt|date('d/m')}]) %}
+            {% endfor %}
+            {{ _self.alert_card(
+                'Commandes bloquées (>48h)',
+                stuck_orders|length,
+                {from: '#F97316', to: '#EA580C'},
+                '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>',
+                items,
+                'Placées depuis plus de 48h sans confirmation.'
+            ) }}
+        {% endif %}
+
+        {% if unread_threads|length > 0 %}
+            {% set items = [] %}
+            {% for t in unread_threads %}
+                {% set items = items|merge([{url: path('app_admin_order_detail', {reference: t.reference}), primary: t.reference, secondary: t.company_name, meta: t.unread_count ~ ' msg'}]) %}
+            {% endfor %}
+            {{ _self.alert_card(
+                'Messages clients',
+                unread_messages_count,
+                {from: '#6366F1', to: '#4338CA'},
+                '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>',
+                items,
+                null
+            ) }}
         {% endif %}
     </div>
+</section>
+{% endif %}
 
-    {# CA mois + graph #}
-    <div class="card p-6 lg:col-span-2">
-        <div class="flex items-start justify-between mb-4">
+<div class="dashboard-grid mt-2 sm:mt-3">
+    {# —— KPI du jour (4 tuiles) — style lineone travel (gradient + shape décorative) —— #}
+    <a href="{{ path('app_admin_orders') }}" class="relative col-span-12 sm:col-span-6 xl:col-span-3 flex flex-col overflow-hidden rounded-xl p-4 sm:p-5 transition-all hover:shadow-[0_10px_30px_-10px_rgba(59,130,246,0.4)]" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+        <p class="relative z-10 text-xs uppercase tracking-wide font-medium" style="color: rgba(255,255,255,0.9);">Nouvelles aujourd'hui</p>
+        <div class="relative z-10 flex items-end justify-between gap-2">
+            <p class="mt-4 font-display text-3xl font-semibold text-white tabular-nums">{{ today.new }}</p>
+            <span class="text-xs font-medium pb-0.5 transition-colors" style="color: #fff; border-bottom: 1px dotted rgba(255,255,255,0.8);">Voir les commandes</span>
+        </div>
+        <svg style="position:absolute;top:12px;right:-16px;width:80px;height:80px;" viewBox="0 0 207 207" fill="rgba(255,255,255,0.22)" aria-hidden="true"><path d="M138.648 181.408C47.268 232.569 1.327 206.607.824 103.52.324.432 46.014-25.148 137.896 26.777c91.882 51.925 92.133 103.469.753 154.631h-.001z"/></svg>
+    </a>
+
+    <a href="{{ path('app_admin_orders', {status: 'placed'}) }}" class="relative col-span-12 sm:col-span-6 xl:col-span-3 flex flex-col overflow-hidden rounded-xl p-4 sm:p-5 transition-all hover:shadow-[0_10px_30px_-10px_rgba(245,158,11,0.4)]" style="background: linear-gradient(135deg, #FBBF24 0%, #EA580C 100%);">
+        <p class="relative z-10 text-xs uppercase tracking-wide font-medium" style="color: rgba(255,255,255,0.9);">À confirmer</p>
+        <div class="relative z-10 flex items-end justify-between gap-2">
+            <p class="mt-4 font-display text-3xl font-semibold text-white tabular-nums">{{ today.to_confirm }}</p>
+            <span class="text-xs font-medium pb-0.5 transition-colors" style="color: #fff; border-bottom: 1px dotted rgba(255,255,255,0.8);">Voir les commandes</span>
+        </div>
+        <svg style="position:absolute;top:12px;right:-16px;width:80px;height:80px;" viewBox="0 0 227 227" fill="rgba(255,255,255,0.22)" aria-hidden="true"><path d="M42.71 42.71c-56.568 56.57-56.568 84.853 0 141.422 56.57 56.569 84.853 56.569 141.422 0s56.569-84.853 0-141.421c-56.569-56.569-84.853-56.569-141.421 0z"/></svg>
+    </a>
+
+    <a href="{{ path('app_admin_orders') }}" class="relative col-span-12 sm:col-span-6 xl:col-span-3 flex flex-col overflow-hidden rounded-xl p-4 sm:p-5 transition-all hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.4)]" style="background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%);">
+        <p class="relative z-10 text-xs uppercase tracking-wide font-medium" style="color: rgba(255,255,255,0.9);">Messages non lus</p>
+        <div class="relative z-10 flex items-end justify-between gap-2">
+            <p class="mt-4 font-display text-3xl font-semibold text-white tabular-nums">{{ unread_messages_count }}</p>
+            <span class="text-xs font-medium pb-0.5 transition-colors" style="color: #fff; border-bottom: 1px dotted rgba(255,255,255,0.8);">Voir les commandes</span>
+        </div>
+        <svg style="position:absolute;top:12px;right:-16px;width:80px;height:80px;" viewBox="0 0 200 182" fill="rgba(255,255,255,0.22)" aria-hidden="true"><path d="M64.786 181.4c-9.196 0-20.063-6.687-25.079-14.21L3.762 105.33c-5.016-8.36-5.016-20.9 0-29.259l35.945-61.86C44.723 5.851 55.59 0 64.786 0h71.055c9.196 0 20.063 6.688 25.079 14.211l35.945 61.86c4.18 8.36 4.18 20.899 0 29.258l-35.945 61.86c-4.18 8.36-15.883 14.211-25.079 14.211H64.786z"/></svg>
+    </a>
+
+    <a href="{{ path('app_admin_orders', {status: 'placed'}) }}" class="relative col-span-12 sm:col-span-6 xl:col-span-3 flex flex-col overflow-hidden rounded-xl p-4 sm:p-5 transition-all hover:shadow-[0_10px_30px_-10px_rgba(236,72,153,0.4)]" style="background: linear-gradient(135deg, #EC4899 0%, #F43F5E 100%);">
+        <p class="relative z-10 text-xs uppercase tracking-wide font-medium" style="color: rgba(255,255,255,0.9);">Urgentes (&gt;24h)</p>
+        <div class="relative z-10 flex items-end justify-between gap-2">
+            <p class="mt-4 font-display text-3xl font-semibold text-white tabular-nums">{{ today.urgent }}</p>
+            <span class="text-xs font-medium pb-0.5 transition-colors" style="color: #fff; border-bottom: 1px dotted rgba(255,255,255,0.8);">Voir les commandes</span>
+        </div>
+        <svg style="position:absolute;top:12px;right:-16px;width:80px;height:80px;" viewBox="0 0 198 198" fill="rgba(255,255,255,0.22)" aria-hidden="true"><path d="M91.346 2.17a20 20 0 0 1 15.308 0l55.403 22.95a20 20 0 0 1 10.824 10.823l22.949 55.403a20.004 20.004 0 0 1 0 15.308l-22.949 55.403a20.006 20.006 0 0 1-10.824 10.824l-55.403 22.949a20.004 20.004 0 0 1-15.308 0l-55.403-22.949a20 20 0 0 1-10.824-10.824L2.17 106.654a20 20 0 0 1 0-15.308l22.95-55.403a20 20 0 0 1 10.823-10.824L91.346 2.17z"/></svg>
+    </a>
+
+    {# —— Urgences + CA —— #}
+    <div class="card col-span-12 lg:col-span-4 flex flex-col overflow-hidden">
+        <div class="lineone-card-head">
             <div>
-                <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Chiffre d'affaires — {{ fr_months[('now'|date('n')) - 1]|capitalize }}</div>
-                <div class="flex items-baseline gap-3">
-                    <div class="font-display text-3xl font-semibold text-[var(--color-primary)]">{{ month.revenue_cents|price }}</div>
-                    {% if month.growth is not null %}
-                        <span class="text-sm font-medium {{ month.growth >= 0 ? 'text-emerald-600' : 'text-[var(--color-destructive)]' }}">
-                            {{ month.growth >= 0 ? '▲' : '▼' }} {{ month.growth|abs }}%
-                        </span>
-                    {% endif %}
+                <h2 class="lineone-card-head__title">Urgences</h2>
+                <p class="text-[11px] text-[var(--color-secondary)] mt-0.5">Placées depuis +24h</p>
+            </div>
+            {% if urgent_orders|length > 0 %}
+                <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-200">{{ urgent_orders|length }}</span>
+            {% endif %}
+        </div>
+        <div class="flex-1 p-4 sm:p-5">
+            {% if urgent_orders is empty %}
+                <div class="text-center py-6 sm:py-8">
+                    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                    </div>
+                    <p class="text-sm font-medium text-[var(--color-foreground)]">Tout est à jour</p>
+                    <p class="mt-1 text-xs text-[var(--color-secondary)]">Aucune commande en attente prolongée.</p>
                 </div>
-                <p class="text-xs text-[var(--color-secondary)] mt-0.5">{{ month.orders }} commande{{ month.orders > 1 ? 's' : '' }} · vs mois précédent</p>
+            {% else %}
+                <ul class="is-scrollbar-hidden max-h-[min(22rem,50vh)] space-y-2 overflow-y-auto pr-1">
+                    {% for order in urgent_orders %}
+                        {% set elapsed_hours = ((date('now').timestamp - order.placedAt.timestamp) / 3600)|round %}
+                        <li>
+                            <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                               class="flex items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 transition-colors hover:border-[var(--color-destructive)]/40 hover:bg-red-50/30">
+                                <div class="min-w-0">
+                                    <div class="font-mono text-sm font-semibold text-[var(--color-foreground)]">{{ order.reference }}</div>
+                                    <div class="truncate text-xs text-[var(--color-secondary)]">{{ order.company.name }} · {{ order.totalQuantity }} pc</div>
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <div class="text-xs font-semibold text-[var(--color-destructive)]">{{ elapsed_hours }}h</div>
+                                    <div class="text-[10px] text-[var(--color-secondary)]">{{ order.placedAt|date('d/m H:i') }}</div>
+                                </div>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card col-span-12 lg:col-span-8 flex flex-col overflow-hidden">
+        <div class="lineone-card-head flex-wrap">
+            <div>
+                <h2 class="lineone-card-head__title">Chiffre d’affaires</h2>
+                <p class="text-[11px] text-[var(--color-secondary)] mt-0.5">{{ fr_months[('now'|date('n')) - 1]|capitalize }} · vs mois précédent</p>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-lg font-semibold text-[var(--color-primary)] sm:text-xl">{{ month.revenue_cents|price }}</span>
+                {% if month.growth is not null %}
+                    <span class="text-xs font-semibold {{ month.growth >= 0 ? 'text-emerald-600' : 'text-[var(--color-destructive)]' }}">
+                        {{ month.growth >= 0 ? '▲' : '▼' }} {{ month.growth|abs }}%
+                    </span>
+                {% endif %}
             </div>
         </div>
-
-        {# 30 day bar chart #}
-        <div class="space-y-2">
-            <div class="flex items-end gap-[2px] h-32">
+        <div class="border-b border-[var(--color-border)] px-4 py-2 sm:px-5">
+            <p class="text-xs text-[var(--color-secondary)]">{{ month.orders }} commande{{ month.orders > 1 ? 's' : '' }} sur la période</p>
+        </div>
+        <div class="p-4 sm:p-5">
+            <div class="flex h-36 items-end gap-px sm:gap-0.5">
                 {% for point in daily_chart %}
                     {% set pct = max_daily > 0 ? (point.value / max_daily * 100)|round : 0 %}
-                    <div class="flex-1 h-full flex items-end group relative">
-                        <div class="w-full rounded-t-sm {{ point.value > 0 ? 'bg-[var(--color-primary)]/70 hover:bg-[var(--color-primary)]' : 'bg-[var(--color-muted)]' }} transition-colors {{ point.value > 0 ? 'min-h-[3px]' : 'h-[2px]' }}"
+                    <div class="flex h-full min-w-0 flex-1 items-end">
+                        <div class="w-full rounded-t-sm transition-colors {{ point.value > 0 ? 'bg-[var(--color-primary)]/75 hover:bg-[var(--color-primary)]' : 'bg-[var(--color-muted)]' }} {{ point.value > 0 ? 'min-h-[3px]' : 'h-0.5' }}"
                              style="{{ point.value > 0 ? 'height: ' ~ pct ~ '%' : '' }}"
                              title="{{ point.day|date('d/m') }} · {{ point.value|price }}"></div>
                     </div>
                 {% endfor %}
             </div>
-            <div class="flex justify-between text-[10px] text-[var(--color-secondary)]">
+            <div class="mt-2 flex justify-between text-[10px] uppercase tracking-wide text-[var(--color-secondary)]">
                 <span>{{ daily_chart|first.day|date('d/m') }}</span>
                 <span>{{ daily_chart[14].day|date('d/m') }}</span>
                 <span>{{ daily_chart|last.day|date('d/m') }}</span>
             </div>
         </div>
     </div>
-</section>
 
-{# === Activité + Top clients === #}
-<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    {# Activité récente (live) #}
-    <div id="admin-activity-frame" class="card p-6 lg:col-span-2"
+    {# —— BAT —— #}
+    {% if pending_bats_count > 0 %}
+    <div class="card col-span-12 overflow-hidden border-l-[3px] border-l-amber-500" data-controller="bat-bulk">
+        <form method="post" action="{{ path('app_bat_bulk_approve') }}" class="flex flex-col">
+            <div class="lineone-card-head flex-wrap bg-amber-50/40">
+                <div class="flex items-start gap-2 min-w-0">
+                    <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                    </span>
+                    <div>
+                        <h2 class="lineone-card-head__title">BAT à valider</h2>
+                        <p class="text-[11px] text-[var(--color-secondary)]">Logos en attente</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">{{ pending_bats_count }}</span>
+                    <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs text-[var(--color-secondary)]">
+                        <input type="checkbox" data-bat-bulk-target="selectAll" data-action="change->bat-bulk#toggleAll" class="form-checkbox !h-4 !w-4">
+                        Tout sélectionner
+                    </label>
+                    <button type="submit" data-bat-bulk-target="submit" disabled
+                            class="btn btn-primary !px-3 !py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        Valider (<span data-bat-bulk-target="counter">0</span>)
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5">
+                <ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {% for asset in pending_bats %}
+                        {% set item = asset.orderItem %}
+                        {% set order = item.order %}
+                        <li>
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 transition-colors has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50/50 hover:border-amber-300">
+                                <input type="checkbox" name="assets[]" value="{{ asset.id }}"
+                                       data-bat-bulk-target="checkbox"
+                                       data-action="change->bat-bulk#updateCounter"
+                                       class="form-checkbox !h-4 !w-4 shrink-0">
+                                {% if asset.logoPath ends with '.pdf' %}
+                                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-white text-[var(--color-secondary)]">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                    </div>
+                                {% else %}
+                                    <img src="{{ asset.logoPath }}" alt="" class="h-12 w-12 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain">
+                                {% endif %}
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}" class="font-mono text-sm font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)]">{{ order.reference }}</a>
+                                        <span class="text-[10px] text-[var(--color-secondary)]">v{{ asset.version }}</span>
+                                    </div>
+                                    <div class="truncate text-xs text-[var(--color-secondary)]">{{ item.variant.product.name }} · {{ item.variant.color }} · {{ item.variant.size }}</div>
+                                </div>
+                                <div class="shrink-0 text-[10px] text-[var(--color-secondary)]">{{ asset.createdAt|date('d/m H:i') }}</div>
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {# —— Activité + Top clients —— #}
+    <div id="admin-activity-frame" class="card col-span-12 lg:col-span-8 flex flex-col overflow-hidden"
          data-controller="poll"
          data-poll-url-value="{{ path('app_admin') }}"
          data-poll-interval-value="5000">
-        <div class="flex items-center justify-between mb-4">
+        <div class="lineone-card-head">
             <div>
-                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Activité récente</h2>
-                <p class="text-xs text-[var(--color-secondary)] mt-0.5 flex items-center gap-1.5">
-                    <span class="relative flex w-1.5 h-1.5">
-                        <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-60 animate-ping"></span>
-                        <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500"></span>
+                <h2 class="lineone-card-head__title">Activité récente</h2>
+                <p class="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--color-secondary)]">
+                    <span class="relative flex h-1.5 w-1.5">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"></span>
+                        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     </span>
-                    Mise à jour auto
+                    Mise à jour automatique
                 </p>
             </div>
         </div>
-        {% if recent_orders is empty %}
-            <p class="text-sm text-[var(--color-secondary)] text-center py-8">Aucune activité récente.</p>
-        {% else %}
-            <ol class="space-y-1">
-                {% for order in recent_orders %}
-                    {% set tile = status_tile_classes(order.status) %}
-                    <li class="relative flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-muted)] transition-colors">
-                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
-                           class="absolute inset-0 z-0 rounded-md focus-visible:outline-2 focus-visible:outline-[var(--color-ring)] focus-visible:outline-offset-[-2px]"
-                           aria-label="Voir {{ order.reference }}"></a>
-                        <div class="relative z-10 w-9 h-9 shrink-0 rounded-lg {{ tile[0] }} {{ tile[1] }} flex items-center justify-center pointer-events-none">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
-                        </div>
-                        <div class="relative z-10 flex-1 min-w-0 pointer-events-none">
-                            <div class="font-mono font-semibold text-sm text-[var(--color-foreground)]">{{ order.reference }}</div>
-                            <div class="text-xs text-[var(--color-secondary)] flex items-center gap-2 flex-wrap">
-                                <span>{{ order.company.name }}</span>
-                                <span>·</span>
-                                <span class="badge border {{ status_badge_class(order.status) }}">{{ order.status.label() }}</span>
+        {% import 'admin/order/list.html.twig' as orderMacros %}
+        <div class="p-3 sm:p-4">
+            {% if recent_orders is empty %}
+                <p class="py-8 text-center text-sm text-[var(--color-secondary)]">Aucune activité récente.</p>
+            {% else %}
+                <ol class="space-y-2">
+                    {% for order in recent_orders %}
+                        {% set pct = order.status.progressPct() %}
+                        {% set color = order.status.progressColor() %}
+                        <li class="relative rounded-xl ring-1 ring-[var(--color-border-soft)] overflow-hidden bg-white hover:shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12)] transition-all">
+                            <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                               class="absolute inset-0 z-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-ring)] focus-visible:outline-offset-[-2px]"
+                               aria-label="Voir {{ order.reference }}"></a>
+                            <div class="relative z-10 flex items-center gap-3 p-3 pointer-events-none">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md" style="background-color: {{ color }}; box-shadow: 0 6px 12px -3px {{ color }}70, 0 3px 6px -3px {{ color }}70;">
+                                    <span class="text-white">{{ orderMacros.status_icon(order.status) }}</span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-mono text-sm font-semibold text-[var(--color-foreground)]">{{ order.reference }}</div>
+                                    <div class="mt-0.5 text-xs text-[var(--color-secondary)] truncate">
+                                        <span class="font-medium text-[var(--color-foreground)]">{{ order.company.name }}</span>
+                                        <span class="mx-1 text-[var(--color-border)]">•</span>
+                                        <span>{{ order.status.label() }}</span>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <div class="font-display text-sm font-semibold" style="color: {{ color }};">{{ pct }}%</div>
+                                    <div class="mt-0.5 text-[10px] text-[var(--color-secondary)] whitespace-nowrap">{{ (order.updatedAt ?? order.createdAt)|date('d/m H:i') }}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="relative z-10 text-xs text-[var(--color-secondary)] whitespace-nowrap pointer-events-none">
-                            {{ (order.updatedAt ?? order.createdAt)|date('d/m H:i') }}
-                        </div>
-                    </li>
-                {% endfor %}
-            </ol>
-        {% endif %}
+                            <div class="relative z-10 h-1 w-full" style="background-color: {{ color }}1A;">
+                                <div class="h-full" style="width: {{ pct }}%; background-color: {{ color }};"></div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </div>
     </div>
 
-    {# Top clients #}
-    <div class="card p-6">
-        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">Top clients</h2>
-        <p class="text-xs text-[var(--color-secondary)] mb-4">Ce mois · CA HT</p>
-        {% if top_clients is empty %}
-            <p class="text-sm text-[var(--color-secondary)] text-center py-6">Pas encore de commandes ce mois.</p>
-        {% else %}
-            <ul class="space-y-3">
-                {% for c in top_clients %}
-                    <li class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] text-xs font-bold shrink-0">{{ loop.index }}</span>
-                            <div class="min-w-0">
-                                <div class="font-medium text-sm text-[var(--color-foreground)] truncate">{{ c.name }}</div>
-                                <div class="text-xs text-[var(--color-secondary)]">{{ c.orders_count }} cmd</div>
+    <div class="card col-span-12 lg:col-span-4 flex flex-col overflow-hidden">
+        <div class="lineone-card-head">
+            <div>
+                <h2 class="lineone-card-head__title">Top clients</h2>
+                <p class="text-[11px] text-[var(--color-secondary)]">Ce mois · CA HT</p>
+            </div>
+            <a href="{{ path('app_admin_companies') }}" class="text-sm font-semibold text-[var(--color-primary)]" style="border-bottom: 1px dotted currentColor; padding-bottom: 1px;">Voir tout</a>
+        </div>
+        <div class="p-4 sm:p-5">
+            {% if top_clients is empty %}
+                <p class="py-6 text-center text-sm text-[var(--color-secondary)]">Pas encore de commandes ce mois.</p>
+            {% else %}
+                {% set avatar_palette = [
+                    {bg: '#DBEAFE', fg: '#1D4ED8'},
+                    {bg: '#FEE2E2', fg: '#B91C1C'},
+                    {bg: '#FEF3C7', fg: '#B45309'},
+                    {bg: '#D1FAE5', fg: '#047857'},
+                    {bg: '#E0E7FF', fg: '#4338CA'},
+                ] %}
+                <ul class="divide-y divide-[var(--color-border-soft)]">
+                    {% for c in top_clients %}
+                        {% set palette = avatar_palette[(loop.index0) % 5] %}
+                        {% set initials = c.name|split(' ')|slice(0, 2)|map(w => w|first)|join('')|upper %}
+                        <li class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: {{ palette.bg }}; color: {{ palette.fg }};">{{ initials }}</span>
+                                <div class="min-w-0">
+                                    <div class="truncate text-sm font-semibold text-[var(--color-foreground)]">{{ c.name }}</div>
+                                    <div class="text-xs text-[var(--color-secondary)]">{{ c.orders_count }} commande{{ c.orders_count > 1 ? 's' : '' }}</div>
+                                </div>
                             </div>
-                        </div>
-                        <span class="font-display font-semibold text-sm text-[var(--color-primary)]">{{ c.revenue|price }}</span>
+                            <span class="shrink-0 font-display text-sm font-semibold text-[var(--color-foreground)]">{{ c.revenue|price }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Clients inactifs — pilotage commercial, déplaçable dans /admin/analytics à terme #}
+    {% if inactive_companies|length > 0 %}
+        <div class="card col-span-12 md:col-span-6 overflow-hidden">
+            <div class="lineone-card-head">
+                <h2 class="lineone-card-head__title">Clients inactifs (&gt;60j)</h2>
+            </div>
+            <ul class="divide-y divide-[var(--color-border-soft)]">
+                {% for c in inactive_companies|slice(0, 5) %}
+                    <li class="flex items-center justify-between gap-2 px-4 sm:px-5 py-2.5 text-sm">
+                        <span class="font-medium text-[var(--color-foreground)] truncate">{{ c.name }}</span>
+                        <span class="text-xs text-[var(--color-secondary)] whitespace-nowrap">
+                            {{ c.last_order ? c.last_order|date('d/m/Y') : 'Jamais' }}
+                        </span>
                     </li>
                 {% endfor %}
             </ul>
-        {% endif %}
-    </div>
-</section>
-
-{# === Pipeline === #}
-<section class="card p-6 mb-6">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="font-display font-semibold text-[var(--color-foreground)]">Pipeline</h2>
-        <a href="{{ path('app_admin_orders') }}" class="text-xs font-medium text-[var(--color-primary)] hover:underline">Voir toutes les commandes →</a>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {% for step in pipeline %}
-            {% set tile = status_tile_classes(step.status) %}
-            <a href="{{ path('app_admin_orders', {status: step.status.value}) }}"
-               class="relative p-4 rounded-lg border border-[var(--color-border-soft)] hover:border-[var(--color-border)] hover:shadow-sm transition-all">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(step.status) }}"></span>
-                    <span class="text-xs font-medium text-[var(--color-secondary)]">{{ step.status.label() }}</span>
-                </div>
-                <div class="font-display text-2xl font-semibold {{ tile[1] }}">{{ step.count }}</div>
-            </a>
-        {% endfor %}
-    </div>
-</section>
-
-{# === Alertes === #}
-{% if stuck_orders|length > 0 or inactive_companies|length > 0 %}
-    <section class="card p-6 border border-amber-200 bg-amber-50/50">
-        <div class="flex items-center gap-2 mb-4">
-            <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
-            <h2 class="font-display font-semibold text-[var(--color-foreground)]">Alertes</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {% if stuck_orders|length > 0 %}
-                <div>
-                    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">
-                        Commandes bloquées (>48h)
-                    </div>
-                    <ul class="space-y-1.5">
-                        {% for order in stuck_orders|slice(0, 5) %}
-                            <li>
-                                <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}" class="flex items-center justify-between gap-2 text-sm hover:text-[var(--color-primary)]">
-                                    <span class="font-mono font-medium">{{ order.reference }}</span>
-                                    <span class="text-xs text-[var(--color-secondary)]">{{ order.company.name }}</span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-            {% if inactive_companies|length > 0 %}
-                <div>
-                    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-2">
-                        Clients inactifs (>60j)
-                    </div>
-                    <ul class="space-y-1.5">
-                        {% for c in inactive_companies|slice(0, 5) %}
-                            <li class="flex items-center justify-between gap-2 text-sm">
-                                <span class="font-medium text-[var(--color-foreground)]">{{ c.name }}</span>
-                                <span class="text-xs text-[var(--color-secondary)]">
-                                    {% if c.last_order %}
-                                        {{ c.last_order|date('d/m/Y') }}
-                                    {% else %}
-                                        Jamais
-                                    {% endif %}
-                                </span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-        </div>
-    </section>
-{% endif %}
+    {% endif %}
+</div>
 {% endblock %}

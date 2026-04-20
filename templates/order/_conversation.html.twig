@@ -1,0 +1,48 @@
+<section id="order-conversation-{{ order.id }}"
+         class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6"
+         data-controller="poll"
+         data-poll-url-value="{{ is_admin ? path('app_admin_order_detail', {reference: order.reference}) : path('app_order_detail', {reference: order.reference}) }}"
+         data-poll-interval-value="5000">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold text-[var(--color-primary)] flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>
+            Conversation
+        </h2>
+        <span class="inline-flex items-center gap-1.5 text-xs text-[var(--color-secondary)]">
+            <span class="relative flex w-1.5 h-1.5">
+                <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-60 animate-ping"></span>
+                <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500"></span>
+            </span>
+            Live
+        </span>
+    </div>
+
+    {% if messages|default([])|length == 0 %}
+        <p class="text-sm text-[var(--color-secondary)] text-center py-4">Aucun message · démarrez la conversation ci-dessous.</p>
+    {% else %}
+        <div class="space-y-3 mb-4 max-h-96 overflow-y-auto pr-1">
+            {% for m in messages %}
+                {% set is_self = m.author.id == app.user.id %}
+                {% set from_admin = m.isFromAdmin() %}
+                <div class="flex {{ is_self ? 'justify-end' : 'justify-start' }}">
+                    <div class="max-w-[85%]">
+                        <div class="flex items-center gap-2 text-[10px] text-[var(--color-secondary)] mb-1 {{ is_self ? 'justify-end' : '' }}">
+                            <span class="font-medium uppercase tracking-wide">{{ is_self ? 'Vous' : (from_admin ? 'Afdal' : m.author.fullName) }}</span>
+                            <span>·</span>
+                            <span>{{ m.createdAt|date('d/m H:i') }}</span>
+                        </div>
+                        <div class="rounded-xl px-3 py-2 text-sm whitespace-pre-line {{ is_self ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : (from_admin ? 'bg-sky-50 text-sky-900 border border-sky-200' : 'bg-[var(--color-muted)] text-[var(--color-foreground)]') }}">
+                            {{ m.body }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" action="{{ path('app_order_message_new', {reference: order.reference}) }}" class="flex gap-2" data-poll-skip>
+        <textarea name="body" rows="2" required maxlength="4000" placeholder="Écrire un message…"
+                  class="form-input text-sm flex-1"></textarea>
+        <button type="submit" class="btn btn-primary text-sm !px-4 self-end">Envoyer</button>
+    </form>
+</section>

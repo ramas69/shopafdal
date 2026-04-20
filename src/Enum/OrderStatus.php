@@ -24,4 +24,30 @@ enum OrderStatus: string
             self::CANCELLED => 'Annulée',
         };
     }
+
+    public function progressPct(): int
+    {
+        return match ($this) {
+            self::DRAFT => 0,
+            self::PLACED => 15,
+            self::CONFIRMED => 30,
+            self::IN_PRODUCTION => 60,
+            self::SHIPPED => 85,
+            self::DELIVERED => 100,
+            self::CANCELLED => 0,
+        };
+    }
+
+    public function progressColor(): string
+    {
+        return match ($this) {
+            self::DRAFT => '#94979C',
+            self::PLACED => '#6366F1',
+            self::CONFIRMED => '#EC4899',
+            self::IN_PRODUCTION => '#F59E0B',
+            self::SHIPPED => '#0EA5E9',
+            self::DELIVERED => '#10B981',
+            self::CANCELLED => '#E82538',
+        };
+    }
 }

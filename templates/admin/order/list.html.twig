@@ -2,25 +2,70 @@
 
 {% block title %}Commandes — Admin{% endblock %}
 
+{% macro status_icon(status) %}
+    {% if status.value == 'placed' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    {% elseif status.value == 'confirmed' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+    {% elseif status.value == 'in_production' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+    {% elseif status.value == 'shipped' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-5.379a1.5 1.5 0 0 0-1.06.44l-2.12 2.12a1.5 1.5 0 0 1-1.061.44H3.75"/></svg>
+    {% elseif status.value == 'delivered' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+    {% elseif status.value == 'cancelled' %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75 14.25 14.25m0-4.5L9.75 14.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    {% else %}
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.25 11.25-1.5 1.5m0 0-1.5 1.5m1.5-1.5h-3.75M9 12h3M9 3H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+    {% endif %}
+{% endmacro %}
+
 {% block content %}
 <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
     <div>
         <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Admin</div>
         <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Commandes</h1>
-        <p class="text-sm text-[var(--color-secondary)] mt-1">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }}{% if current_status %} · statut « {{ (statuses|filter(s => s.value == current_status)|first).label() }} »{% endif %}</p>
+        <p class="text-sm text-[var(--color-secondary)] mt-1">{{ orders|length }} commande{{ orders|length > 1 ? 's' : '' }}</p>
     </div>
-    <form method="get" data-controller="autosubmit" class="flex items-center gap-2">
-        <select name="status" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[180px]">
-            <option value="">Tous statuts</option>
+    <a href="{{ path('app_admin_exports_orders', app.request.query.all) }}" class="btn btn-outline">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+        </svg>
+        Exporter tout {{ orders|length > 0 ? '(' ~ orders|length ~ ')' : '' }}
+    </a>
+</div>
+
+<form method="get" data-controller="autosubmit" class="card mb-6 p-4 flex flex-wrap items-end gap-3">
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Statut</span>
+        <select name="status" class="form-input !w-auto min-w-[160px]" data-controller="tom-select" data-action="change->autosubmit#submitNow">
+            <option value="">Tous</option>
             {% for s in statuses %}
                 <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
             {% endfor %}
         </select>
-        {% if current_status %}
-            <a href="{{ path('app_admin_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)]">Réinit.</a>
-        {% endif %}
-    </form>
-</div>
+    </label>
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Entreprise</span>
+        <select name="company" class="form-input !w-auto min-w-[200px]" data-controller="tom-select" data-action="change->autosubmit#submitNow">
+            <option value="">Toutes</option>
+            {% for c in companies %}
+                <option value="{{ c.id }}" {{ current_company == c.id ? 'selected' }}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Du</span>
+        <input type="date" name="from" value="{{ current_from }}" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
+    </label>
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Au</span>
+        <input type="date" name="to" value="{{ current_to }}" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
+    </label>
+    {% if current_status or current_company or current_from or current_to %}
+        <a href="{{ path('app_admin_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] pb-2.5">Réinitialiser</a>
+    {% endif %}
+</form>
 
 {% if orders is empty %}
     <div class="card p-12 text-center">
@@ -28,60 +73,80 @@
         <p class="text-sm text-[var(--color-secondary)]">Aucune commande ne correspond au filtre.</p>
     </div>
 {% else %}
-    <div class="card overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr>
-                        <th class="whitespace-nowrap rounded-tl-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Commande</th>
-                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Client</th>
-                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Antenne</th>
-                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Date</th>
-                        <th class="whitespace-nowrap bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">Total HT</th>
-                        <th class="whitespace-nowrap rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                        {% set tile = status_tile_classes(order.status) %}
-                        <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
-                            <td class="whitespace-nowrap px-5 py-3">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ tile[0] }} {{ tile[1] }}">
-                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
-                                    </div>
-                                    <div>
-                                        <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
-                                           class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']">{{ order.reference }}</a>
-                                        <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.totalQuantity }} pièces · {{ order.items|length }} lignes</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-3">
-                                <p class="font-medium text-[var(--color-foreground)]">{{ order.company.name }}</p>
-                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.createdBy.fullName }}</p>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-3">
-                                <p class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</p>
-                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.antenna.city }}</p>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-3">
-                                <p class="text-[var(--color-body)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</p>
-                                <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('H:i') }}</p>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-3 text-right">
-                                <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
-                            </td>
-                            <td class="whitespace-nowrap px-5 py-3">
-                                <span class="badge border {{ status_badge_class(order.status) }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
-                                    {{ order.status.label() }}
-                                </span>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div data-controller="selection"
+         data-selection-export-base-value="{{ path('app_admin_exports_orders') }}">
+
+        <div class="flex items-center gap-3 mb-3 px-1">
+            <label class="inline-flex items-center gap-2 text-xs text-[var(--color-secondary)] cursor-pointer">
+                <input type="checkbox" data-selection-target="selectAll" data-action="change->selection#toggleAll"
+                    aria-label="Tout sélectionner"
+                    class="form-checkbox">
+                Tout sélectionner
+            </label>
+        </div>
+
+        {# Barre flottante portalisée vers <body> par le controller selection #}
+        <div data-selection-target="bar" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+            <div class="flex items-center gap-10 px-8 py-3 rounded-full bg-[var(--color-foreground)] text-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.35)]">
+                <span class="text-sm whitespace-nowrap"><strong data-selection-target="counter">0</strong> commande(s) sélectionnée(s)</span>
+                <a data-selection-target="exportLink" href="{{ path('app_admin_exports_orders') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[var(--color-foreground)] text-sm font-medium hover:bg-[var(--color-primary-light)] transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                    Exporter la sélection
+                </a>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            {% for order in orders %}
+                {% set pct = order.status.progressPct() %}
+                {% set color = order.status.progressColor() %}
+                <div class="card relative overflow-hidden">
+                    <div class="p-4 sm:p-5 flex items-center gap-4">
+                        <label class="relative z-30 p-2 -m-2 cursor-pointer shrink-0 inline-flex items-center" aria-label="Sélectionner commande {{ order.reference }}">
+                            <input type="checkbox" value="{{ order.id }}"
+                                data-selection-target="checkbox"
+                                data-action="change->selection#update"
+                                class="form-checkbox">
+                        </label>
+
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-lg" style="background-color: {{ color }}; box-shadow: 0 10px 15px -3px {{ color }}80, 0 4px 6px -4px {{ color }}80;">
+                            <span class="text-white">{{ _self.status_icon(order.status) }}</span>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <a href="{{ path('app_admin_order_detail', {reference: order.reference}) }}"
+                               class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] transition-colors before:absolute before:inset-0 before:content-['']"
+                               aria-label="Voir la commande {{ order.reference }}">{{ order.reference }}</a>
+                            <p class="mt-1 text-xs text-[var(--color-secondary)]">
+                                <span class="font-medium text-[var(--color-foreground)]">{{ order.company.name }}</span>
+                                <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                {{ order.antenna.name }}
+                                <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                Créée le {{ (order.placedAt ?? order.createdAt)|date('d.m.Y') }}
+                                {% if order.estimatedDeliveryAt %}
+                                    <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                    Livraison : {{ order.estimatedDeliveryAt|date('d.m.Y') }}
+                                {% endif %}
+                                <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                {{ order.totalQuantity }} pc{{ order.totalQuantity > 1 ? 's' : '' }}
+                            </p>
+                        </div>
+
+                        <div class="hidden sm:block text-right shrink-0">
+                            <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
+                            <p class="text-[11px] text-[var(--color-secondary)]">{{ order.status.label() }}</p>
+                        </div>
+
+                        <div class="shrink-0 text-right" style="color: {{ color }};">
+                            <span class="font-display text-xl font-semibold">{{ pct }}%</span>
+                        </div>
+                    </div>
+
+                    <div class="h-1.5 w-full" style="background-color: {{ color }}1A;">
+                        <div class="h-full transition-all" style="width: {{ pct }}%; background-color: {{ color }};"></div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 {% endif %}

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Company;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Enum\UserRole;
@@ -31,6 +32,27 @@ final class NotificationService
         $this->em->persist($notification);
         $this->em->flush();
         return $notification;
+    }
+
+    /** Notify all active client managers attached to a Company. */
+    public function notifyCompany(
+        Company $company,
+        string $title,
+        ?string $message = null,
+        ?string $linkUrl = null,
+        string $type = Notification::TYPE_INFO,
+    ): void {
+        $members = $this->users->findBy(['company' => $company, 'active' => true]);
+        foreach ($members as $member) {
+            $n = (new Notification())
+                ->setRecipient($member)
+                ->setTitle($title)
+                ->setMessage($message)
+                ->setLinkUrl($linkUrl)
+                ->setType($type);
+            $this->em->persist($n);
+        }
+        $this->em->flush();
     }
 
     /** Notify all active Afdal admins. */

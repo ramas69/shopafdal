@@ -94,6 +94,56 @@ final class OrderEventLogger
         );
     }
 
+    public function logShippingUpdated(Order $order, ?string $carrier, ?string $tracking, ?\DateTimeImmutable $eta): void
+    {
+        $parts = [];
+        if ($carrier) {
+            $parts[] = $carrier;
+        }
+        if ($tracking) {
+            $parts[] = 'n° ' . $tracking;
+        }
+        if ($eta) {
+            $parts[] = 'ETA ' . $eta->format('d/m/Y');
+        }
+        $this->log(
+            $order,
+            OrderEvent::TYPE_SHIPPING_UPDATED,
+            'Livraison : ' . (empty($parts) ? 'détails effacés' : implode(' · ', $parts)),
+            ['carrier' => $carrier, 'tracking' => $tracking, 'eta' => $eta?->format('Y-m-d')],
+        );
+    }
+
+    public function logBatUploaded(Order $order, string $itemLabel, int $version): void
+    {
+        $this->log(
+            $order,
+            OrderEvent::TYPE_BAT_UPLOADED,
+            sprintf('BAT v%d téléversé · %s', $version, $itemLabel),
+            ['item' => $itemLabel, 'version' => $version],
+        );
+    }
+
+    public function logBatApproved(Order $order, string $itemLabel, int $version): void
+    {
+        $this->log(
+            $order,
+            OrderEvent::TYPE_BAT_APPROVED,
+            sprintf('BAT v%d validé · %s', $version, $itemLabel),
+            ['item' => $itemLabel, 'version' => $version],
+        );
+    }
+
+    public function logBatRejected(Order $order, string $itemLabel, int $version, ?string $feedback): void
+    {
+        $this->log(
+            $order,
+            OrderEvent::TYPE_BAT_REJECTED,
+            sprintf('BAT v%d refusé · %s', $version, $itemLabel),
+            ['item' => $itemLabel, 'version' => $version, 'feedback' => $feedback],
+        );
+    }
+
     public function logAdminNote(Order $order, string $note): void
     {
         $this->log(

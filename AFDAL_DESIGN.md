@@ -485,6 +485,513 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 
 ---
 
+## Live sync & audit (Phase live)
+
+**Polling Stimulus** (`assets/controllers/poll_controller.js`) :
+- `data-controller="poll"` + `data-poll-url-value` + `data-poll-interval-value="5000"` sur un élément avec `id` unique
+- Refetch la page entière, extrait l'élément par `id`, swap DOM si HTML différent
+- Skip si `document.hidden` ou si un dropdown interne est ouvert (évite fermeture involontaire)
+- Utilisé pour : notifications topbar, badge statut commande (client + admin), articles commande (admin), timeline historique (client + admin)
+
+**OrderEvent (audit trail)** :
+- Entité `OrderEvent` : `actor`, `type`, `summary`, `data` (JSON), `createdAt`
+- Types : `CREATED`, `STATUS_CHANGED`, `ITEMS_EDITED`, `ANTENNA_CHANGED`, `NOTES_UPDATED`, `CANCELLED`, `ADMIN_NOTE`
+- Service `OrderEventLogger` enregistre sans flush (caller flush avec le changement métier)
+- Visible côté admin (tous les types) et côté client (filtré, `ADMIN_NOTE` masqué)
+- Actor label : `Vous` (client courant) vs `Afdal` (admin) côté client ; nom complet côté admin
+- `<details>` expandable pour items_edited (diff added/removed/changed)
+
+**Sidebar "Historique" commande** (client + admin) :
+- Section dans `aside` entre "Livraison" et "Informations"
+- Badge "Live" avec ping animation (dot accent + pulse)
+- Timeline verticale avec dot coloré par type d'événement
+- Format date FR (jours/mois custom car ICU `fr` non dispo en Twig)
+
+**Modal "Ajouter un article"** (client, édition commande) :
+- Bouton en header de la page édition (pas dans le flow form)
+- Backdrop `bg-black/50 backdrop-blur-sm` + dialog `max-w-4xl max-h-[85vh]`
+- Deux panneaux : liste (grid 3 cols) → détail (matrice couleur × taille)
+- Recherche live dans le panneau liste
+- Matrice : une ligne par couleur (avec pastille hex), colonnes = tailles triées `TU/XXS→XXXL`, input qty par variante
+- Sous-total live calculé sur `input` event
+- Submit : `quantities[variant_id]` array POST vers `app_order_add_item`
+- Contrôleur `add_article_controller.js` (Stimulus), données produits via `<script type="application/json">`
+
+**UX direct action** :
+- Bouton "Retirer" article en édition commande : clic → ligne disparaît immédiatement (display:none + input désactivé)
+- Pas de pattern mark-then-save avec overlay barré
+
+---
+
+## Phase A — Quick wins (Stock / Filtres / Favoris)
+
+**Stock UI** :
+- `ProductVariant` : helpers `isStockTracked()` / `isOutOfStock()` / `isLowStock($threshold=5)`
+- `Product` : `isAllOutOfStock()` (tous les variants tracked en rupture) + `hasLowStockVariant()`
+- Badges catalogue list (overlay image bottom-right) : `Rupture` (destructive) ou `Stock limité` (amber)
+- Card en rupture : `opacity-75` + `grayscale` sur l'image
+- Detail produit : stock affiché par ligne (rupture / X restants / X dispo), input `max={stock}`, row `opacity-50` + `disabled` si rupture
+- Modale "Ajouter un article" : idem en cell matrice (label stock sous input)
+- `quantities_controller` : `_clampInput(input)` plafonne côté client au max
+- Panier : bandeau rouge si qty > stock actuel, bouton "Passer commande" désactivé (`Stock insuffisant`)
+- Checkout server-side : ligne > stock → flash erreur + redirect panier (refuse création commande)
+- `app_order_add_item` server-side : bloque qty > stock avec flash détaillé
+- `app_cart_update` : clamp silencieux au stock disponible + flash warning
+
+**Filtres catalogue** (`list.html.twig` + `catalogue_filters_controller.js`) :
+- Facets dérivés : `color_facets` (DISTINCT color+hex) + `size_facets` (DISTINCT size, triés TU/XXS→XXXL)
+- Pills couleur (dot + nom) et taille (chips `XS`/`M`/`L`…) — actif = `bg-primary text-on-primary`
+- Query string : `?colors=Noir,Blanc&sizes=M,L` (comma-separated pour URL propre)
+- Logique : AND entre axes (color × size dans une même variante via `innerJoin`), OR intra-axe (`IN`)
+- Controller Stimulus : `toggleColor/toggleSize` → mutate hidden input + `requestSubmit()` → autosubmit
+
+**Favoris** :
+- Entité `Favorite(user, product, createdAt)` — unique index `(user_id, product_id)`
+- `FavoriteRepository::findProductIdsForUser()` pour hydrater l'état dans la liste catalogue en une requête
+- Controller `app_favorites_toggle` : accepte JSON (Accept/XHR) → `{favorited: true|false}` sans reload
+- `favorite_button_controller.js` : toggle optimiste, revert si erreur, `aria-pressed`, cible icône (fill) + label optionnel
+- Bouton cœur : sur card catalogue (top-right, overlay image, 36px rond `bg-white/90 backdrop-blur`) + sur page detail (bouton bordé avec label "Favori" / "Ajouter aux favoris")
+- Page `/favoris` : grid identique au catalogue, cœur pré-rempli rouge ; empty state avec CTA vers le catalogue
+- Sidebar client : entrée "Favoris" avec icône cœur duotone
+
+---
+
+## Phase B — Images & galerie
+
+**Shape images (rupture de compat storage)** :
+- `Product.images` (JSON) stocke désormais `array<{path: string, color: ?string}>` au lieu de `string[]`
+- Migration `Version20260418212334` : normalise les entrées existantes (strings → `{path, color: null}`)
+- Helpers entité : `getImages()` (shape normalisée), `getImagePaths()` (compat legacy), `getPrimaryImage()`, `getImageForColor(?string)` (fallback au primary si pas de match)
+- Templates : `product.imagePaths|length` / `product.primaryImage` remplacent `product.images|first`
+
+**Admin — drag-sort + tag couleur** :
+- SortableJS ajouté via `importmap:require sortablejs` (asset-map native, pas de node)
+- Controller `image_sort_controller.js` : `Sortable.create({handle: '[data-image-sort-target="handle"]'})`, `onEnd` → réindexe les `name="existing_images[N][path|color]"` pour préserver l'ordre au POST
+- Chaque vignette (existante) : handle drag (icône burger coin haut-gauche), bouton retirer (coin haut-droit), badge "Principal" sur la 1ère après réindex, select couleur en pied (dropdown alimenté par les variantes du produit)
+- Nouveau shape POST `existing_images[N][path]` + `existing_images[N][color]` + `remove_images[]` + `images[]` (nouveaux fichiers, color=null par défaut)
+- `syncImages` : lit `existing_images` (filtré par `remove_images`), merge avec nouveaux uploads à la fin
+
+**Variante "Dupliquer"** (admin edit produit) :
+- Bouton icône copie dans chaque ligne variante → clone size/color/hex, SKU + `-COPY`, id vidé (création)
+
+**Client — image contextuelle** :
+- Gallery controller étendu : `peek(event)` (hover) + `restore()` (leave) + `defaultSrcValue` (source "stable" actualisée par `select`)
+- Page detail : `data-controller="quantities gallery"` sur le `<form>` (scope commun), matrice de lignes couleurs avec `data-color-image="/uploads/x.jpg"` + actions `mouseenter->gallery#peek mouseleave->gallery#restore` (seulement si une image couleur-spécifique existe)
+- Catalogue list : si un seul filtre couleur actif, l'image de la card bascule sur `imageForColor(color)` → fallback primary
+- Vignettes galerie (admin + client detail) : petite pastille couleur coin bas-droit si l'image est taguée
+
+---
+
+## Phase C — BAT / Marquage
+
+**Entités** :
+- `MarkingAsset(orderItem, logoPath, status: pending|approved|rejected, feedback, version, uploadedBy, reviewedBy, createdAt, reviewedAt)`
+- Liée par `#[ORM\OneToMany]` côté `OrderItem` (cascade persist, order by version ASC) → `item.markingAssets` / `item.latestMarkingAsset` dispo en Twig
+- Enum `MarkingStatus { PENDING, APPROVED, REJECTED }` avec labels FR
+
+**OrderEvent** : nouveaux types `TYPE_BAT_UPLOADED / APPROVED / REJECTED` (timeline filtrée côté client inchangée : `admin_note` seul est masqué)
+
+**Upload & formats** :
+- Uploads dans `public/uploads/markings/`, MIME autorisés : jpeg/png/webp/svg + **pdf** (certains clients envoient en vecto)
+- Nom fichier random 24-char hex (sécurité)
+
+**Workflow** :
+1. **Upload anticipé (recommandé)** : côté catalogue/detail, la section "Ajouter un marquage" inclut un champ logo (dropzone + preview via `bat-upload` controller sans target submit). Le fichier est uploadé en `addToCart`, le path stocké dans `cart.line.marking.logo_path`. Au checkout : `logo_path` est extrait, un `MarkingAsset v1 pending` est créé automatiquement pour chaque item, puis `logo_path` est retiré du JSON `OrderItem.marking` (le logo vit désormais sur l'asset). La notif admin indique `· N BAT à valider` directement.
+2. **Upload post-commande (fallback)** : si le client n'a pas joint de logo, le bloc BAT s'affiche sur `/commandes/{ref}` avec le formulaire dropzone → même flow pending.
+3. Panier affiche miniature logo (ou pastille PDF) + badge "Logo joint" en vert, ou alerte ambre "Logo à fournir après commande" si aucun
+3. Admin reçoit notification + widget "BAT à valider" sur dashboard + bouton Valider / Refuser + motif sur order detail
+4. Approve → notif client success ; Reject avec motif obligatoire → notif client warning
+5. Client re-upload si refusé → v2, v3… (chaque version conservée pour audit)
+6. Bouton upload visible côté client tant que `order.status ∈ {placed, confirmed}` — désactivé une fois en production
+
+**Controller** (`BatController` + `Admin\BatBulkController`) :
+- `POST /commandes/{ref}/bat/upload/{item}` — client (ou admin sur commande propriétaire)
+- `POST /commandes/{ref}/bat/approve/{asset}` — admin, un BAT
+- `POST /commandes/{ref}/bat/reject/{asset}` — admin, `feedback` obligatoire
+- `POST /commandes/{ref}/bat/approve-all` — admin, **valide tous les BAT pending d'une commande en un clic** (1 notif groupée client : "N BAT validés · Commande X")
+- `POST /admin/bat/bulk-approve` — admin, **validation cross-orders** (payload `assets[]=id&assets[]=id…`), regroupe les notifs par commande
+- `MapEntity` pour reference↔Order, id↔OrderItem/MarkingAsset
+
+**UI validation groupée** :
+- Admin order detail : bouton "Valider tous les BAT" dans l'en-tête section Articles (visible seulement si `has_pending_bats`), avec confirmation
+- Dashboard widget : chaque carte BAT devient une `<label>` avec checkbox (rangée en `has-[:checked]:bg-emerald-50/40` pour feedback visuel), header avec "Tout sélectionner" (indeterminate supporté) et bouton "Valider la sélection (N)" désactivé si aucune coche
+- Controller Stimulus `bat-bulk` : toggle/sélection, compteur live, gestion état indeterminate
+
+**UI** :
+- Bloc BAT client : icône check + titre "BAT marquage", upload form (si pas encore ou rejeté), aperçu miniature 16×16 (PDF → icône doc), badge statut, feedback affiché en rouge si rejeté
+- Bloc BAT admin : même structure, boutons Valider (vert) / Refuser avec textarea `bat_review_controller.js` (toggle show/hide, focus auto), historique `<details>` des versions
+- Widget dashboard admin : bordure gauche ambre, grid 2 colonnes de miniatures cliquables → order detail, compteur badge
+- `NotificationService::notifyCompany(Company)` ajouté (notifie tous membres actifs d'une entreprise)
+
+---
+
+## Phase D — Livraison & suivi
+
+**Champs `Order`** : `carrier` (80), `trackingNumber` (80), `estimatedDeliveryAt` (datetime), `setShippedAt()` exposé public · `getTrackingUrl()` génère l'URL transporteur selon pattern (Chronopost, Colissimo, DPD, UPS).
+
+**Admin** — section "Expédition" sur `admin/order/detail` (visible si status ∈ confirmed/in_production/shipped/delivered) : select transporteur + input n° suivi + date picker ETA · route `POST /admin/commandes/{ref}/shipping` · flash info si inchangé, notif client si diff.
+
+**Client** — bloc livraison enrichi : transporteur, n° de suivi mono-font, lien "Suivre le colis" (si transporteur connu), ETA avec countdown "dans Nj".
+
+**OrderEvent** : `TYPE_SHIPPING_UPDATED` avec data `{carrier, tracking, eta}`.
+
+---
+
+## Phase E — Multi-utilisateurs par entreprise
+
+**Enum** `CompanyRole { OWNER, MEMBER }` · champ `User.companyRole` (nullable, null pour admins Afdal).
+
+**Migration** : backfill des `CLIENT_MANAGER` existants avec company → `owner`.
+
+**Invitations** : nouveau champ `Invitation.companyRole` (default MEMBER). Admin Afdal invite → OWNER. Owner invite via `/parametres` → MEMBER.
+
+**Sécurité** : `User::getRoles()` ajoute `ROLE_COMPANY_OWNER` si `companyRole === OWNER`. Les routes team dans `SettingsController` sont gardées par `isCompanyOwner()`.
+
+**UI `/parametres` section Équipe** (OWNER uniquement) :
+- Liste membres avec badges rôle + statut actif
+- Bouton "Retirer" (hors soi-même, hors autres OWNERs)
+- Invitations en cours avec lien token copiable + révocation
+- Form "Inviter un membre" (email → MEMBER)
+
+**`RegistrationController`** : applique `invitation.companyRole` sur le nouveau User.
+
+---
+
+## Phase F — Pricing B2B
+
+**Entités** :
+- `PriceTier(product, minQty, unitPriceCents)` — index unique (product, minQty)
+- `CompanyPrice(company, product, unitPriceCents)` — index unique (company, product) = tarif négocié
+
+**Service `PricingService::resolveUnitPrice(product, company, qty)`** — ordre :
+1. CompanyPrice négocié → override absolu
+2. Palier volume le plus élevé dont `minQty ≤ qty`
+3. Fallback `product.basePriceCents`
+
+**Wiring** :
+- `Cart::lines()` : agrège qty par produit, applique pricing résolu
+- `OrderController::addItem()` (re-commande) : utilise pricing
+- `CheckoutController` : l'OrderItem freeze le prix résolu dans `unitPriceCents` (déjà le cas via Cart)
+
+**Admin produit** : section "Barème volume" avec table éditable (add/remove paliers) · Controller `price-tiers` Stimulus pour UI dynamique.
+
+**Catalogue detail** :
+- Si CompanyPrice : badge vert "Tarif négocié" + prix HT / pièce + prix standard barré
+- Sinon : tarif de base + pills dégressifs "dès N → X€" ligne horizontale
+
+**CGV** : page `/cgv` + `/mentions-legales` (controller `LegalController`, contenu template twig inline) · checkbox obligatoire au checkout côté form + validation server-side dans `CheckoutController`.
+
+---
+
+## Phase G — Messagerie commande
+
+**Entité `OrderMessage(order, author, body, createdAt, readByClientAt, readByAdminAt)`** · auto-mark read côté auteur à la création.
+
+**Repository** : `findForOrder`, `countUnreadForClientInCompany`, `countUnreadForAdmin`, `markAllReadForClient/Admin`.
+
+**Controller `POST /commandes/{ref}/messages/new`** — author = current user, destinataire opposé notifié. Admin écrit → notif groupée entreprise. Client écrit → notif admins.
+
+**UI `order/_conversation.html.twig`** (include factorisé client + admin) :
+- Bulles alternées : self à droite (primary), admin à gauche (sky), client à gauche (muted)
+- Label auteur + timestamp compact
+- Scroll max-h-96
+- Textarea + bouton Envoyer avec `data-poll-skip` (empêche le poll d'écraser la saisie en cours)
+- Polling 5s du conteneur pour feed live
+
+**Read markers** : au chargement de detail (client ou admin), les messages non lus sont marqués lus via `markAllReadForClient/Admin`.
+
+---
+
+## Phase H — Export CSV + Analytics
+
+**Chart.js** via `importmap:require chart.js` + controller Stimulus `chart` générique (type/payload/horizontal en values).
+
+**Exports** (`OrderExporter` étendu, UTF-8 BOM + séparateur `;` compat Excel/Sheets) :
+- Commandes détaillées : filtres statut/entreprise/période · 1 ligne par article
+- CA par entreprise : période avec total cumulé
+- Annuaire entreprises : toutes companies avec métriques (membres, antennes, commandes, CA)
+
+**Page `/admin/exports`** : 3 cards avec filtres dédiés.
+
+**Page `/admin/analytics`** :
+- Stat cards : CA total, commandes, ticket moyen, livrées
+- Line chart : CA 12 mois glissants
+- Doughnut : distribution statuts actifs (couleurs Afdal)
+- Bar horizontal : top 10 produits (qty)
+- Liste : top 10 entreprises avec rang, nb commandes, CA
+
+**Entrées sidebar admin** : "Analytics" (icône chart) + "Exports" (icône download).
+
+---
+
+## Phase I — Reset mot de passe
+
+**Stack** : `symfony/mailer` + `symfonycasts/reset-password-bundle` (installés via composer, entité + controller scaffold générés).
+
+**Config** :
+- `MAILER_DSN=null://null` par défaut (dev)
+- SMTP o2switch (prod) : `MAILER_DSN=smtp://user:pass@mail.o2switch.net:587?encryption=tls` (à configurer en `.env.local.prod`)
+- Expéditeur hardcodé `no-reply@afdal.fr` — à remplacer par `MAILER_FROM` env plus tard
+
+**Dev fallback** : quand `MAILER_DSN=null://...`, le controller catche l'erreur mailer et flash `reset_password_dev` avec l'URL de reset. Le template `check_email.html.twig` affiche un bloc ambre "Dev · mailer désactivé" avec l'URL copiable → permet de tester le flow sans SMTP.
+
+**Templates thémés** :
+- `request.html.twig` : formulaire email, card centrée, flash errors
+- `check_email.html.twig` : confirmation + fallback dev + retour login
+- `reset.html.twig` : nouveau mot de passe (formulaire reset-password-bundle)
+
+**Login** : lien "Mot de passe oublié ?" sous le bouton "Se connecter".
+
+**Flow prod** : `/reset-password` → form email → email avec lien → `/reset-password/reset/{token}` → nouveau MDP → redirect login.
+
+---
+
+## Itérations post-livraison
+
+*Corrections et ajouts appliqués après la validation des phases D→I.*
+
+**Admin — UI tarifs négociés** (manquait, complétée) :
+- `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
+- Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
+- Form d'ajout : select produit (Tom Select recherchable, dropdown porté sur `<body>`) + prix unitaire HT → `app_admin_company_price_save`
+- Le `CompanyPrice` override tout (palier, base) pour cette entreprise sur ce produit
+
+**Catalogue detail — recalcul live PricingService** :
+- Le controller Stimulus `quantities` reçoit désormais :
+  - `unit-price` = `negotiated_price_cents` si dispo, sinon `basePriceCents` (écrasé selon qty si tiers)
+  - `base-price` = `product.basePriceCents` (toujours, pour calcul savings)
+  - `negotiated` (bool) — si true, ignore les paliers
+  - `tiers` (array `{min_qty, unit_cents}`)
+- Résolution live côté client : `negotiatedValue ? unitPrice : tier-best-matching-totalQty`
+- Total recalculé à chaque input
+
+**Catalogue detail — feedback savings** :
+- Prix unitaire effectif affiché sous le total en gros
+- Badge vert "Vous économisez X € (N%) vs tarif standard" → visible dès que l'utilisateur gagne par rapport au `basePrice` (négocié OU palier déclenché)
+- Hint ambre "Ajoutez N pièce(s) pour passer à X€/pc" → uniquement sans tarif négocié ET qu'un prochain palier existe
+
+**Invitation admin Afdal** (extension Phase E) :
+- `Invitation.company` passé en nullable + nouveau champ `Invitation.targetRole` (UserRole, default `CLIENT_MANAGER`) + migration
+- Form `/admin/invitations/new` : sélecteur à 3 modes (client entreprise existante / client nouvelle entreprise / **employé Afdal**) — le 3e est stylé primary pour trahir le niveau de privilège
+- Mode Afdal : pas de company, `targetRole=ADMIN`, encart explicatif sur les droits accordés
+- `RegistrationController` branche sur `invitation.isAdminInvitation()` → user sans company + `role=ADMIN`
+- Liste `/admin/invitations` : badge primary "Employé Afdal" à la place du nom d'entreprise pour les invitations admin
+- Controller `mode-switch` accepte désormais 3 targets (existing / new / afdal)
+
+**Bugfixes visuels collectés** :
+- Tom Select dropdown : `dropdownParent: 'body'` (échappe les stacking contexts), `z-index: 1000` sur `.ts-dropdown`
+- Input prix HT : remplacé `position: absolute` du `€` par un layout flex avec 2 cellules (input + suffix) — plus de collision possible même avec des valeurs longues
+- Twig strict_variables : `marking.logo_path` → `marking.logo_path|default(null)` pour tolérer les markings legacy sans logo
+
+**Bugfixes métier** :
+- BAT upload condition élargie : `can_upload` = `status not in ['shipped', 'delivered', 'cancelled']` (était trop restreint à placed/confirmed uniquement)
+- Erreur upload 2Mo diagnostique : le `BatController::upload` traduit `UPLOAD_ERR_INI_SIZE` en message clair + `public/.user.ini` relève les limites PHP à 20Mo (pris en compte par PHP-FPM o2switch + symfony serve)
+- Polling 5s : skip si `[data-poll-skip]` descendant visible OU si focus sur un input/textarea dans la zone polled → n'écrase plus les saisies en cours (BAT rejet, messagerie, etc.)
+
+---
+
+## Tests
+
+**Smoke test console** (`php bin/console app:smoke-test`) :
+- Exercice en transaction rollback de tous les flows critiques : création entreprise/antenne/users (admin/owner/member), produit avec paliers + tarif négocié, vérification `PricingService`, favori, commande PLACED avec BAT pending, validation admin, transition CONFIRMED→IN_PRODUCTION→SHIPPED avec carrier+tracking, messagerie owner↔admin, invitation membre
+- Flag `--keep` pour conserver les données (debug)
+- Exit code 0 si tout OK, 1 si moindre échec
+- Temps moyen ~1s — à lancer après chaque modif structurelle
+
+**Tests fonctionnels PHPUnit** (`./vendor/bin/phpunit`) :
+- Stack : `symfony/test-pack` (WebTestCase + BrowserKit) + `dama/doctrine-test-bundle` (wrap chaque test en transaction, rollback auto)
+- DB dédiée : `afdal_dev_test` en Postgres (config dans `.env.test.local`)
+- Bundle `DAMADoctrineTestBundle` activé `test-only` dans `config/bundles.php` + `config/packages/test/dama_doctrine_test.yaml`
+- Trait `TestDataTrait` pour helpers `createCompanyWithAntenna() / createUser() / createProduct()`
+
+**Suite actuelle (16 tests, <1s)** :
+- `SmokeHttpTest` : routes publiques (home, login, forgot, cgv), redirections auth (catalogue, admin)
+- `AuthTest` : login client/admin, interdit client sur /admin (403)
+- `OrderFlowTest` : cycle complet passer commande → confirm admin, validation CGV obligatoire
+- `PricingServiceTest` : base / palier volume / tarif négocié
+- `ResetPasswordTest` : request reset (avec fallback dev URL flash) + email inconnu (silent redirect)
+
+**Lancer les tests** :
+```bash
+# Smoke rapide (dev DB, transaction rollback)
+php bin/console app:smoke-test
+
+# Tests fonctionnels (test DB séparée)
+createdb afdal_dev_test   # une fois
+php bin/console doctrine:migrations:migrate --env=test --no-interaction
+./vendor/bin/phpunit
+```
+
+**Conventions retenues** :
+- Dama rollback → pas besoin de setUp/tearDown pour nettoyer la DB
+- Pas de fixtures partagées → chaque test crée ses données via `TestDataTrait`
+- Suffixes aléatoires `bin2hex(random_bytes())` pour éviter collisions (email/slug/sku uniques)
+
+**À ajouter plus tard** : Panther pour tester les Stimulus controllers JS-lourds (matrice catalogue detail, drag-sort images admin, polling live messagerie, BAT upload preview).
+
+---
+
+## Roadmap — Phases restantes
+
+*Toutes les phases D→I ont été livrées. Ce qui suit est la spec détaillée d'origine, conservée comme référence.*
+
+### Phase D — Livraison & suivi (~1j)
+
+**Entité `Order`** : ajouter 4 champs
+- `carrier` (string 80) — Chronopost, Colissimo, DPD, autre…
+- `trackingNumber` (string 80, nullable)
+- `estimatedDeliveryAt` (datetime, nullable)
+- `shippedAt` (datetime, nullable — déjà géré implicitement par transition SHIPPED)
+
+**Admin** — dans le panneau statut de `admin/order/detail.html.twig`
+- Form inline "Expédition" visible quand status ∈ {confirmed, in_production, shipped}
+- Champs : transporteur (select pré-rempli), n° suivi (input), date livraison estimée (date picker)
+- À la transition vers `SHIPPED` : `shippedAt = now()` auto + notif client enrichie
+
+**Client** — `order/detail.html.twig`
+- Bloc "Livraison" enrichi : transporteur + n° suivi + "Suivre le colis" (lien externe vers transporteur selon pattern URL)
+- Timeline : step "Expédiée" affiche n° suivi et transporteur
+- Si `estimatedDeliveryAt` : countdown "Livraison estimée dans N jour(s)"
+
+**URLs transporteurs** (pattern statique)
+- Chronopost : `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT={tracking}`
+- Colissimo : `https://www.laposte.fr/outils/suivre-vos-envois?code={tracking}`
+- DPD : `https://www.dpd.fr/trace/{tracking}`
+
+**OrderEvent** : nouveau type `TYPE_SHIPPED` enrichi avec carrier+tracking dans `data`
+
+---
+
+### Phase E — Multi-utilisateurs par entreprise (~1-2j)
+
+**Refacto relations**
+- Actuel : `Company.manager` (ManyToOne vers User, unique). Supprimer.
+- Nouveau : `User.company` ManyToOne (existe déjà), inverse `Company.members` OneToMany
+- Ajouter `User.companyRole` enum `OWNER|MEMBER` (nullable, null pour admins Afdal)
+
+**Migration Doctrine**
+- Pour chaque Company : l'ancien manager devient `companyRole=OWNER`, les autres users déjà rattachés deviennent `MEMBER`
+- Drop `companies.manager_id`
+
+**Sécurité & rôles**
+- Voter `CompanyVoter` : MEMBER peut lister/voir commandes + passer commande ; OWNER ajoute gestion équipe + CGV
+- `Invitation` : ajouter `companyRole` cible (owner peut inviter des members ; admin Afdal peut inviter owners)
+
+**UI `/parametres`** (nouveau panneau)
+- Section "Équipe" (visible OWNER uniquement) : liste des membres + rôle + bouton "Retirer"
+- Form "Inviter un membre" : email + rôle par défaut MEMBER
+- Invitation suit le flow existant (lien unique + expiration)
+
+**UI admin**
+- Page company detail : liste membres avec badges rôle (OWNER/MEMBER)
+- Invitation admin : cible désormais "Entreprise" dans un dropdown (plus juste email)
+
+**Ordres d'idée** : pas de notion d'organisation au-dessus de Company, reste en multi-company plat
+
+---
+
+### Phase F — Pricing B2B (~2-3j)
+
+**Entités tarification**
+- `PriceTier(product, minQty, unitCents)` — barème volume : ex. 1-49=15€, 50-99=12€, 100+=10€
+- `CompanyPrice(company, product, unitCents)` — tarif négocié pour UNE entreprise, override le barème
+
+**Logique résolution prix** (service `PricingService`)
+- Pour un (product, company, qty) : retourne `unitCents` = `CompanyPrice` si existe, sinon palier `PriceTier` le plus proche au-dessus de qty, sinon `Product.basePriceCents`
+- Applique sur TOUS les touchpoints : cart subtotal, order creation (freeze au moment du placement dans `OrderItem.unitPriceCents` → déjà le cas)
+
+**Admin**
+- Page produit : nouvelle section "Barème volume" avec table éditable (add/remove paliers)
+- Page company : nouvelle section "Tarifs négociés" avec table (product searchable + prix unitaire + bouton add/remove)
+
+**Catalogue client**
+- Detail produit : table paliers affichée sous le total ("Prix unitaire diminue à partir de N pièces")
+- Cart : `unit_price_cents` recalculé live via Stimulus en fonction de la qty totale produit — indicateur quand franchissement palier ("Ajoutez X pour passer à Y€/pc")
+- Detail commande : si la commande comporte des prix négociés, petit badge "Tarif négocié" sur la ligne
+
+**CGV**
+- Entité `LegalDocument(slug, title, content, publishedAt)` ou fichier statique selon préférence → discussion
+- Page `/cgv` publique (render markdown via `michelf/php-markdown` ou natif Twig)
+- Checkbox "J'accepte les [CGV](/cgv)" au checkout, obligatoire, traçage dans `Order.cgvAcceptedAt` + version CGV acceptée
+
+---
+
+### Phase G — Messagerie commande (~1j)
+
+**Entité** `OrderMessage(order, author, body, createdAt, readByClient, readByAdmin)`
+- Index `(order_id, created_at)`
+- `readByClient` / `readByAdmin` : `?\DateTimeImmutable` (null = non lu)
+
+**Repository**
+- `findForOrder(Order)` chronologique
+- `countUnreadForClient(Order)` / `countUnreadForAdmin(Order)`
+- Marquage en masse au chargement du detail (`markAllReadForClient` / `markAllReadForAdmin`)
+
+**UI** — aside sur `order/detail.html.twig` (client + admin)
+- Section "Conversation" avec liste messages (bulles alternées client/admin, timestamp, auteur)
+- Textarea en bas + bouton "Envoyer"
+- Polling 5s (réutilise `poll_controller`)
+- Protège le saisir en cours avec `data-poll-skip` (même pattern que BAT review)
+
+**Sidebar globale**
+- Badge compteur "N messages non lus" sur l'entrée "Mes commandes" (client) ou "Commandes" (admin)
+- Topbar : petite icône bulle avec count total, clic → dropdown listant les 5 commandes avec messages non lus
+
+**Différence avec notes** : les notes sont 1-shot + non versionnées, la messagerie est multi-tours + historique conservé
+
+---
+
+### Phase H — Export + Analytics admin (~2j)
+
+**Exports CSV** (service `CsvExporter`)
+- Commandes : filtres période/statut/entreprise, colonnes réf + date + entreprise + antenne + statut + pièces + CA HT
+- CA par entreprise : période + entreprise, lignes mensuelles, total annuel
+- Annuaire entreprises : toutes les companies avec membres, antennes, compteurs commandes et CA total
+
+**UI export**
+- Page `/admin/exports` avec 3 cards (1 par export) contenant les filtres + bouton "Télécharger le CSV"
+- `StreamedResponse` pour gros volumes
+
+**Analytics** — nouvelle page `/admin/analytics`
+- Installer **Chart.js** via `importmap:require chart.js` (pas de node)
+- Line chart : CA par mois sur 12 mois glissants
+- Bar chart horizontal : top 10 produits (qty vendue)
+- Bar chart : top 10 entreprises (CA)
+- Donut : distribution statuts commandes actives
+- Stat cards : CA total année, commandes totales, ticket moyen, taux conversion (placed→delivered)
+
+**Performance**
+- Cache queries sur 5min avec `CacheInterface` (pas d'invalidation fine, simple TTL)
+- Pagination ou limite sur les listes
+
+---
+
+### Phase I — Reset mot de passe (~1j)
+
+**⚠️ Bloqueur** : dépend du choix Mailer
+
+**Option A** — Mailer complet (recommandé, cohérent avec o2switch)
+- `composer require symfony/mailer symfonycasts/reset-password-bundle`
+- Dev : Mailpit via Docker Compose (`docker-compose.mailpit.yml`, port 1025/8025) — seule dépendance Docker du projet, optionnelle
+- Prod : SMTP o2switch via `MAILER_DSN=smtp://user:pass@mail.o2switch.net:587?encryption=tls`
+- Flow standard reset-password-bundle : `/mot-de-passe-oublie` → email avec token signé → `/reset/{token}` → nouveau MDP
+
+**Option B** — Admin-driven (pas d'email)
+- Route client `/mot-de-passe-oublie` : form email → crée un `ResetRequest(email, token, expiresAt, usedAt)`
+- Admin reçoit notification in-app "Reset demandé par X"
+- Admin copie le lien (`/reset/{token}`) via bouton "Copier le lien" sur page dédiée → l'envoie au client par son canal habituel (Slack/SMS/tel)
+- Client ouvre le lien → new password
+
+**Décision attendue** : A ou B ? (A ouvre la voie pour Phase "Emails transactionnels" plus tard : confirmation commande, BAT validé, expédition)
+
+---
+
+### Estimation totale restante : **~8-11 jours**
+
+Ordre suggéré : **D → E → F → G → H → I** (dépendances : F nécessite les membres multiples de E pour tests significatifs ; G bénéficie de E ; I indépendant mais bloqué par décision Mailer).
+
+---
+
 ## Patterns Tailwind partagés
 
 ```html
@@ -523,3 +1030,182 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - [ ] Focus visible (clavier)
 - [ ] `prefers-reduced-motion` respecté
 - [ ] Responsive : 375px · 768px · 1024px · 1440px
+
+
+---
+
+## Refonte fiche produit client — `templates/catalogue/detail.html.twig` (2026-04-19)
+
+**Objectif** : moderniser la page produit côté client. Look éditorial clair (Aesop/COS-inspired), plus d'air, matrice de variantes en pleine largeur.
+
+**Structure** :
+- Breadcrumb fin `Catalogue / {category}` (remplace bouton Retour)
+- **Hero** 2 colonnes (5/7 sur lg, grid-cols-12) :
+  - Image principale `aspect-[4/5]` `rounded-3xl`
+  - Thumbnails horizontales scrollables, ring 2px offset au lieu de border
+  - Colonne droite : catégorie micro-label, titre `font-display text-5xl`, matière, description `max-w-prose`, prix XXL `text-5xl font-display`, tiers en pills rondes
+  - Bouton favori : icône seule dans pastille ronde 44px (label sr-only)
+- **Section 02 — Configuration** : matrice full-width dans card `rounded-2xl`, lignes fines
+- **Section 03 — Personnalisation** : marquage en `<details>` stylé (icône ronde primary-light + chevron rotatif)
+- **Barre d'action flottante** `fixed bottom-4` : `backdrop-blur-xl`, shadow douce, total XXL + CTA noir avec flèche
+
+**Pourquoi `fixed` et pas `sticky`** : sticky testé (top header + wrapper interne) mais ne s'est pas déclenché en Chrome sur cette app → fallback `fixed` qui marche toujours. Padding `pb-32` sur le form pour compenser la hauteur de la barre.
+
+**Préservation** : tous les data-controllers (`quantities`, `gallery`, `favorite-button`, `bat-upload`) et leurs targets/actions conservés.
+
+
+---
+
+## Analytics client (2026-04-19)
+
+Nouvelle page `/analytics` côté client, scopée à `app.user.company`.
+
+**Fichiers créés** :
+- `src/Controller/ClientAnalyticsController.php` — 4 queries DBAL (monthly, top_products, status_dist, totals) filtrées `WHERE o.company_id = :company`
+- `templates/dashboard/analytics.html.twig` — 4 KPI cards + 3 charts (line CA 12m, doughnut statuts actifs, bar Top 5 produits)
+
+**Nav** : entrée "Analytics" ajoutée dans `_shell.html.twig` entre "Mes antennes" et "Paramètres" (icône chart existante).
+
+**Différences vs admin** :
+- KPI 4ème = "En cours" (placed+confirmed+in_production) au lieu de "Livrées"
+- Pas de top entreprises (une seule = la sienne)
+- Top 5 produits au lieu de 10
+- Titre montre le nom de l'entreprise
+
+**Chart.js + `chart_controller.js` réutilisés tels quels** (déjà dans importmap + controllers).
+
+
+### MAJ Analytics — 3 blocs supplémentaires (2026-04-19)
+
+- **Alerte Commandes en retard** en haut de page (rouge) : card avec liste des 5 premières commandes `estimated_delivery_at < NOW() AND status NOT IN (delivered, cancelled)`. N'apparaît que si count > 0.
+- **KPI Économies** : 5ème card de la rangée KPI, style emerald, calcule `SUM(GREATEST(products.base_price_cents - order_items.unit_price_cents, 0) * quantity)` — valorise les tarifs négociés.
+- **Commandes par antenne** (bar horizontal) : en bas à droite à côté du Top produits, groupé sur `antennas.name`. Fallback empty state si aucune commande avec antenne.
+
+
+### Dashboard admin — tuiles KPI style "Lineone Travel" (2026-04-19)
+
+Les 4 tuiles KPI du jour (`templates/dashboard/admin_stub.html.twig`, début du `dashboard-grid`) reprennent le style Lineone :
+- Fond gradient plein (bleu / orange / indigo / rose)
+- Texte blanc pur en inline style (`rgba(255,255,255,0.9)` pour titre, `#fff` pour lien "Voir les commandes" avec `border-bottom: 1px dotted`) — Tailwind `text-white/85` et `text-blue-100` ne rendaient pas correctement
+- Forme SVG décorative (cercle/hexagone/polygone) positionnée en inline style `top:12px;right:-16px;width:80px;height:80px` avec `fill="rgba(255,255,255,0.22)"` — le modificateur `text-white/20` sur `fill="currentColor"` ne marchait pas
+- z-index : texte en `relative z-10` pour rester au-dessus de la forme
+
+Section **Pipeline** supprimée en bas du dashboard admin (redondante avec les tuiles KPI + activité récente). Méthode `computePipeline()` du controller aussi retirée.
+
+**Top clients** (`templates/dashboard/admin_stub.html.twig`, bloc col-span-4) refondu :
+- Avatar 44px avec initiales de l'entreprise (2 premières lettres, `|split(' ')|slice(0,2)|map(w => w|first)`)
+- Palette cyclée sur 5 couleurs pastel (`#DBEAFE/#1D4ED8`, `#FEE2E2/#B91C1C`, `#FEF3C7/#B45309`, `#D1FAE5/#047857`, `#E0E7FF/#4338CA`) via `loop.index0 % 5`
+- "Voir tout" en haut-droite (pointillé), pointe vers `app_admin_companies`
+- `divide-y` entre rangées au lieu de `space-y-3`
+
+
+### Cards antennes — style gradient border + avatar contact (2026-04-19)
+
+`templates/antenna/list.html.twig` refondu inspiré design "classes" :
+- **Bordure gauche gradient** (span absolu `w-1.5`) avec palette cyclée 5 couleurs (`loop.index0 % 5`) : bleu→violet, rose→rouge, ambre→rouge, émeraude→cyan, indigo→pourpre
+- **Icône localisation** dans carré 80px rounded-2xl avec même gradient + shadow colorée (`0 8px 20px -6px {{ palette.from }}66`)
+- **Badge téléphone** en bas : inline-flex gradient même palette, texte blanc
+- **Avatar contact** (initiales contactName, 40px rond, border blanche) + **bouton flèche** (rond 40px, muted → primary au hover) en bas de la card
+- Boutons edit/delete en haut-droite avec `opacity-0 group-hover:opacity-100` (révélés au survol), fond `bg-white/80 backdrop-blur`
+- Card cliquable via pattern `before:absolute before:inset-0` sur le `<a>`
+- `flex flex-col` + `min-height: 340px` sur l'article + `mt-auto pt-6` sur la rangée avatar/flèche : hauteur homogène et alignement bas propre
+
+**Page détail antenne** (`templates/antenna/detail.html.twig`) alignée sur le même langage :
+- Palette déterminée par `antenna.id % 5` (même couleur entre liste et détail pour une antenne donnée)
+- Hero card en haut : bordure gauche gradient + carré icône 80px gradient + titre/adresse + badge téléphone (identique aux cards liste)
+- Card "Contact responsable" : avatar 44px initiales (contactName) + gradient palette, sous-titre "Responsable", email/phone en liens hover primary
+- **4 stats cards** : chacune avec icône 40px dans carré rounded-xl gradient dédié (commandes bleu/indigo, pièces émeraude/cyan, revenue ambre/rouge avec text-fill gradient, last order rose/violet)
+- **Graph 6 mois** : barres en gradient palette antenne avec shadow colorée + tooltip au hover en gradient
+- **Top produits** : avatars pastel cyclés (5 palettes bg+fg) avec numéro, `divide-y` entre rangées, toute la ligne cliquable
+- **Historique commandes** : remplacé `<ol class="timeline">` par cards rounded-xl avec icône panier status-colorée + badge statut + barre de progression en bas (réutilise `status.progressColor()` / `progressPct()` comme l'activité récente du dashboard admin)
+
+
+### Nav admin — lien Paramètres (2026-04-19)
+
+Ajout d'une entrée `{ route: 'app_settings', label: 'Paramètres', icon: 'cog' }` dans `nav_items` admin de `templates/dashboard/_shell.html.twig`. Le `SettingsController` client est réutilisé tel quel — le template gère déjà le cas admin en masquant :
+- Champ Entreprise (condition `if not app.user.isAdmin()`)
+- Onglet Équipe (condition `if is_owner` — admin n'est pas company owner → false)
+
+Admin voit donc : Profil (email readonly + nom) + Sécurité (changement mot de passe). Pas besoin de nouveau controller ni template.
+
+
+### Timeline événements commande — refonte unifiée (2026-04-20)
+
+Partial partagé `templates/order/_timeline.html.twig` utilisé côté client (`order/detail.html.twig`) et admin (`admin/order/detail.html.twig`) — supprime la duplication de ~80 lignes.
+
+- **Filtre Twig `time_ago`** ajouté dans `src/Twig/AppExtension.php` : rend "à l'instant / il y a X min / il y a X h / hier / il y a X j / date" en français
+- **Table `event_config`** mappe chaque `event.type` (created, status_changed, items_edited, cancelled, admin_note, bat_*, shipping_updated, antenna_changed, notes_updated) vers `{title, bg, fg}` — couleurs pastel dédiées par type d'évènement
+- **Dot icône** 32px rond avec bg/fg du type, SVG choisi par type
+- **Chip actor** : mini-avatar 20px initiales en gradient palette du type + nom ("Afdal · X" pour admin events, nom seul pour client)
+- **Titre + description + time_ago** : titre bold (label du type), summary en secondaire, temps relatif aligné à droite
+- **Ligne connecteur** : span absolu `left-4 top-9 bottom-0 w-px` (masqué sur le dernier item via `not loop.last`)
+
+
+### Suivi commande (stepper) — refonte colorée (2026-04-20)
+
+Bloc "Suivi" de `templates/order/detail.html.twig` (stepper Placée → Confirmée → En production → Expédiée → Livrée) refondu dans le même langage visuel :
+- Dot 40px rond coloré avec la `status.progressColor()` (indigo/rose/ambre/sky/émeraude) au fond 22% d'opacité + icône SVG dédiée par statut (facture, check-circle, cog, truck, package)
+- Étape courante : ring coloré 4px + shadow colorée pour faire pulser visuellement
+- Étapes à venir : gris muted `#F1F5F9` / `#94A3B8`
+- Titre bold + description (ex. "Impression et fabrication en cours") pour chaque statut + timestamp relatif via `time_ago`
+- Connecteur fin avec la couleur du status à 40% d'opacité (étapes terminées) ou grey (à venir)
+- Card "cancelled" : même style mais rounded-xl + description "Cette commande a été annulée et ne sera pas traitée"
+
+
+### Accès non authentifié — redirection vers / (2026-04-20)
+
+Nouvelle classe `src/Security/HomeEntryPoint.php` implémentant `AuthenticationEntryPointInterface` : redirige systématiquement vers `app_home` (`/`) au lieu de `/login` quand un visiteur non connecté atteint une URL protégée.
+
+Wiring dans `config/packages/security.yaml` sous la firewall `main` : `entry_point: App\Security\HomeEntryPoint`. Le `form_login.login_path` reste sur `app_login` (route qui sert le formulaire), seul le comportement "unauthenticated access → redirect" change.
+
+Les 403 réels (utilisateur connecté sans permission, ex. client qui tente `/admin`) restent gérés par Symfony normalement.
+
+
+### Bloc "À traiter en priorité" — refonte Lineone (2026-04-20)
+
+`templates/dashboard/admin_stub.html.twig` : section alertes critiques refondue avec macro partagée `alert_card(title, count, palette, icon_svg, items, footer_note)`.
+
+- **En-tête** : icône gradient ambre→rouge 32px + titre + sous-titre "Actions urgentes à réaliser maintenant" (au lieu du gradient background amber)
+- **Chaque alerte est une card** `rounded-xl bg-white` avec :
+  - Bordure gauche gradient (2 couleurs par type) — même pattern que les antennes
+  - Icône gradient 36px dans carré `rounded-lg` avec shadow colorée + titre + badge count à droite (gradient aussi)
+  - Liste items en `divide-y` : ref mono + nom client + meta colorée à droite
+  - Footer note optionnelle en italique
+- **Palettes** : livraisons retard (rouge→rose), BAT refusés (rose→cramoisi), stock (ambre), bloquées (orange), messages (indigo)
+- **Hover** : `-translate-y-0.5` + `shadow-md` comme les cards antennes
+- Macro Twig `_self.alert_card(...)` supprime la duplication HTML des 5 types d'alertes
+
+
+### Préparation déploiement o2switch (2026-04-20)
+
+URL prod : `https://afdal.sora3439.odns.fr`. Email applicatif : `afdal@sora3439.odns.fr` (SMTP via `mail.sora3439.odns.fr:465` SSL, username doit encoder `@` en `%40`).
+
+Fichiers ajoutés :
+- `public/.htaccess` — rewrite Apache standard Symfony + compression + cache static assets + bloc HTTPS commenté (à activer après AutoSSL)
+- `.env.prod` — template commité (APP_ENV=prod, DEFAULT_URI, MESSENGER_TRANSPORT_DSN=doctrine) sans secrets
+- `DEPLOY.md` — checklist 10 étapes (PostgreSQL, upload, `.env.prod.local`, migrations, permissions, admin user, SSL, troubleshooting)
+- `.gitignore` mis à jour : `public/uploads/markings/*` et `public/uploads/products/*` exclus avec `.gitkeep` préservés
+
+**Non résolu mais documenté** : document root à pointer sur `~/afdal/public/` via cPanel (ou symlink si indispo). Paths uploads restent dans `public/uploads/` — acceptable sur o2switch avec permissions correctes, à surveiller.
+
+
+### Bascule PostgreSQL → MySQL pour o2switch (2026-04-20)
+
+**Contexte** : premier déploiement sur mutualisé o2switch. PostgreSQL 9.6 local (EOL depuis 2021, incompatible avec le schéma Doctrine généré pour PG 17). Neon/Supabase externes bloqués par le firewall sortant TCP 5432. Budget serré → pas d'option VPS.
+
+**Décision** : migrer l'app sur MySQL 8 / MariaDB 10 (natif o2switch, gratuit, supporté par Doctrine).
+
+**Changements opérés** :
+- `.env`, `.env.local` (MAMP 8.0.44 port 8889), `.env.test`, `.env.prod` → DSN MySQL
+- `config/packages/doctrine.yaml` → retrait de `identity_generation_preferences: PostgreSQLPlatform: identity`
+- 5 requêtes SQL natives patchées :
+  - `TO_CHAR(DATE_TRUNC('month', X), 'YYYY-MM')` → `DATE_FORMAT(X, '%Y-%m')` (4 occurrences dans `Admin/AnalyticsController` et `ClientAnalyticsController`)
+  - `EXTRACT(DAY FROM :now::timestamp - X)` → `DATEDIFF(:now, X)` (DashboardController)
+  - `ORDER BY X ASC NULLS LAST` → `ORDER BY X IS NULL, X ASC` (DashboardController)
+- `Entity/Product.php` : retiré `options: ['default' => '[]']` sur la colonne JSON `images` (MySQL interdit un default sur JSON/TEXT ; le défaut PHP `= []` suffit)
+- Suppression des 16 migrations PG + génération d'une migration MySQL unique via `doctrine:migrations:diff`
+- `DEPLOY.md` mis à jour (pdo_mysql, DSN mysql, MariaDB 10.11)
+
+**Validé** : smoke test 10/10 OK sur MySQL local (MAMP 8.0.44). Aucun opérateur JSON Pg / cast `::type` / type `ARRAY` dans le code → pas d'autre surprise attendue.
+
+**À faire côté prod** : noter la version MySQL/MariaDB o2switch dans `.env.prod.local` (`serverVersion=10.x-MariaDB` ou `8.0.x`).

@@ -20,8 +20,11 @@
   --color-foreground: #181D27;
   --color-body: #414651;
   --color-secondary: #535862;
-  --color-background: #FAFAFA;
+  --color-background: #FCFCFD;
+  /* Canvas applicatif — bleu très léger (profondeur sans griser) */
+  --color-canvas: #FAFBFD;
   --color-surface: #FFFFFF;
+  --color-surface-elevated: #ffffff;
   --color-muted: #E9EAEB;
   --color-border: #D5D7DA;
   --color-border-soft: #E9EAEB;
@@ -33,6 +36,7 @@
   --color-warning: #DC6803;
   --color-destructive: #E82538;
   --color-ring: #175CD3;
+  --color-error: #b42318;
 
   /* Navy scale (legacy, used par shell / composants Lineone) */
   --color-navy-50: #F8F9FB;
@@ -48,29 +52,35 @@
   --color-navy-800: #181D27;
   --color-navy-900: #13161B;
 
-  /* Typography */
-  --font-sans: "Poppins", system-ui, -apple-system, sans-serif;
-  --font-display: "Poppins", system-ui, -apple-system, sans-serif;
-  --font-inter: "Inter", system-ui, -apple-system, sans-serif;
+  /* Typography — Inter corps, Lexend titres (charte Afdal / Lineone) */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Lexend", system-ui, -apple-system, sans-serif;
 
-  /* Shadows (Lineone-inspired) */
-  --shadow-soft: 0 3px 10px 0 rgb(48 46 56 / 6%);
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06);
-  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  /* Ombres — relief doux type produit (layered) */
+  --shadow-soft: 0 2px 8px -2px rgb(15 23 42 / 6%), 0 0 0 1px rgb(15 23 42 / 3%);
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 4%);
+  --shadow-sm: 0 4px 12px -4px rgb(15 23 42 / 8%), 0 0 0 1px rgb(15 23 42 / 4%);
+  --shadow-md: 0 12px 32px -8px rgb(15 23 42 / 12%), 0 0 0 1px rgb(15 23 42 / 5%);
+  --shadow-glow-primary: 0 8px 32px -6px rgb(23 92 211 / 18%);
 
-  /* Radii */
+  /* Radii — plus organiques */
   --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
+  --radius-md: 0.5625rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
     color: var(--color-body);
-    background-color: var(--color-background);
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(ellipse 120% 80% at 100% -20%, rgb(23 92 211 / 4%), transparent 55%),
+      radial-gradient(ellipse 80% 60% at 0% 100%, rgb(232 37 56 / 2%), transparent 50%),
+      linear-gradient(180deg, var(--color-canvas) 0%, #F5F7FB 100%);
+    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -104,12 +114,142 @@
 }
 
 @layer components {
-  /* ----- Card ----- */
+  /* Grille décorative panneau auth (Lineone-like, sans image) */
+  .auth-panel-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 7%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 7%) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Grille légère sur fond clair — colonne illustration auth Lineone */
+  .auth-panel-grid-light {
+    background-image:
+      linear-gradient(to right, rgb(15 23 42 / 5%) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(15 23 42 / 5%) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Scrollbar masquée — menus latéraux */
+  .is-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .is-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ----- Card — surface flottante, bordure lumineuse ----- */
   .card {
-    background-color: var(--color-surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-soft);
+    background-color: var(--color-surface-elevated);
+    border-radius: var(--radius-xl);
+    border: 1px solid rgb(255 255 255 / 0.7);
+    box-shadow:
+      var(--shadow-xs),
+      0 0 0 1px rgb(15 23 42 / 4%),
+      0 6px 20px -8px rgb(23 92 211 / 7%);
     color: var(--color-body);
+  }
+
+  /* Titres de page applicatifs */
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .page-header {
+      margin-bottom: 2rem;
+    }
+  }
+  .page-header__eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 0.35rem;
+  }
+  .page-header__title {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-foreground);
+    line-height: 1.25;
+  }
+  @media (min-width: 768px) {
+    .page-header__title {
+      font-size: 1.5rem;
+    }
+  }
+
+  /*
+   * Dashboard Lineone — grille 12 colonnes, cartes avec en-tête
+   * (équivalent sémantique de .main-content + .card du template dist)
+   */
+  .lineone-main {
+    width: 100%;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .dashboard-grid {
+      gap: 1.25rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      gap: 1.5rem;
+    }
+  }
+
+  .lineone-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--color-border-soft);
+    padding: 0.75rem 1rem;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.95) 0%, rgb(248 250 252 / 0.85) 100%);
+  }
+  @media (min-width: 640px) {
+    .lineone-card-head {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+  }
+
+  .lineone-card-head__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
+  }
+
+  .lineone-stat-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+  }
+
+  .lineone-stat-value {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--color-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (min-width: 640px) {
+    .lineone-stat-value {
+      font-size: 2rem;
+    }
   }
 
   /* ----- Buttons ----- */
@@ -118,7 +258,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 0.5rem 1.25rem;
     font-weight: 500;
     font-size: 0.875rem;
@@ -131,11 +271,16 @@
   .btn:disabled { pointer-events: none; opacity: 0.5; }
 
   .btn-primary {
-    background-color: var(--color-primary);
+    background: linear-gradient(165deg, #1a6ee0 0%, var(--color-primary) 45%, #124a9e 100%);
     color: var(--color-on-primary);
+    box-shadow: var(--shadow-glow-primary);
+    border: 1px solid rgb(255 255 255 / 0.12);
   }
   .btn-primary:hover,
-  .btn-primary:focus { background-color: var(--color-primary-focus); }
+  .btn-primary:focus {
+    background: linear-gradient(165deg, #2b7ce8 0%, #175cd3 50%, var(--color-primary-focus) 100%);
+    filter: brightness(1.02);
+  }
 
   .btn-accent {
     background-color: var(--color-accent);
@@ -174,7 +319,7 @@
   .form-input {
     display: block;
     width: 100%;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background-color: var(--color-surface);
     padding: 0.5rem 0.75rem;
@@ -189,6 +334,18 @@
     border-color: var(--color-primary);
     outline: 2px solid transparent;
     box-shadow: 0 0 0 3px rgb(23 92 211 / 0.12);
+  }
+
+  /* Page connexion — ring Tailwind, pas de double halo */
+  .auth-form-login .form-input {
+    border-width: 0;
+  }
+  .auth-form-login .form-input:hover {
+    border-color: transparent;
+  }
+  .auth-form-login .form-input:focus {
+    border-color: transparent;
+    box-shadow: none;
   }
 
   .form-label {
@@ -265,34 +422,36 @@
     font-size: inherit !important;
     color: var(--color-foreground) !important;
   }
-  .ts-wrapper .ts-dropdown {
+  /* Dropdown monté sur <body> — sélecteur sans .ts-wrapper pour matcher le portal */
+  .ts-dropdown {
     border: 1px solid var(--color-border) !important;
     border-radius: var(--radius-md) !important;
-    box-shadow: var(--shadow-md) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
     margin-top: 0.375rem !important;
-    background-color: var(--color-surface) !important;
+    background-color: #ffffff !important;
     font-family: var(--font-sans) !important;
     padding: 0.25rem !important;
     overflow: hidden;
+    z-index: 1000 !important;
   }
-  .ts-wrapper .ts-dropdown .option {
+  .ts-dropdown .option {
     padding: 0.5rem 0.75rem !important;
     border-radius: var(--radius-sm) !important;
     color: var(--color-body) !important;
     font-size: inherit !important;
     cursor: pointer;
   }
-  .ts-wrapper .ts-dropdown .option.active,
-  .ts-wrapper .ts-dropdown .option:hover {
+  .ts-dropdown .option.active,
+  .ts-dropdown .option:hover {
     background-color: var(--color-muted) !important;
     color: var(--color-foreground) !important;
   }
-  .ts-wrapper .ts-dropdown .option.selected {
+  .ts-dropdown .option.selected {
     background-color: var(--color-primary-light) !important;
     color: var(--color-primary) !important;
     font-weight: 500;
   }
-  .ts-wrapper .ts-dropdown .option.selected.active {
+  .ts-dropdown .option.selected.active {
     background-color: var(--color-primary) !important;
     color: var(--color-on-primary) !important;
   }

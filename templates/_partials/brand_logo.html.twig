@@ -1,0 +1,29 @@
+{#
+  Logo Afdal — fichier : public/logo-afdal.png
+
+  @param class       Classes pour le <img> (ex. h-9 w-auto)
+  @param variant     default | on_dark  (sur fond sombre : fond clair léger derrière le logo)
+  @param wrap_class  Classes du cadre blanc (variant on_dark uniquement)
+  @param loading     eager (défaut) | lazy
+#}
+{% set img_classes = (class|default('h-10 w-auto max-h-11')) ~ ' object-contain object-left' %}
+{% if variant|default('default') == 'on_dark' %}
+    {% set img_dark = (class|default('h-10 sm:h-11 w-auto max-w-[min(100%,280px)]')) ~ ' object-contain object-center' %}
+    <span class="inline-flex items-center justify-center {{ wrap_class|default('rounded-2xl bg-white/95 p-3 sm:p-4 shadow-lg') }}">
+        <img src="{{ asset('logo-afdal.png') }}"
+             alt="Afdal"
+             class="{{ img_dark }}"
+             width="180"
+             height="54"
+             loading="{{ loading|default('eager') }}"
+             decoding="async">
+    </span>
+{% else %}
+    <img src="{{ asset('logo-afdal.png') }}"
+         alt="Afdal"
+         class="{{ img_classes }}"
+         width="180"
+         height="54"
+         loading="{{ loading|default('eager') }}"
+         decoding="async">
+{% endif %}

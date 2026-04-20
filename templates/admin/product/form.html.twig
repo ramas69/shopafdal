@@ -112,11 +112,11 @@
 
             <label class="block">
                 <span class="form-label">Prix HT de base <span class="text-[var(--color-destructive)]">*</span></span>
-                <div class="relative mt-1.5">
+                <div class="flex items-stretch mt-1.5 rounded-md border {{ errors.base_price is defined ? 'border-[var(--color-destructive)]' : 'border-[var(--color-border)]' }} bg-white focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 overflow-hidden">
                     <input type="text" name="base_price" value="{{ is_new ? '' : (product.basePriceCents / 100)|number_format(2, ',', '') }}" required
                         placeholder="0,00"
-                        class="form-input pr-10 text-right font-mono {{ errors.base_price is defined ? '!border-[var(--color-destructive)]' : '' }}">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]">€</span>
+                        class="flex-1 min-w-0 px-3 py-2 bg-transparent text-right font-mono text-sm focus:outline-none">
+                    <span class="flex items-center px-3 bg-[var(--color-muted)] text-[var(--color-secondary)] text-sm border-l border-[var(--color-border)]">€</span>
                 </div>
                 {% if errors.base_price is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.base_price }}</span>{% endif %}
                 <p class="text-xs text-[var(--color-secondary)] mt-1.5">Prix unitaire affiché aux clients.</p>
@@ -133,28 +133,42 @@
             </div>
         </div>
 
-        {% if not is_new and product.images|length > 0 %}
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+        {% if not is_new and product.imagePaths|length > 0 %}
+            {% set colors_avail = [] %}
+            {% for v in product.variants %}
+                {% if v.color not in colors_avail %}{% set colors_avail = colors_avail|merge([v.color]) %}{% endif %}
+            {% endfor %}
+            <div data-controller="image-sort" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4" data-image-sort-target="grid">
                 {% for img in product.images %}
-                    <div data-controller="image-remove" class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square group">
-                        <input type="hidden" name="remove_images[]" value="{{ img }}" data-image-remove-target="input" disabled>
-                        <img src="{{ img }}" alt="" class="w-full h-full object-cover">
-
-                        <button type="button"
-                                data-action="click->image-remove#remove"
-                                title="Retirer l'image"
-                                aria-label="Retirer l'image"
-                                class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center cursor-pointer hover:bg-[var(--color-destructive)] hover:text-white text-[var(--color-destructive)] transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                        </button>
-
-                        {% if loop.first %}
-                            <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide pointer-events-none">Principal</span>
-                        {% endif %}
+                    <div data-controller="image-remove" data-image-sort-target="item" data-path="{{ img.path }}" class="relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square bg-white flex flex-col">
+                        <input type="hidden" name="existing_images[{{ loop.index0 }}][path]" value="{{ img.path }}" data-image-sort-target="pathInput">
+                        <input type="hidden" name="remove_images[]" value="{{ img.path }}" data-image-remove-target="input" disabled>
+                        <div class="relative flex-1">
+                            <img src="{{ img.path }}" alt="" class="w-full h-full object-cover">
+                            <span data-image-sort-target="handle" class="absolute top-2 left-2 w-7 h-7 rounded-md bg-white/90 shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing text-[var(--color-secondary)]" title="Glisser pour réordonner">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"/></svg>
+                            </span>
+                            <button type="button"
+                                    data-action="click->image-remove#remove"
+                                    title="Retirer l'image"
+                                    aria-label="Retirer l'image"
+                                    class="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-white/95 shadow-sm flex items-center justify-center cursor-pointer hover:bg-[var(--color-destructive)] hover:text-white text-[var(--color-destructive)] transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                            </button>
+                            <span data-image-sort-target="primaryBadge" class="{{ loop.first ? '' : 'hidden' }} absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-[var(--color-primary)] text-white text-[10px] font-semibold uppercase tracking-wide pointer-events-none">Principal</span>
+                        </div>
+                        <div class="p-2 border-t border-[var(--color-border-soft)] bg-white">
+                            <select name="existing_images[{{ loop.index0 }}][color]" class="form-input text-xs !py-1">
+                                <option value="">Toutes couleurs</option>
+                                {% for c in colors_avail %}
+                                    <option value="{{ c }}" {{ img.color == c ? 'selected' }}>{{ c }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
-            <p class="text-xs text-[var(--color-secondary)] mb-3">Cliquez sur la croix pour retirer une image. La suppression devient effective à l'enregistrement.</p>
+            <p class="text-xs text-[var(--color-secondary)] mb-3">Glissez pour réordonner · la 1ère image est le visuel principal · associez une couleur pour afficher l'image sur les lignes/filtre correspondants.</p>
         {% endif %}
 
         <div data-controller="image-preview">
@@ -193,9 +207,14 @@
                     <input type="text" name="variants[{{ loop.index0 }}][color]" value="{{ v.color }}" required placeholder="Blanc" class="form-input col-span-3">
                     <input type="color" name="variants[{{ loop.index0 }}][color_hex]" value="{{ v.colorHex ?? '#FFFFFF' }}" class="form-input col-span-1 h-10 !p-1">
                     <input type="text" name="variants[{{ loop.index0 }}][sku]" value="{{ v.sku }}" required placeholder="TSHIRT-S-BLC" class="form-input col-span-5 font-mono text-xs">
-                    <button type="button" data-action="variants-editor#remove" class="col-span-1 inline-flex items-center justify-center h-10 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)]" aria-label="Retirer">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                    </button>
+                    <div class="col-span-1 flex items-center justify-end gap-1">
+                        <button type="button" data-action="variants-editor#duplicate" class="inline-flex items-center justify-center h-9 w-9 rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]" aria-label="Dupliquer" title="Dupliquer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
+                        </button>
+                        <button type="button" data-action="variants-editor#remove" class="inline-flex items-center justify-center h-9 w-9 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)]" aria-label="Retirer" title="Retirer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -215,6 +234,68 @@
 
         {% if is_new or product.variants|length == 0 %}
             <p data-variants-editor-target="empty" class="text-center text-sm text-[var(--color-secondary)] py-8">Aucune variante. Cliquez sur « Ajouter ».</p>
+        {% endif %}
+    </section>
+
+    {# Barème volume #}
+    <section class="card p-6" data-controller="price-tiers">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Barème volume</h2>
+                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Diminue le prix unitaire selon la quantité totale commandée sur ce produit. Le prix de base s'applique sous le 1er palier.</p>
+            </div>
+            <button type="button" data-action="price-tiers#add" class="btn btn-outline text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Ajouter un palier
+            </button>
+        </div>
+
+        <div data-price-tiers-target="list" class="space-y-2">
+            {% for t in tiers|default([]) %}
+                <div class="grid grid-cols-12 gap-2 items-center p-3 rounded-md border border-[var(--color-border-soft)]" data-price-tiers-target="row">
+                    <input type="hidden" name="tiers[{{ loop.index0 }}][id]" value="{{ t.id }}">
+                    <label class="col-span-4 block">
+                        <span class="text-[10px] uppercase tracking-wide text-[var(--color-secondary)]">À partir de</span>
+                        <input type="number" min="1" name="tiers[{{ loop.index0 }}][min_qty]" value="{{ t.minQty }}" required class="form-input mt-1 text-right font-mono" placeholder="50">
+                    </label>
+                    <div class="col-span-1 text-center text-[var(--color-secondary)] pt-4">pièces</div>
+                    <label class="col-span-5 block">
+                        <span class="text-[10px] uppercase tracking-wide text-[var(--color-secondary)]">Prix unitaire HT</span>
+                        <div class="flex items-stretch mt-1 rounded-md border border-[var(--color-border)] bg-white focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 overflow-hidden">
+                            <input type="text" name="tiers[{{ loop.index0 }}][price]" value="{{ (t.unitPriceCents / 100)|number_format(2, ',', '') }}" required class="flex-1 min-w-0 px-3 py-2 bg-transparent text-right font-mono text-sm focus:outline-none" placeholder="12,00">
+                            <span class="flex items-center px-3 bg-[var(--color-muted)] text-[var(--color-secondary)] text-sm border-l border-[var(--color-border)]">€</span>
+                        </div>
+                    </label>
+                    <button type="button" data-action="price-tiers#remove" class="col-span-2 inline-flex items-center justify-center h-9 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)] self-end" aria-label="Retirer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <template data-price-tiers-target="template">
+            <div class="grid grid-cols-12 gap-2 items-center p-3 rounded-md border border-[var(--color-border-soft)]" data-price-tiers-target="row">
+                <input type="hidden" name="tiers[__INDEX__][id]" value="">
+                <label class="col-span-4 block">
+                    <span class="text-[10px] uppercase tracking-wide text-[var(--color-secondary)]">À partir de</span>
+                    <input type="number" min="1" name="tiers[__INDEX__][min_qty]" required class="form-input mt-1 text-right font-mono" placeholder="50">
+                </label>
+                <div class="col-span-1 text-center text-[var(--color-secondary)] pt-4">pièces</div>
+                <label class="col-span-5 block">
+                    <span class="text-[10px] uppercase tracking-wide text-[var(--color-secondary)]">Prix unitaire HT</span>
+                    <div class="flex items-stretch mt-1 rounded-md border border-[var(--color-border)] bg-white focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 overflow-hidden">
+                        <input type="text" name="tiers[__INDEX__][price]" required class="flex-1 min-w-0 px-3 py-2 bg-transparent text-right font-mono text-sm focus:outline-none" placeholder="12,00">
+                        <span class="flex items-center px-3 bg-[var(--color-muted)] text-[var(--color-secondary)] text-sm border-l border-[var(--color-border)]">€</span>
+                    </div>
+                </label>
+                <button type="button" data-action="price-tiers#remove" class="col-span-2 inline-flex items-center justify-center h-9 rounded-md text-[var(--color-destructive)] hover:bg-[var(--color-accent-light)] self-end" aria-label="Retirer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </template>
+
+        {% if tiers|default([])|length == 0 %}
+            <p class="text-center text-sm text-[var(--color-secondary)] py-6">Aucun palier — le prix de base s'applique à toutes les quantités.</p>
         {% endif %}
     </section>
 

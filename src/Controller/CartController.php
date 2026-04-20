@@ -27,6 +27,17 @@ final class CartController extends AbstractController
     public function update(string $lineId, Request $request, Cart $cart): RedirectResponse
     {
         $qty = (int) $request->request->get('quantity', 1);
+        foreach ($cart->lines() as $line) {
+            if ($line['line_id'] !== $lineId) {
+                continue;
+            }
+            $stock = $line['variant']->getStock();
+            if ($stock !== null && $qty > $stock) {
+                $qty = $stock;
+                $this->addFlash('warning', sprintf('Quantité ajustée au stock disponible (%d).', $stock));
+            }
+            break;
+        }
         $cart->updateQuantity($lineId, $qty);
         return $this->redirectToRoute('app_cart');
     }

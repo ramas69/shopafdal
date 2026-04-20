@@ -3,10 +3,15 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Company;
+use App\Entity\CompanyPrice;
+use App\Entity\Product;
+use App\Repository\CompanyPriceRepository;
 use App\Repository\CompanyRepository;
 use App\Repository\OrderRepository;
+use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -51,8 +56,13 @@ final class CompanyController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_admin_company_detail', requirements: ['id' => '\d+'])]
-    public function detail(Company $company, OrderRepository $orders, EntityManagerInterface $em): Response
-    {
+    public function detail(
+        Company $company,
+        OrderRepository $orders,
+        EntityManagerInterface $em,
+        CompanyPriceRepository $companyPrices,
+        ProductRepository $productsRepo,
+    ): Response {
         $companyOrders = $orders->findBy(['company' => $company], ['createdAt' => 'DESC'], 10);
 
         $totals = $em->getConnection()->fetchAssociative(
@@ -65,6 +75,9 @@ final class CompanyController extends AbstractController
             ['id' => $company->getId(), 'cancelled' => 'cancelled']
         );
 
+        $negotiated = $companyPrices->findForCompany($company);
+        $allProducts = $productsRepo->createQueryBuilder('p')->orderBy('p.name', 'ASC')->getQuery()->getResult();
+
         return $this->render('admin/company/detail.html.twig', [
             'company' => $company,
             'recent_orders' => $companyOrders,
@@ -73,6 +86,60 @@ final class CompanyController extends AbstractController
                 'revenue' => (int) $totals['revenue'],
                 'qty' => (int) $totals['qty'],
             ],
+            'negotiated_prices' => $negotiated,
+            'all_products' => $allProducts,
         ]);
+    }
+
+    #[Route('/{id}/tarif-negocie', name: 'app_admin_company_price_save', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function savePrice(
+        Company $company,
+        Request $request,
+        ProductRepository $productsRepo,
+        CompanyPriceRepository $companyPrices,
+        EntityManagerInterface $em,
+    ): RedirectResponse {
+        $productId = (int) $request->request->get('product_id', 0);
+        $priceStr = (string) $request->request->get('price', '');
+        $product = $productsRepo->find($productId);
+
+        if (!$product) {
+            $this->addFlash('error', 'Produit invalide.');
+            return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+        }
+        if ($priceStr === '' || !is_numeric(str_replace(',', '.', $priceStr))) {
+            $this->addFlash('error', 'Prix invalide.');
+            return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+        }
+
+        $cents = (int) round(((float) str_replace(',', '.', $priceStr)) * 100);
+        $existing = $companyPrices->findForCompanyAndProduct($company, $product);
+        if ($existing) {
+            $existing->setUnitPriceCents($cents);
+        } else {
+            $cp = (new CompanyPrice())->setCompany($company)->setProduct($product)->setUnitPriceCents($cents);
+            $em->persist($cp);
+        }
+        $em->flush();
+        $this->addFlash('success', sprintf('Tarif négocié pour « %s » : %s', $product->getName(), number_format($cents / 100, 2, ',', ' ') . ' €'));
+        return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/{id}/tarif-negocie/{priceId}/delete', name: 'app_admin_company_price_delete', methods: ['POST'], requirements: ['id' => '\d+', 'priceId' => '\d+'])]
+    public function deletePrice(
+        Company $company,
+        int $priceId,
+        CompanyPriceRepository $companyPrices,
+        EntityManagerInterface $em,
+    ): RedirectResponse {
+        $cp = $companyPrices->find($priceId);
+        if (!$cp || $cp->getCompany()->getId() !== $company->getId()) {
+            throw $this->createNotFoundException();
+        }
+        $productName = $cp->getProduct()->getName();
+        $em->remove($cp);
+        $em->flush();
+        $this->addFlash('success', sprintf('Tarif négocié supprimé pour « %s ».', $productName));
+        return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
     }
 }

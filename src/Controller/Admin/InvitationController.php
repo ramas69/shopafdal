@@ -60,7 +60,9 @@ final class InvitationController extends AbstractController
             }
 
             $company = null;
-            if ($mode === 'new') {
+            if ($mode === 'afdal') {
+                // Invitation admin Afdal — pas de company
+            } elseif ($mode === 'new') {
                 if ($newCompanyName === '') {
                     $errors['new_company_name'] = 'Nom de l\'entreprise requis.';
                 } else {
@@ -78,18 +80,22 @@ final class InvitationController extends AbstractController
             }
 
             if (empty($errors)) {
-                $invitation = (new Invitation())
-                    ->setEmail($email)
-                    ->setCompany($company);
+                $invitation = (new Invitation())->setEmail($email);
+
+                if ($mode === 'afdal') {
+                    $invitation->setTargetRole(\App\Enum\UserRole::ADMIN)->setCompany(null);
+                    $msg = sprintf('Invitation admin Afdal envoyée à %s. Copie le lien pour le transmettre.', $email);
+                } else {
+                    $invitation->setTargetRole(\App\Enum\UserRole::CLIENT_MANAGER)
+                        ->setCompany($company)
+                        ->setCompanyRole(\App\Enum\CompanyRole::OWNER);
+                    $createdPrefix = $mode === 'new' ? sprintf('Entreprise « %s » créée. ', $company->getName()) : '';
+                    $msg = sprintf('%sInvitation envoyée à %s. Copie le lien pour le transmettre.', $createdPrefix, $email);
+                }
+
                 $em->persist($invitation);
                 $em->flush();
-
-                $createdPrefix = $mode === 'new' ? sprintf('Entreprise « %s » créée. ', $company->getName()) : '';
-                $this->addFlash('success', sprintf(
-                    '%sInvitation envoyée à %s. Utilise « Copier le lien » pour le transmettre.',
-                    $createdPrefix,
-                    $email
-                ));
+                $this->addFlash('success', $msg);
 
                 return $this->redirectToRoute('app_admin_invitations');
             }

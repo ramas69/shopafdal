@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use App\Entity\ProductVariant;
+use App\Entity\User;
 use App\Repository\ProductVariantRepository;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class Cart
@@ -13,6 +15,8 @@ final class Cart
     public function __construct(
         private RequestStack $requestStack,
         private ProductVariantRepository $variants,
+        private PricingService $pricing,
+        private Security $security,
     ) {}
 
     public function add(int $variantId, int $quantity, ?array $marking = null): void
@@ -69,11 +73,29 @@ final class Cart
             $variants[$v->getId()] = $v;
         }
 
+        // Agrège les qty par produit pour décider du palier volume
+        $qtyByProduct = [];
+        foreach ($raw as $item) {
+            $variant = $variants[$item['variant_id']] ?? null;
+            if (!$variant) {
+                continue;
+            }
+            $pid = $variant->getProduct()->getId();
+            $qtyByProduct[$pid] = ($qtyByProduct[$pid] ?? 0) + (int) $item['quantity'];
+        }
+
+        $currentUser = $this->security->getUser();
+        $company = $currentUser instanceof User ? $currentUser->getCompany() : null;
+
         $lines = [];
         foreach ($raw as $item) {
             $variant = $variants[$item['variant_id']] ?? null;
-            if (!$variant) continue;
-            $unit = $variant->getProduct()->getBasePriceCents();
+            if (!$variant) {
+                continue;
+            }
+            $product = $variant->getProduct();
+            $totalQty = $qtyByProduct[$product->getId()] ?? $item['quantity'];
+            $unit = $this->pricing->resolveUnitPrice($product, $company, $totalQty);
             $lines[] = [
                 'line_id' => $item['line_id'],
                 'variant' => $variant,

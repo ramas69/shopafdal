@@ -5,7 +5,18 @@ export default class extends Controller {
     static values = { exportBase: String };
 
     connect() {
+        // Portal the floating bar to <body> so `position: fixed` escapes any
+        // ancestor with transform/backdrop-filter creating a containing block.
+        if (this.hasBarTarget) {
+            document.body.appendChild(this.barTarget);
+        }
         this.update();
+    }
+
+    disconnect() {
+        if (this.hasBarTarget) {
+            this.barTarget.remove();
+        }
     }
 
     toggleAll() {

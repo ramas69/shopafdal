@@ -44,7 +44,15 @@
                     {% for invitation in invitations %}
                         <tr>
                             <td class="px-4 py-3 font-medium text-[var(--color-foreground)]">{{ invitation.email }}</td>
-                            <td class="px-4 py-3 text-[var(--color-secondary)]">{{ invitation.company.name }}</td>
+                            <td class="px-4 py-3 text-[var(--color-secondary)]">
+                                {% if invitation.isAdminInvitation() %}
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/30 uppercase tracking-wide">
+                                        Employé Afdal
+                                    </span>
+                                {% else %}
+                                    {{ invitation.company.name }}
+                                {% endif %}
+                            </td>
                             <td class="px-4 py-3">
                                 {% if invitation.acceptedAt %}
                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Acceptée</span>

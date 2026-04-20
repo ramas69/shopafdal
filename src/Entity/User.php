@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\CompanyRole;
 use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -34,6 +35,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(nullable: true)]
     private ?Company $company = null;
 
+    #[ORM\Column(length: 10, enumType: CompanyRole::class, nullable: true)]
+    private ?CompanyRole $companyRole = null;
+
     #[ORM\Column]
     private bool $active = true;
 
@@ -59,6 +63,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self { $this->password = $password; return $this; }
     public function getCompany(): ?Company { return $this->company; }
     public function setCompany(?Company $company): self { $this->company = $company; return $this; }
+    public function getCompanyRole(): ?CompanyRole { return $this->companyRole; }
+    public function setCompanyRole(?CompanyRole $r): self { $this->companyRole = $r; return $this; }
+    public function isCompanyOwner(): bool { return $this->companyRole === CompanyRole::OWNER; }
     public function isActive(): bool { return $this->active; }
     public function setActive(bool $v): self { $this->active = $v; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
@@ -69,7 +76,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return [$this->role->value];
+        $roles = [$this->role->value];
+        if ($this->companyRole === CompanyRole::OWNER) {
+            $roles[] = 'ROLE_COMPANY_OWNER';
+        }
+        return array_unique($roles);
     }
 
     public function eraseCredentials(): void {}

@@ -77,47 +77,68 @@
                 {% endif %}
             </div>
             {% if order.status.value == 'cancelled' %}
-                <div class="flex items-start gap-3 p-4 rounded-md bg-red-50 border border-red-200">
-                    <div class="w-8 h-8 rounded-full bg-[var(--color-destructive)] flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                <div class="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #FEE2E2; color: #DC2626;">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-3 flex-wrap">
-                            <div class="font-medium text-[var(--color-destructive)]">Commande annulée</div>
+                            <div class="text-sm font-semibold text-[var(--color-destructive)]">Commande annulée</div>
                             {% if order.cancelledAt %}
-                                <time datetime="{{ order.cancelledAt|date('c') }}" class="text-xs text-[var(--color-secondary)] font-mono">{{ order.cancelledAt|date('d/m/Y à H:i') }}</time>
+                                <span class="text-xs text-[var(--color-secondary)]">{{ order.cancelledAt|time_ago }}</span>
                             {% endif %}
                         </div>
+                        <div class="text-xs text-[var(--color-secondary)] mt-0.5">Cette commande a été annulée et ne sera pas traitée.</div>
                     </div>
                 </div>
             {% else %}
+                {% set step_descriptions = {
+                    'placed':        'Commande reçue par Afdal',
+                    'confirmed':     'Commande validée, en file d\'attente',
+                    'in_production': 'Impression et fabrication en cours',
+                    'shipped':       'Expédiée au transporteur',
+                    'delivered':     'Livrée à votre antenne',
+                } %}
                 <ol class="relative">
                     {% for step in timeline %}
-                        {% set is_last = loop.last %}
-                        <li class="flex gap-4 {{ not is_last ? 'pb-6' : '' }} relative">
-                            {% if not is_last %}
-                                <div class="absolute left-4 top-8 bottom-0 w-px {{ step.state == 'done' ? 'bg-emerald-400' : 'bg-[var(--color-border)]' }}"></div>
+                        {% set color = step.status.progressColor() %}
+                        {% set is_upcoming = step.state == 'upcoming' %}
+                        {% set is_current = step.state == 'current' %}
+                        {% set is_done = step.state == 'done' %}
+                        {% set dot_bg = is_upcoming ? '#F1F5F9' : color %}
+                        {% set dot_fg = is_upcoming ? '#94A3B8' : '#ffffff' %}
+                        {% set next_is_done_or_current = not loop.last and timeline[loop.index].state != 'upcoming' %}
+                        <li class="relative flex gap-4 {{ not loop.last ? 'pb-8' : '' }}">
+                            {% if not loop.last %}
+                                <span aria-hidden="true" style="position: absolute; left: 21px; top: 48px; bottom: 0; width: 2px; border-radius: 9999px; background-color: {{ is_upcoming or not next_is_done_or_current ? '#E2E8F0' : color ~ '66' }};"></span>
                             {% endif %}
-                            <div class="relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 {{ step.state == 'done' ? 'bg-emerald-500' : step.state == 'current' ? 'bg-[var(--color-primary)] ring-4 ring-[var(--color-primary-light)]' : 'bg-[var(--color-muted)] border border-[var(--color-border)]' }}">
-                                {% if step.state == 'done' %}
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                {% elseif step.state == 'current' %}
-                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                            <div class="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all" style="background-color: {{ dot_bg }}; color: {{ dot_fg }}; {{ is_current ? 'box-shadow: 0 0 0 6px ' ~ color ~ '22, 0 6px 16px -4px ' ~ color ~ '66;' : is_done ? 'box-shadow: 0 4px 10px -4px ' ~ color ~ '55;' : '' }}">
+                                {% if step.status.value == 'placed' %}
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
+                                {% elseif step.status.value == 'confirmed' %}
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                {% elseif step.status.value == 'in_production' %}
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                {% elseif step.status.value == 'shipped' %}
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M1.5 8.25h12.75v6.75m0 0H2.25M14.25 8.25a2.25 2.25 0 0 1 2.25-2.25h2.379"/></svg>
+                                {% elseif step.status.value == 'delivered' %}
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 7.5-3.75 3.75m0 0 3.75 3.75M3.75 11.25h16.5m0 0-3.75-3.75M20.25 11.25 16.5 15"/></svg>
+                                {% else %}
+                                    <div class="w-2 h-2 rounded-full bg-current"></div>
                                 {% endif %}
                             </div>
-                            <div class="pt-1 flex-1">
-                                <div class="flex items-center justify-between gap-3 flex-wrap">
-                                    <div class="font-medium {{ step.state == 'upcoming' ? 'text-[var(--color-secondary)]' : 'text-[var(--color-foreground)]' }}">{{ step.status.label() }}</div>
-                                    {% if step.at %}
-                                        <time datetime="{{ step.at|date('c') }}" class="text-xs text-[var(--color-secondary)] font-mono">
-                                            {{ step.at|date('d/m/Y à H:i') }}
-                                        </time>
-                                    {% endif %}
+
+                            <div class="flex-1 min-w-0 flex items-start justify-between gap-3 pt-1">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-sm font-semibold leading-snug {{ is_upcoming ? 'text-[var(--color-secondary)]' : 'text-[var(--color-foreground)]' }}">{{ step.status.label() }}</div>
+                                    <div class="text-xs mt-0.5 {{ is_current ? 'font-medium' : '' }}" style="color: {{ is_current ? color : 'var(--color-secondary)' }};">
+                                        {% if is_upcoming %}À venir
+                                        {% elseif is_current %}Étape en cours
+                                        {% else %}{{ step_descriptions[step.status.value]|default(step.status.label()) }}{% endif %}
+                                    </div>
                                 </div>
-                                {% if step.state == 'current' %}
-                                    <div class="text-xs text-[var(--color-primary)] mt-0.5 font-medium">Étape en cours</div>
-                                {% elseif step.state == 'upcoming' %}
-                                    <div class="text-xs text-[var(--color-secondary)] mt-0.5">À venir</div>
+                                {% if step.at %}
+                                    <span class="shrink-0 text-xs text-[var(--color-secondary)] whitespace-nowrap" title="{{ step.at|date('d/m/Y à H:i') }}">{{ step.at|time_ago }}</span>
                                 {% endif %}
                             </div>
                         </li>
@@ -131,22 +152,88 @@
             <h2 class="text-sm font-semibold text-[var(--color-primary)] px-6 py-4 border-b border-[var(--color-border)]">Articles</h2>
             <div class="divide-y divide-[var(--color-border)]">
                 {% for item in order.items %}
-                    <div class="flex items-center justify-between gap-4 p-4">
-                        <div class="min-w-0 flex-1">
-                            <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
-                            <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1 flex-wrap">
-                                <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ item.variant.colorHex }}"></span>
-                                {{ item.variant.color }} · {{ item.variant.size }}
-                                <span class="font-mono text-xs">{{ item.variant.sku }}</span>
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0 flex-1">
+                                <div class="font-medium text-[var(--color-foreground)]">{{ item.variant.product.name }}</div>
+                                <div class="text-sm text-[var(--color-secondary)] flex items-center gap-2 mt-1 flex-wrap">
+                                    <span class="w-3 h-3 rounded-full border border-[var(--color-border)]" style="background-color: {{ item.variant.colorHex }}"></span>
+                                    {{ item.variant.color }} · {{ item.variant.size }}
+                                    <span class="font-mono text-xs">{{ item.variant.sku }}</span>
+                                </div>
+                                {% if item.marking %}
+                                    <div class="text-xs text-[var(--color-secondary)] mt-1">Marquage : {{ item.marking.zone|capitalize }} ({{ item.marking.size }})</div>
+                                {% endif %}
                             </div>
-                            {% if item.marking %}
-                                <div class="text-xs text-[var(--color-secondary)] mt-1">Marquage : {{ item.marking.zone|capitalize }} ({{ item.marking.size }})</div>
-                            {% endif %}
+                            <div class="text-right">
+                                <div class="text-sm text-[var(--color-secondary)]">{{ item.quantity }} × {{ item.unitPriceCents|price }}</div>
+                                <div class="font-semibold">{{ (item.quantity * item.unitPriceCents)|price }}</div>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-sm text-[var(--color-secondary)]">{{ item.quantity }} × {{ item.unitPriceCents|price }}</div>
-                            <div class="font-semibold">{{ (item.quantity * item.unitPriceCents)|price }}</div>
-                        </div>
+
+                        {% if item.marking and item.marking.zone %}
+                            {% set latest = item.latestMarkingAsset %}
+                            {% set can_upload = order.status.value not in ['shipped', 'delivered', 'cancelled'] %}
+                            <div class="rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-muted)]/40 p-3 space-y-2">
+                                <div class="flex items-center gap-2 text-xs font-semibold text-[var(--color-foreground)]">
+                                    <svg class="w-4 h-4 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    BAT marquage
+                                </div>
+
+                                {% if latest is null %}
+                                    {% if can_upload %}
+                                        <p class="text-xs text-[var(--color-secondary)]">Téléversez votre logo (JPG, PNG, WebP, SVG ou PDF). Vous pourrez le prévisualiser avant envoi.</p>
+                                        {{ include('order/_bat_upload_form.html.twig', {
+                                            action: path('app_bat_upload', {reference: order.reference, item: item.id}),
+                                            submit_label: 'Envoyer le logo',
+                                        }) }}
+                                    {% else %}
+                                        <p class="text-xs text-[var(--color-secondary)]">Logo en attente (commande non ouverte à l'upload).</p>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="flex items-start gap-3">
+                                        {% if latest.logoPath ends with '.pdf' %}
+                                            <a href="{{ latest.logoPath }}" target="_blank" rel="noopener" class="w-16 h-16 shrink-0 rounded-md border border-[var(--color-border)] bg-white flex items-center justify-center text-[var(--color-secondary)] hover:border-[var(--color-primary)]">
+                                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ latest.logoPath }}" target="_blank" rel="noopener" class="w-16 h-16 shrink-0 rounded-md overflow-hidden border border-[var(--color-border)] bg-white">
+                                                <img src="{{ latest.logoPath }}" alt="BAT v{{ latest.version }}" class="w-full h-full object-contain">
+                                            </a>
+                                        {% endif %}
+                                        <div class="flex-1 min-w-0 text-xs space-y-1">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="font-medium text-[var(--color-foreground)]">BAT v{{ latest.version }}</span>
+                                                {% if latest.isApproved() %}
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Validé
+                                                    </span>
+                                                {% elseif latest.isRejected() %}
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[var(--color-destructive)]/10 text-[var(--color-destructive)] border border-[var(--color-destructive)]/30">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-destructive)]"></span>À refaire
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>En attente Afdal
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            {% if latest.feedback %}
+                                                <p class="text-[var(--color-destructive)]">Retour Afdal : {{ latest.feedback }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if latest.isRejected() and can_upload %}
+                                        <div class="pt-2 border-t border-[var(--color-border-soft)]">
+                                            {{ include('order/_bat_upload_form.html.twig', {
+                                                action: path('app_bat_upload', {reference: order.reference, item: item.id}),
+                                                submit_label: 'Envoyer v' ~ (latest.version + 1),
+                                            }) }}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -170,7 +257,43 @@
             <div class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</div>
             <div class="text-sm text-[var(--color-secondary)]">{{ order.antenna.fullAddress }}</div>
             {% if order.antenna.phone %}<div class="text-sm text-[var(--color-secondary)] mt-1">{{ order.antenna.phone }}</div>{% endif %}
+
+            {% if order.carrier or order.trackingNumber or order.estimatedDeliveryAt %}
+                <div class="mt-4 pt-4 border-t border-[var(--color-border-soft)] space-y-2 text-sm">
+                    {% if order.carrier %}
+                        <div class="flex justify-between gap-2">
+                            <span class="text-[var(--color-secondary)]">Transporteur</span>
+                            <span class="font-medium text-[var(--color-foreground)]">{{ order.carrier }}</span>
+                        </div>
+                    {% endif %}
+                    {% if order.trackingNumber %}
+                        <div class="flex justify-between gap-2">
+                            <span class="text-[var(--color-secondary)]">N° de suivi</span>
+                            <span class="font-mono font-medium text-[var(--color-foreground)] truncate">{{ order.trackingNumber }}</span>
+                        </div>
+                        {% if order.trackingUrl %}
+                            <a href="{{ order.trackingUrl }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-primary)] hover:underline">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                Suivre le colis
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    {% if order.estimatedDeliveryAt %}
+                        {% set days = ((order.estimatedDeliveryAt.timestamp - date().timestamp) / 86400)|round(0, 'ceil') %}
+                        <div class="flex justify-between gap-2">
+                            <span class="text-[var(--color-secondary)]">Livraison estimée</span>
+                            <span class="font-medium text-[var(--color-foreground)]">
+                                {{ order.estimatedDeliveryAt|date('d/m/Y') }}
+                                {% if days > 0 %}<span class="text-xs text-[var(--color-secondary)]">(dans {{ days }}j)</span>{% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
         </section>
+
+        {{ include('order/_conversation.html.twig', {order: order, messages: messages|default([]), is_admin: false}) }}
 
         <section id="order-history-client-{{ order.id }}"
                  class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6"
@@ -190,59 +313,7 @@
             {% if events|default([]) is empty %}
                 <p class="text-sm text-[var(--color-secondary)]">Aucun événement enregistré.</p>
             {% else %}
-                <ol class="space-y-4">
-                    {% for event in events %}
-                        {% set is_admin_evt = event.adminEvent() %}
-                        {% set is_cancelled = event.type == 'cancelled' %}
-                        {% set dot_bg = is_cancelled ? 'bg-red-100 text-red-600'
-                            : is_admin_evt ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]'
-                            : 'bg-amber-50 text-amber-600' %}
-                        <li class="flex gap-3 relative">
-                            {% if not loop.last %}
-                                <div class="absolute left-3.5 top-7 bottom-[-1rem] w-px bg-[var(--color-border-soft)]"></div>
-                            {% endif %}
-                            <div class="relative z-10 w-7 h-7 rounded-full {{ dot_bg }} flex items-center justify-center shrink-0">
-                                {% if event.type == 'created' %}
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                                {% elseif event.type == 'status_changed' %}
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                {% elseif event.type == 'items_edited' %}
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"/></svg>
-                                {% elseif is_cancelled %}
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                                {% else %}
-                                    <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
-                                {% endif %}
-                            </div>
-                            <div class="flex-1 min-w-0 pt-0.5">
-                                <div class="text-sm text-[var(--color-foreground)]">{{ event.summary }}</div>
-                                <div class="text-xs text-[var(--color-secondary)] mt-0.5 flex items-center gap-2 flex-wrap">
-                                    <span>{{ event.createdAt|date('d/m/Y à H:i') }}</span>
-                                    <span>·</span>
-                                    <span class="{{ is_admin_evt ? 'text-[var(--color-primary)] font-medium' : '' }}">
-                                        {{ is_admin_evt ? 'Afdal' : 'Vous' }}
-                                    </span>
-                                </div>
-                                {% if event.type == 'items_edited' and event.data %}
-                                    <details class="mt-2">
-                                        <summary class="text-xs text-[var(--color-primary)] hover:underline cursor-pointer">Voir le détail</summary>
-                                        <div class="mt-2 space-y-1 text-xs text-[var(--color-secondary)] pl-2 border-l-2 border-[var(--color-border-soft)]">
-                                            {% for item in event.data.removed|default([]) %}
-                                                <div><span class="text-[var(--color-destructive)]">−</span> {{ item.label }} (était {{ item.qty }})</div>
-                                            {% endfor %}
-                                            {% for item in event.data.changed|default([]) %}
-                                                <div>{{ item.label }} : {{ item.from }} → <strong>{{ item.to }}</strong></div>
-                                            {% endfor %}
-                                            {% for item in event.data.added|default([]) %}
-                                                <div><span class="text-emerald-600">+</span> {{ item.label }} ({{ item.qty }})</div>
-                                            {% endfor %}
-                                        </div>
-                                    </details>
-                                {% endif %}
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ol>
+                {{ include('order/_timeline.html.twig', {events: events, is_admin: false}) }}
             {% endif %}
         </section>
 

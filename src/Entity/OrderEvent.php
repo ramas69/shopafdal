@@ -17,6 +17,10 @@ class OrderEvent
     public const TYPE_NOTES_UPDATED = 'notes_updated';
     public const TYPE_CANCELLED = 'cancelled';
     public const TYPE_ADMIN_NOTE = 'admin_note';
+    public const TYPE_BAT_UPLOADED = 'bat_uploaded';
+    public const TYPE_BAT_APPROVED = 'bat_approved';
+    public const TYPE_BAT_REJECTED = 'bat_rejected';
+    public const TYPE_SHIPPING_UPDATED = 'shipping_updated';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

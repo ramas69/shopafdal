@@ -19,6 +19,11 @@ export default class extends Controller {
         // Skip if this element has a currently-open dropdown menu (avoid closing it during user interaction)
         const openMenu = this.element.querySelector('[data-dropdown-target="menu"]:not(.hidden)');
         if (openMenu) return;
+        // Skip if an interactive panel explicitly marks itself (e.g. BAT reject form open, editing in progress)
+        if (this.element.querySelector('[data-poll-skip]')) return;
+        // Skip if focus is on any input/textarea/select inside — user is typing
+        const active = document.activeElement;
+        if (active && this.element.contains(active) && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
         try {
             const res = await fetch(this.urlValue, {
                 headers: { 'Accept': 'text/html' },

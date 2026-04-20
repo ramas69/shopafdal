@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\OrderItemRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: OrderItemRepository::class)]
@@ -31,6 +33,29 @@ class OrderItem
     /** @var array<string, mixed>|null marking config (zone, file, size) */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $marking = null;
+
+    /** @var Collection<int, MarkingAsset> */
+    #[ORM\OneToMany(targetEntity: MarkingAsset::class, mappedBy: 'orderItem', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['version' => 'ASC'])]
+    private Collection $markingAssets;
+
+    public function __construct()
+    {
+        $this->markingAssets = new ArrayCollection();
+    }
+
+    public function getMarkingAssets(): Collection { return $this->markingAssets; }
+
+    public function getLatestMarkingAsset(): ?MarkingAsset
+    {
+        $count = $this->markingAssets->count();
+        return $count > 0 ? $this->markingAssets->last() : null;
+    }
+
+    public function requiresMarking(): bool
+    {
+        return is_array($this->marking) && !empty($this->marking['zone']);
+    }
 
     public function getId(): ?int { return $this->id; }
     public function getOrder(): Order { return $this->order; }

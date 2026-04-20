@@ -3,66 +3,165 @@
 {% block title %}Paramètres — Afdal{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Paramètres</h1>
-    <p class="text-[var(--color-secondary)]">Gérez votre profil et la sécurité de votre compte.</p>
+<div class="mb-6">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold text-[var(--color-foreground)]">Paramètres</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Gérez votre profil{{ is_owner|default(false) ? ', votre équipe' : '' }} et la sécurité de votre compte.</p>
 </div>
 
-<div class="max-w-2xl space-y-6">
-    <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Profil</h2>
-        <p class="text-sm text-[var(--color-secondary)] mb-4">Votre email ne peut pas être modifié. Contactez Afdal si besoin.</p>
+<div class="max-w-3xl" data-controller="tabs">
+    {# Tab list #}
+    <div class="flex items-center gap-1 border-b border-[var(--color-border)] mb-6 overflow-x-auto" role="tablist">
+        <button type="button" data-tabs-target="tab" data-tab-id="profile"
+                data-action="click->tabs#select"
+                role="tab"
+                class="inline-flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 border-transparent text-[var(--color-secondary)] hover:text-[var(--color-foreground)] transition-colors whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+            Profil
+        </button>
+
+        {% if is_owner|default(false) %}
+            <button type="button" data-tabs-target="tab" data-tab-id="team"
+                    data-action="click->tabs#select"
+                    role="tab"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 border-transparent text-[var(--color-secondary)] hover:text-[var(--color-foreground)] transition-colors whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
+                Équipe
+                <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[var(--color-muted)] text-[10px] font-semibold text-[var(--color-secondary)]">{{ members|length }}</span>
+            </button>
+        {% endif %}
+
+        <button type="button" data-tabs-target="tab" data-tab-id="security"
+                data-action="click->tabs#select"
+                role="tab"
+                class="inline-flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-medium border-b-2 border-transparent text-[var(--color-secondary)] hover:text-[var(--color-foreground)] transition-colors whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+            Sécurité
+        </button>
+    </div>
+
+    {# Panel Profil #}
+    <section data-tabs-target="panel" data-panel-id="profile" class="bg-white rounded-xl ring-1 ring-[var(--color-border-soft)] p-6" role="tabpanel">
+        <div class="mb-4">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Informations du compte</h2>
+            <p class="text-xs text-[var(--color-secondary)] mt-0.5">Votre email ne peut pas être modifié. Contactez Afdal si besoin.</p>
+        </div>
 
         <form method="post" action="{{ path('app_settings_profile') }}" class="space-y-4">
             <label class="block">
-                <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Email</span>
-                <input type="email" value="{{ app.user.email }}" disabled
-                    class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] text-[var(--color-secondary)] cursor-not-allowed">
+                <span class="form-label">Email</span>
+                <input type="email" value="{{ app.user.email }}" disabled class="form-input mt-1.5 !bg-[var(--color-muted)] !text-[var(--color-secondary)] cursor-not-allowed">
             </label>
             <label class="block">
-                <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Nom complet</span>
-                <input type="text" name="full_name" value="{{ app.user.fullName }}" required
-                    class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                <span class="form-label">Nom complet</span>
+                <input type="text" name="full_name" value="{{ app.user.fullName }}" required class="form-input mt-1.5">
             </label>
             {% if not app.user.isAdmin() %}
                 <label class="block">
-                    <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Entreprise</span>
-                    <input type="text" value="{{ app.user.company.name }}" disabled
-                        class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] text-[var(--color-secondary)] cursor-not-allowed">
+                    <span class="form-label">Entreprise</span>
+                    <input type="text" value="{{ app.user.company.name }}" disabled class="form-input mt-1.5 !bg-[var(--color-muted)] !text-[var(--color-secondary)] cursor-not-allowed">
                 </label>
             {% endif %}
-            <div class="pt-2">
-                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-                    Enregistrer
-                </button>
+            <div class="pt-2 flex justify-end">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
             </div>
         </form>
     </section>
 
-    <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-[var(--color-primary)] mb-1">Mot de passe</h2>
-        <p class="text-sm text-[var(--color-secondary)] mb-4">Utilisez au moins 8 caractères.</p>
+    {# Panel Équipe #}
+    {% if is_owner|default(false) %}
+        <section data-tabs-target="panel" data-panel-id="team" class="hidden bg-white rounded-xl ring-1 ring-[var(--color-border-soft)] p-6" role="tabpanel">
+            <div class="mb-4">
+                <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Membres de {{ app.user.company.name }}</h2>
+                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Les membres peuvent passer et suivre des commandes.</p>
+            </div>
+
+            <ul class="space-y-2 mb-5">
+                {% for m in members %}
+                    <li class="flex items-center justify-between gap-3 p-3 rounded-md border border-[var(--color-border-soft)] {{ not m.isActive() ? 'opacity-50' : '' }}">
+                        <div class="min-w-0">
+                            <div class="font-medium text-[var(--color-foreground)] flex items-center gap-2 flex-wrap">
+                                {{ m.fullName }}
+                                {% if m.isCompanyOwner() %}
+                                    <span class="badge border bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/30 text-[10px]">Responsable</span>
+                                {% else %}
+                                    <span class="badge border bg-slate-50 text-slate-700 border-slate-200 text-[10px]">Membre</span>
+                                {% endif %}
+                                {% if not m.isActive() %}
+                                    <span class="text-[10px] text-[var(--color-destructive)] uppercase tracking-wide">Inactif</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-[var(--color-secondary)]">{{ m.email }}</div>
+                        </div>
+                        {% if m.id != app.user.id and m.isActive() and not m.isCompanyOwner() %}
+                            <form method="post" action="{{ path('app_settings_team_remove', {id: m.id}) }}"
+                                  data-controller="confirm"
+                                  data-confirm-title-value="Retirer {{ m.fullName }} ?"
+                                  data-confirm-message-value="Ce membre n'aura plus accès aux commandes de l'entreprise."
+                                  data-confirm-label-value="Retirer"
+                                  data-action="submit->confirm#gate">
+                                <button type="submit" class="text-xs text-[var(--color-destructive)] hover:underline cursor-pointer">Retirer</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if pending_invites|length > 0 %}
+                <div class="mb-5">
+                    <div class="text-xs font-medium uppercase tracking-wide text-[var(--color-secondary)] mb-2">Invitations en cours</div>
+                    <ul class="space-y-2">
+                        {% for inv in pending_invites %}
+                            <li class="flex items-center justify-between gap-3 p-3 rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/40">
+                                <div class="min-w-0 text-sm">
+                                    <div class="font-medium text-[var(--color-foreground)] truncate">{{ inv.email }}</div>
+                                    <div class="text-xs text-[var(--color-secondary)]">{{ inv.companyRole.label() }} · expire le {{ inv.expiresAt|date('d/m/Y') }}</div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <input type="text" readonly value="{{ absolute_url(path('app_register', {token: inv.token})) }}"
+                                        onclick="this.select();document.execCommand('copy')"
+                                        class="text-xs font-mono px-2 py-1 rounded border border-[var(--color-border)] bg-white w-40 cursor-pointer">
+                                    <form method="post" action="{{ path('app_settings_team_revoke', {id: inv.id}) }}">
+                                        <button type="submit" class="text-xs text-[var(--color-destructive)] hover:underline cursor-pointer">Révoquer</button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ path('app_settings_team_invite') }}" class="flex flex-wrap items-end gap-2 pt-4 border-t border-[var(--color-border-soft)]">
+                <label class="flex-1 min-w-[240px]">
+                    <span class="form-label">Inviter un membre</span>
+                    <input type="email" name="email" required placeholder="membre@entreprise.fr" class="form-input mt-1.5">
+                </label>
+                <button type="submit" class="btn btn-primary">Envoyer l'invitation</button>
+            </form>
+        </section>
+    {% endif %}
+
+    {# Panel Sécurité #}
+    <section data-tabs-target="panel" data-panel-id="security" class="hidden bg-white rounded-xl ring-1 ring-[var(--color-border-soft)] p-6" role="tabpanel">
+        <div class="mb-4">
+            <h2 class="font-display text-base font-semibold text-[var(--color-foreground)]">Mot de passe</h2>
+            <p class="text-xs text-[var(--color-secondary)] mt-0.5">Utilisez au moins 8 caractères.</p>
+        </div>
 
         <form method="post" action="{{ path('app_settings_password') }}" class="space-y-4">
             <label class="block">
-                <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Mot de passe actuel</span>
-                <input type="password" name="current_password" required autocomplete="current-password"
-                    class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                <span class="form-label">Mot de passe actuel</span>
+                <input type="password" name="current_password" required autocomplete="current-password" class="form-input mt-1.5">
             </label>
             <label class="block">
-                <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Nouveau mot de passe</span>
-                <input type="password" name="new_password" required minlength="8" autocomplete="new-password"
-                    class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                <span class="form-label">Nouveau mot de passe</span>
+                <input type="password" name="new_password" required minlength="8" autocomplete="new-password" class="form-input mt-1.5">
             </label>
             <label class="block">
-                <span class="text-sm font-medium text-[var(--color-foreground)] mb-1.5 block">Confirmer</span>
-                <input type="password" name="confirm_password" required autocomplete="new-password"
-                    class="w-full px-3 py-2 rounded-md border border-[var(--color-border)] bg-white focus-visible:outline-2 focus-visible:outline-[var(--color-ring)]">
+                <span class="form-label">Confirmer</span>
+                <input type="password" name="confirm_password" required autocomplete="new-password" class="form-input mt-1.5">
             </label>
-            <div class="pt-2">
-                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--color-secondary)]">
-                    Changer le mot de passe
-                </button>
+            <div class="pt-2 flex justify-end">
+                <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
             </div>
         </form>
     </section>

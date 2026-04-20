@@ -1,0 +1,64 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Exports CSV — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Données</div>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Exports CSV</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Séparateur `;` et BOM UTF-8 — compatibles Excel et Google Sheets.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <section class="card p-6">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">Commandes détaillées</h2>
+        <p class="text-xs text-[var(--color-secondary)] mb-4">Une ligne par article commandé.</p>
+        <form method="get" action="{{ path('app_admin_exports_orders') }}" class="space-y-3">
+            <label class="block">
+                <span class="form-label">Entreprise</span>
+                <select name="company" class="form-input mt-1.5">
+                    <option value="">Toutes</option>
+                    {% for c in companies %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+                <label class="block">
+                    <span class="form-label">Du</span>
+                    <input type="date" name="from" class="form-input mt-1.5">
+                </label>
+                <label class="block">
+                    <span class="form-label">Au</span>
+                    <input type="date" name="to" class="form-input mt-1.5">
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Télécharger le CSV</button>
+        </form>
+    </section>
+
+    <section class="card p-6">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">CA par entreprise</h2>
+        <p class="text-xs text-[var(--color-secondary)] mb-4">Agrégat sur la période sélectionnée.</p>
+        <form method="get" action="{{ path('app_admin_exports_revenue') }}" class="space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+                <label class="block">
+                    <span class="form-label">Du</span>
+                    <input type="date" name="from" value="{{ 'first day of this year'|date('Y-m-d') }}" class="form-input mt-1.5">
+                </label>
+                <label class="block">
+                    <span class="form-label">Au</span>
+                    <input type="date" name="to" value="{{ 'now'|date('Y-m-d') }}" class="form-input mt-1.5">
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Télécharger le CSV</button>
+        </form>
+    </section>
+
+    <section class="card p-6">
+        <h2 class="font-display font-semibold text-[var(--color-foreground)] mb-1">Annuaire entreprises</h2>
+        <p class="text-xs text-[var(--color-secondary)] mb-4">Toutes les entreprises avec leurs métriques globales.</p>
+        <a href="{{ path('app_admin_exports_companies') }}" class="btn btn-primary w-full">Télécharger le CSV</a>
+    </section>
+</div>
+{% endblock %}

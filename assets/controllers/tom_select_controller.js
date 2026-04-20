@@ -11,6 +11,7 @@ export default class extends Controller {
             create: false,
             maxOptions: 500,
             controlInput: this.element.dataset.tomSelectSearch === 'true' ? null : null,
+            dropdownParent: 'body',
         });
     }
 

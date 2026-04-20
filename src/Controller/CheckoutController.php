@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\MarkingAsset;
 use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Entity\User;
@@ -63,7 +64,30 @@ final class CheckoutController extends AbstractController
                 $errors['antenna'] = 'Veuillez sélectionner une antenne valide.';
             }
 
+            if (!$request->request->getBoolean('cgv_accepted')) {
+                $errors['cgv'] = 'Vous devez accepter les CGV.';
+            }
+
             if (empty($errors)) {
+                $stockIssues = [];
+                foreach ($cart->lines() as $line) {
+                    $variant = $line['variant'];
+                    $stock = $variant->getStock();
+                    if ($stock !== null && $line['quantity'] > $stock) {
+                        $stockIssues[] = sprintf('%s · %s · %s : %d demandé(s), %d disponible(s)',
+                            $variant->getProduct()->getName(),
+                            $variant->getColor(),
+                            $variant->getSize(),
+                            $line['quantity'],
+                            $stock,
+                        );
+                    }
+                }
+                if (!empty($stockIssues)) {
+                    $this->addFlash('error', 'Stock insuffisant — ' . implode(' ; ', $stockIssues));
+                    return $this->redirectToRoute('app_cart');
+                }
+
                 $order = (new Order())
                     ->setReference($this->generateReference($em))
                     ->setCompany($company)
@@ -73,29 +97,47 @@ final class CheckoutController extends AbstractController
                     ->setNotes($notes ?: null)
                     ->setPlacedAt(new \DateTimeImmutable());
 
+                $pendingBats = [];
                 foreach ($cart->lines() as $line) {
+                    $marking = $line['marking'];
+                    $logoPath = is_array($marking) ? ($marking['logo_path'] ?? null) : null;
+                    // Strip logo_path from the stored marking JSON — it lives on MarkingAsset now
+                    if ($logoPath !== null) {
+                        unset($marking['logo_path']);
+                    }
+
                     $item = (new OrderItem())
                         ->setVariant($line['variant'])
                         ->setQuantity($line['quantity'])
                         ->setUnitPriceCents($line['unit_price_cents'])
-                        ->setMarking($line['marking']);
+                        ->setMarking($marking);
                     $order->addItem($item);
+
+                    if ($logoPath !== null) {
+                        $pendingBats[] = ['item' => $item, 'logo' => $logoPath];
+                    }
                 }
 
                 $em->persist($order);
                 $em->flush();
+
+                foreach ($pendingBats as $bat) {
+                    $em->persist(new MarkingAsset($bat['item'], $user, $bat['logo'], 1));
+                }
                 $events->logCreated($order);
                 $em->flush();
                 $cart->clear();
                 $request->getSession()->remove('preselected_antenna_id');
 
+                $batInfo = !empty($pendingBats) ? sprintf(' · %d BAT à valider', count($pendingBats)) : '';
                 $notifications->notifyAdmins(
                     sprintf('Nouvelle commande %s', $order->getReference()),
-                    sprintf('%s · %s · %d pièces · %s',
+                    sprintf('%s · %s · %d pièces · %s%s',
                         $company->getName(),
                         $antenna->getName(),
                         $order->getTotalQuantity(),
-                        number_format($order->getTotalCents() / 100, 2, ',', ' ') . ' €'
+                        number_format($order->getTotalCents() / 100, 2, ',', ' ') . ' €',
+                        $batInfo,
                     ),
                     $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
                     \App\Entity\Notification::TYPE_SUCCESS,

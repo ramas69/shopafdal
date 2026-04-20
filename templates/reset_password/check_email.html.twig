@@ -1,0 +1,29 @@
+{% extends 'layouts/auth.html.twig' %}
+
+{% block title %}Email envoyé — Afdal{% endblock %}
+
+{% block auth_content %}
+<div class="text-center">
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-navy-600)] tracking-tight">Email envoyé</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-2 leading-relaxed text-left">
+        Si un compte correspond à cet email, un lien de réinitialisation vient d’être envoyé.
+        Il expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
+    </p>
+</div>
+
+<div class="mt-8 space-y-5">
+    {% for devUrl in app.flashes('reset_password_dev') %}
+        <div class="rounded-lg border border-amber-300/80 bg-amber-50 p-3 text-xs">
+            <div class="font-semibold text-amber-900 uppercase tracking-wide mb-1">Dev — mailer désactivé</div>
+            <p class="text-amber-800 mb-2">Utilise ce lien directement :</p>
+            <input type="text" readonly value="{{ devUrl }}"
+                   onclick="this.select();document.execCommand('copy')"
+                   class="w-full font-mono text-[11px] px-2 py-1.5 rounded-md border border-amber-200 bg-white cursor-pointer">
+        </div>
+    {% endfor %}
+
+    <p class="text-xs text-[var(--color-secondary)]">Rien reçu ? <a href="{{ path('app_forgot_password_request') }}" class="text-[var(--color-primary)] hover:underline font-medium">Réessayer</a> ou vérifiez vos spams.</p>
+
+    <a href="{{ path('app_login') }}" class="btn btn-outline w-full justify-center">Retour à la connexion</a>
+</div>
+{% endblock %}

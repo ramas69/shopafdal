@@ -56,8 +56,15 @@ final class RegistrationController extends AbstractController
                 $user = (new User())
                     ->setEmail($invitation->getEmail())
                     ->setFullName(trim($fullName))
-                    ->setRole(UserRole::CLIENT_MANAGER)
-                    ->setCompany($invitation->getCompany());
+                    ->setRole($invitation->getTargetRole());
+
+                if ($invitation->isAdminInvitation()) {
+                    $user->setCompany(null)->setCompanyRole(null);
+                } else {
+                    $user->setCompany($invitation->getCompany())
+                        ->setCompanyRole($invitation->getCompanyRole());
+                }
+
                 $user->setPassword($hasher->hashPassword($user, $password));
                 $em->persist($user);
 

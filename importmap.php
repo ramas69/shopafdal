@@ -38,4 +38,19 @@ return [
         'version' => '2.6.0',
         'type' => 'css',
     ],
+    'sortablejs' => [
+        'version' => '1.15.7',
+    ],
+    'chart.js' => [
+        'version' => '4.0.1',
+    ],
+    '@kurkle/color' => [
+        'version' => '0.3.4',
+    ],
+    'chartjs-plugin-datalabels' => [
+        'version' => '2.2.0',
+    ],
+    'chart.js/helpers' => [
+        'version' => '4.0.1',
+    ],
 ];

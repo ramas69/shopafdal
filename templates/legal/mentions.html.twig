@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mentions légales — Afdal{% endblock %}
+
+{% block body %}
+<div class="min-h-[100dvh] bg-[var(--color-background)] py-10 sm:py-14 px-4">
+    <div class="max-w-3xl mx-auto">
+        <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" class="inline-flex text-sm text-[var(--color-secondary)] hover:text-[var(--color-primary)] transition-colors mb-8">&larr; Retour</a>
+        <div class="card rounded-2xl p-8 sm:p-10">
+            <header class="mb-8">
+                <h1 class="font-display text-2xl sm:text-3xl font-semibold text-[var(--color-foreground)] tracking-tight">Mentions légales</h1>
+            </header>
+            <section class="space-y-8 text-[var(--color-body)] text-[15px] leading-relaxed">
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">Éditeur</h2>
+                    <p>Afdal — SAS au capital de X€ — RCS X — SIRET X — TVA FR00000000000</p>
+                </div>
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">Hébergement</h2>
+                    <p>o2switch — Chem. des Pardiaux, 63000 Clermont-Ferrand, France</p>
+                </div>
+                <div>
+                    <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-3">Contact</h2>
+                    <p>Email : contact@afdal.fr</p>
+                </div>
+                <p class="text-xs text-[var(--color-secondary)] italic pt-4 border-t border-[var(--color-border-soft)]">À compléter avec les informations légales réelles.</p>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

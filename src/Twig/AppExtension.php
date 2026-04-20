@@ -8,10 +8,31 @@ use Twig\Attribute\AsTwigFunction;
 
 final class AppExtension
 {
+    private const AGO = 'il y a ';
+
     #[AsTwigFilter('price')]
     public function formatPrice(int $cents): string
     {
         return number_format($cents / 100, 2, ',', ' ') . ' €';
+    }
+
+    #[AsTwigFilter('time_ago')]
+    public function timeAgo(\DateTimeInterface $date): string
+    {
+        $diff = time() - $date->getTimestamp();
+        $ago = self::AGO;
+        $buckets = [
+            [60, fn() => 'à l\'instant'],
+            [3600, fn($d) => $ago . (int) round($d / 60) . ' min'],
+            [86400, fn($d) => $ago . (int) round($d / 3600) . ' h'],
+            [604800, fn($d) => (int) round($d / 86400) === 1 ? 'hier' : $ago . (int) round($d / 86400) . ' j'],
+        ];
+        foreach ($buckets as [$threshold, $formatter]) {
+            if ($diff < $threshold) {
+                return $formatter($diff);
+            }
+        }
+        return $date->format('d/m/Y');
     }
 
     #[AsTwigFunction('status_badge_class')]

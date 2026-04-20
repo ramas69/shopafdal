@@ -152,6 +152,7 @@ final class ProductController extends AbstractController
 
                 $this->syncVariants($product, $variantsInput, $em);
                 $this->syncImages($product, $request);
+                $this->syncPriceTiers($product, $request->request->all('tiers'), $em);
 
                 $em->flush();
                 $this->addFlash('success', $isNew ? 'Produit créé en brouillon.' : 'Produit mis à jour.');
@@ -163,7 +164,47 @@ final class ProductController extends AbstractController
             'product' => $product,
             'is_new' => $isNew,
             'errors' => $errors,
+            'tiers' => $isNew ? [] : $em->getRepository(\App\Entity\PriceTier::class)->findBy(['product' => $product], ['minQty' => 'ASC']),
         ]);
+    }
+
+    /** @param array<int, array{id?:string,min_qty:string,price:string}> $tiersInput */
+    private function syncPriceTiers(Product $product, array $tiersInput, EntityManagerInterface $em): void
+    {
+        $repo = $em->getRepository(\App\Entity\PriceTier::class);
+        $existing = $repo->findBy(['product' => $product]);
+        $byId = [];
+        foreach ($existing as $t) {
+            $byId[$t->getId()] = $t;
+        }
+        $keepIds = [];
+
+        foreach ($tiersInput as $row) {
+            $minQty = (int) ($row['min_qty'] ?? 0);
+            $priceStr = (string) ($row['price'] ?? '');
+            if ($minQty < 1 || $priceStr === '' || !is_numeric(str_replace(',', '.', $priceStr))) {
+                continue;
+            }
+            $cents = (int) round(((float) str_replace(',', '.', $priceStr)) * 100);
+            $id = isset($row['id']) && $row['id'] !== '' ? (int) $row['id'] : null;
+
+            if ($id && isset($byId[$id])) {
+                $byId[$id]->setMinQty($minQty)->setUnitPriceCents($cents);
+                $keepIds[] = $id;
+            } else {
+                $tier = (new \App\Entity\PriceTier())
+                    ->setProduct($product)
+                    ->setMinQty($minQty)
+                    ->setUnitPriceCents($cents);
+                $em->persist($tier);
+            }
+        }
+
+        foreach ($existing as $t) {
+            if (!in_array($t->getId(), $keepIds, true)) {
+                $em->remove($t);
+            }
+        }
     }
 
     /**
@@ -173,20 +214,37 @@ final class ProductController extends AbstractController
      */
     private function syncImages(Product $product, Request $request): void
     {
-        $current = $product->getImages();
-
         $removed = $request->request->all()['remove_images'] ?? [];
         if (!is_array($removed)) {
             $removed = [];
         }
+        $removedSet = array_flip(array_map('strval', $removed));
 
-        foreach ($removed as $path) {
-            $path = (string) $path;
-            $current = array_values(array_filter($current, fn($p) => $p !== $path));
+        foreach ($removedSet as $path => $_) {
             $absolute = $this->getParameter('kernel.project_dir') . '/public' . $path;
             if (is_file($absolute) && str_starts_with($path, self::UPLOAD_PUBLIC_PREFIX)) {
                 @unlink($absolute);
             }
+        }
+
+        // Existing images in ordered form (post-drag-sort) with color assignments
+        $existingInput = $request->request->all()['existing_images'] ?? [];
+        if (!is_array($existingInput)) {
+            $existingInput = [];
+        }
+        ksort($existingInput, SORT_NUMERIC);
+
+        $next = [];
+        foreach ($existingInput as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $path = (string) ($row['path'] ?? '');
+            if ($path === '' || isset($removedSet[$path])) {
+                continue;
+            }
+            $color = trim((string) ($row['color'] ?? '')) ?: null;
+            $next[] = ['path' => $path, 'color' => $color];
         }
 
         /** @var UploadedFile[] $uploaded */
@@ -202,13 +260,13 @@ final class ProductController extends AbstractController
             $filename = bin2hex(random_bytes(12)) . '.' . ($file->guessExtension() ?: 'jpg');
             try {
                 $file->move($this->uploadDir, $filename);
-                $current[] = self::UPLOAD_PUBLIC_PREFIX . $filename;
+                $next[] = ['path' => self::UPLOAD_PUBLIC_PREFIX . $filename, 'color' => null];
             } catch (FileException) {
                 // skip
             }
         }
 
-        $product->setImages(array_values($current));
+        $product->setImages($next);
     }
 
     /**

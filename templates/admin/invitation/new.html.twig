@@ -24,25 +24,42 @@
 
     {# Mode switcher #}
     <div class="card p-6" data-controller="mode-switch">
-        <div class="form-label mb-3">Entreprise <span class="text-[var(--color-destructive)]">*</span></div>
+        <div class="form-label mb-3">Type d'invitation <span class="text-[var(--color-destructive)]">*</span></div>
 
-        <div class="grid grid-cols-2 gap-2 mb-5 p-1 rounded-md bg-[var(--color-muted)]">
+        <div class="grid grid-cols-3 gap-2 mb-5 p-1 rounded-md bg-[var(--color-muted)]">
             <label class="cursor-pointer">
-                <input type="radio" name="company_mode" value="existing" {{ mode != 'new' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
-                <div class="px-3 py-2 rounded text-sm text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
-                    Entreprise existante
+                <input type="radio" name="company_mode" value="existing" {{ mode not in ['new', 'afdal'] ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
+                <div class="px-3 py-2 rounded text-xs text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
+                    Client · entreprise existante
                 </div>
             </label>
             <label class="cursor-pointer">
                 <input type="radio" name="company_mode" value="new" {{ mode == 'new' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
-                <div class="px-3 py-2 rounded text-sm text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
-                    + Nouvelle entreprise
+                <div class="px-3 py-2 rounded text-xs text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-surface)] peer-checked:text-[var(--color-foreground)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
+                    Client · nouvelle entreprise
+                </div>
+            </label>
+            <label class="cursor-pointer">
+                <input type="radio" name="company_mode" value="afdal" {{ mode == 'afdal' ? 'checked' }} class="peer sr-only" data-action="change->mode-switch#switch">
+                <div class="px-3 py-2 rounded text-xs text-center font-medium text-[var(--color-secondary)] peer-checked:bg-[var(--color-primary)] peer-checked:text-[var(--color-on-primary)] peer-checked:shadow-[var(--shadow-xs)] transition-all">
+                    Employé Afdal
                 </div>
             </label>
         </div>
 
+        {# Mode: afdal (employé admin) #}
+        <div data-mode-switch-target="afdal" class="{{ mode != 'afdal' ? 'hidden' : '' }}">
+            <div class="flex items-start gap-2 p-3 rounded-md bg-[var(--color-primary-light)]/40 border border-[var(--color-primary)]/30">
+                <svg class="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                <div class="text-xs text-[var(--color-foreground)]">
+                    <div class="font-semibold mb-0.5">Invitation admin Afdal</div>
+                    <p>La personne invitée aura accès à la console admin complète (commandes, produits, entreprises, BAT, analytics, exports). Pas rattachée à une entreprise cliente.</p>
+                </div>
+            </div>
+        </div>
+
         {# Mode: existing #}
-        <div data-mode-switch-target="existing" class="{{ mode == 'new' ? 'hidden' : '' }}">
+        <div data-mode-switch-target="existing" class="{{ mode in ['new', 'afdal'] ? 'hidden' : '' }}">
             <label class="block">
                 <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Sélectionner une entreprise</span>
                 <select name="company_id" data-controller="tom-select"

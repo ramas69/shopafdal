@@ -35,10 +35,10 @@
     </a>
 </div>
 
-<form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3">
+<form method="get" data-controller="autosubmit" class="card mb-6 p-4 flex flex-wrap items-end gap-3">
     <label>
         <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Statut</span>
-        <select name="status" class="form-input !w-auto min-w-[160px]" data-controller="tom-select">
+        <select name="status" class="form-input !w-auto min-w-[160px]" data-controller="tom-select" data-action="change->autosubmit#submitNow">
             <option value="">Tous</option>
             {% for s in statuses %}
                 <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
@@ -48,7 +48,7 @@
     {% if antennas|length > 1 %}
         <label>
             <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Antenne</span>
-            <select name="antenna" class="form-input !w-auto min-w-[180px]" data-controller="tom-select">
+            <select name="antenna" class="form-input !w-auto min-w-[180px]" data-controller="tom-select" data-action="change->autosubmit#submitNow">
                 <option value="">Toutes</option>
                 {% for a in antennas %}
                     <option value="{{ a.id }}" {{ current_antenna == a.id ? 'selected' }}>{{ a.name }}</option>
@@ -56,9 +56,16 @@
             </select>
         </label>
     {% endif %}
-    <button type="submit" class="btn btn-primary self-end">Filtrer</button>
-    {% if current_status or current_antenna %}
-        <a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] self-end pb-2">Réinitialiser</a>
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Du</span>
+        <input type="date" name="from" value="{{ current_from }}" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
+    </label>
+    <label>
+        <span class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1.5 block">Au</span>
+        <input type="date" name="to" value="{{ current_to }}" data-action="change->autosubmit#submitNow" class="form-input !w-auto">
+    </label>
+    {% if current_status or current_antenna or current_from or current_to %}
+        <a href="{{ path('app_orders') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] pb-2.5">Réinitialiser</a>
     {% endif %}
 </form>
 
@@ -72,85 +79,76 @@
     <div data-controller="selection"
          data-selection-export-base-value="{{ path('app_orders_export') }}">
 
-        <div data-selection-target="bar" class="hidden mb-3 flex items-center justify-between gap-3 p-3 rounded-md bg-[var(--color-primary-light)] border border-[var(--color-primary)]/20">
-            <span class="text-sm text-[var(--color-foreground)]"><strong data-selection-target="counter">0</strong> commande(s) sélectionnée(s)</span>
-            <a data-selection-target="exportLink" href="{{ path('app_orders_export') }}" class="btn btn-primary text-sm">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                Exporter la sélection
-            </a>
+        <div class="flex items-center gap-3 mb-3 px-1">
+            <label class="inline-flex items-center gap-2 text-xs text-[var(--color-secondary)] cursor-pointer">
+                <input type="checkbox" data-selection-target="selectAll" data-action="change->selection#toggleAll"
+                    aria-label="Tout sélectionner"
+                    class="form-checkbox">
+                Tout sélectionner
+            </label>
         </div>
 
-        <div class="card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr>
-                            <th class="whitespace-nowrap rounded-tl-lg px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 lg:px-5 w-10">
-                                <input type="checkbox" data-selection-target="selectAll" data-action="change->selection#toggleAll"
-                                    aria-label="Tout sélectionner"
-                                    class="form-checkbox">
-                            </th>
-                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Commande</th>
-                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Antenne</th>
-                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Date</th>
-                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-right lg:px-5">Total HT</th>
-                            <th class="whitespace-nowrap px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 text-left lg:px-5">Statut</th>
-                            <th class="whitespace-nowrap rounded-tr-lg px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] bg-slate-200 lg:px-5 w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                            {% set tile = status_tile_classes(order.status) %}
-                            <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
-                                    <input type="checkbox" value="{{ order.id }}"
-                                        data-selection-target="checkbox"
-                                        data-action="change->selection#update"
-                                        aria-label="Sélectionner commande {{ order.reference }}"
-                                        class="form-checkbox relative z-20">
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
-                                    <div class="flex items-center gap-4">
-                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {{ tile[0] }} {{ tile[1] }}">
-                                            {{ _self.status_icon(order.status) }}
-                                        </div>
-                                        <div>
-                                            <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
-                                               class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] before:absolute before:inset-0 before:content-['']"
-                                               aria-label="Voir la commande {{ order.reference }}">{{ order.reference }}</a>
-                                            <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.totalQuantity }} pièce{{ order.totalQuantity > 1 ? 's' : '' }} · {{ order.items|length }} ligne{{ order.items|length > 1 ? 's' : '' }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
-                                    <p class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</p>
-                                    <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ order.antenna.city }}</p>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
-                                    <p class="text-[var(--color-body)]">{{ (order.placedAt ?? order.createdAt)|date('d/m/Y') }}</p>
-                                    <p class="mt-0.5 text-xs text-[var(--color-secondary)]">{{ (order.placedAt ?? order.createdAt)|date('H:i') }}</p>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5 text-right">
-                                    <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5">
-                                    <span class="badge border {{ status_badge_class(order.status) }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ status_dot_class(order.status) }}"></span>
-                                        {{ order.status.label() }}
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3 sm:px-5 relative z-20">
-                                    <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
-                                       class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-secondary)] hover:hover:text-[var(--color-foreground)] transition-colors"
-                                       aria-label="Voir détail {{ order.reference }}">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        {# Barre de sélection en bas, flottante (ne décale pas le layout) #}
+        <div data-selection-target="bar" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 pb-safe">
+            <div class="flex items-center gap-10 px-8 py-3 rounded-full bg-[var(--color-foreground)] text-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.35)]">
+                <span class="text-sm whitespace-nowrap"><strong data-selection-target="counter">0</strong> commande(s) sélectionnée(s)</span>
+                <a data-selection-target="exportLink" href="{{ path('app_orders_export') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[var(--color-foreground)] text-sm font-medium hover:bg-[var(--color-primary-light)] transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                    Exporter la sélection
+                </a>
             </div>
+        </div>
+
+        <div class="space-y-3">
+            {% for order in orders %}
+                {% set tile = status_tile_classes(order.status) %}
+                {% set pct = order.status.progressPct() %}
+                {% set color = order.status.progressColor() %}
+                <div class="card relative overflow-hidden">
+                    <div class="p-4 sm:p-5 flex items-center gap-4">
+                        <label class="relative z-30 p-2 -m-2 cursor-pointer shrink-0 inline-flex items-center" aria-label="Sélectionner commande {{ order.reference }}">
+                            <input type="checkbox" value="{{ order.id }}"
+                                data-selection-target="checkbox"
+                                data-action="change->selection#update"
+                                class="form-checkbox">
+                        </label>
+
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-lg" style="background-color: {{ color }}; box-shadow: 0 10px 15px -3px {{ color }}80, 0 4px 6px -4px {{ color }}80;">
+                            <span class="text-white">{{ _self.status_icon(order.status) }}</span>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <a href="{{ path('app_order_detail', {reference: order.reference}) }}"
+                               class="font-mono font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] transition-colors before:absolute before:inset-0 before:content-['']"
+                               aria-label="Voir la commande {{ order.reference }}">{{ order.reference }}</a>
+                            <p class="mt-1 text-xs text-[var(--color-secondary)]">
+                                <span class="font-medium text-[var(--color-foreground)]">{{ order.antenna.name }}</span>
+                                <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                Créée le {{ (order.placedAt ?? order.createdAt)|date('d.m.Y') }}
+                                {% if order.estimatedDeliveryAt %}
+                                    <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                    Livraison : {{ order.estimatedDeliveryAt|date('d.m.Y') }}
+                                {% endif %}
+                                <span class="mx-1.5 text-[var(--color-border)]">•</span>
+                                {{ order.totalQuantity }} pc{{ order.totalQuantity > 1 ? 's' : '' }}
+                            </p>
+                        </div>
+
+                        <div class="hidden sm:block text-right shrink-0">
+                            <p class="font-display font-semibold text-[var(--color-foreground)]">{{ order.totalCents|price }}</p>
+                            <p class="text-[11px] text-[var(--color-secondary)]">{{ order.status.label() }}</p>
+                        </div>
+
+                        <div class="shrink-0 text-right" style="color: {{ color }};">
+                            <span class="font-display text-xl font-semibold">{{ pct }}%</span>
+                        </div>
+                    </div>
+
+                    <div class="h-1.5 w-full" style="background-color: {{ color }}1A;">
+                        <div class="h-full transition-all" style="width: {{ pct }}%; background-color: {{ color }};"></div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 {% endif %}

@@ -62,8 +62,8 @@
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-[var(--color-muted)] to-[var(--color-border)] flex items-center justify-center font-display font-bold text-[var(--color-secondary)] shrink-0">
-                                        {% if product.images|length > 0 %}
-                                            <img src="{{ product.images|first }}" alt="" class="w-full h-full object-cover">
+                                        {% if product.imagePaths|length > 0 %}
+                                            <img src="{{ product.primaryImage }}" alt="" class="w-full h-full object-cover">
                                         {% else %}
                                             {{ product.name|first|upper }}
                                         {% endif %}
