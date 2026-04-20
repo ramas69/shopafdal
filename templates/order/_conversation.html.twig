@@ -25,13 +25,13 @@
                 {% set is_self = m.author.id == app.user.id %}
                 {% set from_admin = m.isFromAdmin() %}
                 <div class="flex {{ is_self ? 'justify-end' : 'justify-start' }}">
-                    <div class="max-w-[85%]">
-                        <div class="flex items-center gap-2 text-[10px] text-[var(--color-secondary)] mb-1 {{ is_self ? 'justify-end' : '' }}">
+                    <div class="max-w-[85%] flex flex-col {{ is_self ? 'items-end' : 'items-start' }}">
+                        <div class="flex items-center gap-2 text-[10px] text-[var(--color-secondary)] mb-1">
                             <span class="font-medium uppercase tracking-wide">{{ is_self ? 'Vous' : (from_admin ? 'Afdal' : m.author.fullName) }}</span>
                             <span>·</span>
                             <span>{{ m.createdAt|date('d/m H:i') }}</span>
                         </div>
-                        <div class="rounded-xl px-3 py-2 text-sm whitespace-pre-line {{ is_self ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : (from_admin ? 'bg-sky-50 text-sky-900 border border-sky-200' : 'bg-[var(--color-muted)] text-[var(--color-foreground)]') }}">
+                        <div class="rounded-xl px-3 py-2 text-sm whitespace-pre-line w-fit {{ is_self ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : (from_admin ? 'bg-sky-50 text-sky-900 border border-sky-200' : 'bg-[var(--color-muted)] text-[var(--color-foreground)]') }}">
                             {{ m.body }}
                         </div>
                     </div>
