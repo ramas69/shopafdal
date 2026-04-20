@@ -171,12 +171,13 @@ final class ProductController extends AbstractController
             }
         }
 
+        $status = ($request->isMethod('POST') && !empty($errors)) ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK;
         return $this->render('admin/product/form.html.twig', [
             'product' => $product,
             'is_new' => $isNew,
             'errors' => $errors,
             'tiers' => $isNew ? [] : $em->getRepository(\App\Entity\PriceTier::class)->findBy(['product' => $product], ['minQty' => 'ASC']),
-        ]);
+        ], new Response(null, $status));
     }
 
     /** @param array<int, array{id?:string,min_qty:string,price:string}> $tiersInput */
