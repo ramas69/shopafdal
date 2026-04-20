@@ -44,7 +44,7 @@ export default class extends Controller {
             const thumb = document.createElement('div');
             thumb.className = 'relative rounded-lg overflow-hidden border border-[var(--color-border-soft)] aspect-square bg-slate-100';
             thumb.innerHTML = `
-                <img src="${url}" alt="" class="w-full h-full object-cover" onload="URL.revokeObjectURL(this.src)">
+                <img src="${url}" alt="" class="w-full h-full object-cover">
                 <div class="absolute inset-x-0 bottom-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent">
                     <div class="text-[10px] text-white truncate">${file.name}</div>
                 </div>
@@ -55,6 +55,8 @@ export default class extends Controller {
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                 </button>
             `;
+            const img = thumb.querySelector('img');
+            img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
             this.previewTarget.appendChild(thumb);
         });
     }
