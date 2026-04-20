@@ -38,7 +38,7 @@
         </div>
     {% endif %}
 
-    <form method="post" action="{{ path('app_order_message_new', {reference: order.reference}) }}" class="flex gap-2">
+    <form method="post" action="{{ path('app_order_message_new', {reference: order.reference}) }}" class="flex gap-2" data-controller="enter-submit">
         <textarea name="body" rows="2" required maxlength="4000" placeholder="Écrire un message…"
                   class="form-input text-sm flex-1"></textarea>
         <button type="submit" class="btn btn-primary text-sm !px-4 self-end">Envoyer</button>
