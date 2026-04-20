@@ -74,14 +74,16 @@ export default class extends Controller {
         const grid = PRESETS.map(([hex, name]) => `
             <button type="button" data-action="click->color-picker#pick" data-hex="${hex}"
                     title="${name}"
-                    class="w-7 h-7 rounded-md border border-[var(--color-border)] hover:ring-2 hover:ring-[var(--color-primary)] hover:ring-offset-1 transition-all"
-                    style="background-color:${hex}"></button>
+                    style="width:28px;height:28px;border-radius:6px;border:1px solid var(--color-border);background-color:${hex};cursor:pointer;transition:box-shadow .15s;"
+                    onmouseover="this.style.boxShadow='0 0 0 2px var(--color-primary)'"
+                    onmouseout="this.style.boxShadow=''"></button>
         `).join('');
         this.panelTarget.innerHTML = `
-            <div class="grid grid-cols-5 gap-1.5 mb-3">${grid}</div>
-            <label class="block text-[10px] uppercase tracking-wide font-semibold text-[var(--color-secondary)] mb-1">Hex personnalisé</label>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;">${grid}</div>
+            <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;color:var(--color-secondary);margin-bottom:4px;">Hex personnalisé</label>
             <input type="text" data-color-picker-target="hex" data-action="input->color-picker#inputHex"
-                   class="form-input text-xs font-mono" placeholder="#FFFFFF" maxlength="7">
+                   placeholder="#FFFFFF" maxlength="7"
+                   style="width:100%;padding:6px 8px;border:1px solid var(--color-border);border-radius:6px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;">
         `;
     }
 }
