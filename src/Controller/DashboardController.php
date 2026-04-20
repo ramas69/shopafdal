@@ -329,7 +329,7 @@ final class DashboardController extends AbstractController
              LEFT JOIN orders o ON o.company_id = c.id
              GROUP BY c.id, c.name
              HAVING MAX(o.created_at) IS NULL OR MAX(o.created_at) < :cutoff
-             ORDER BY last_order IS NULL, last_order ASC
+             ORDER BY MAX(o.created_at) IS NULL, MAX(o.created_at) ASC
              LIMIT 5',
             ['cutoff' => $now->modify('-60 days')->format(self::SQL_DATE_FORMAT)]
         );
