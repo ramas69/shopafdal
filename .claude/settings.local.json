@@ -85,7 +85,10 @@
       "Bash(git pull *)",
       "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot -h 127.0.0.1 -P 8889 -e \"SHOW TABLES FROM afdal;\")",
       "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot -h 127.0.0.1 -P 8889 -e \"DROP DATABASE afdal; CREATE DATABASE afdal CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\")",
-      "Bash(php bin/console debug:router)"
+      "Bash(php bin/console debug:router)",
+      "Bash(awk '/<div id=\"order-timeline-frame-{{ order.id }}\"/,/<section id=\"order-history-client/' /Users/soumare/Desktop/Perso/shopAfdal/templates/order/detail.html.twig)",
+      "Bash(awk 'NR>=60 {d+=gsub\\(/<div[ >]/,\"&\"\\); d-=gsub\\(/<\\\\/div>/,\"&\"\\); if\\(d==0\\) {print NR; exit}}' /Users/soumare/Desktop/Perso/shopAfdal/templates/order/detail.html.twig)",
+      "Bash(git commit *)"
     ],
     "additionalDirectories": [
       "/Users/soumare/Desktop/Perso/shopAfdal/migrations"

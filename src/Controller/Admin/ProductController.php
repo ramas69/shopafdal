@@ -137,6 +137,13 @@ final class ProductController extends AbstractController
 
             $variantsInput = $request->request->all('variants');
 
+            // Pré-validation SKU unique côté client avant de taper la DB
+            $skus = array_map(static fn($v) => trim((string) ($v['sku'] ?? '')), $variantsInput);
+            $skus = array_filter($skus, static fn($s) => $s !== '');
+            if (count($skus) !== count(array_unique($skus))) {
+                $errors['variants'] = 'Chaque SKU doit être unique dans ce produit.';
+            }
+
             if (empty($errors)) {
                 $product
                     ->setName($name)
@@ -154,9 +161,13 @@ final class ProductController extends AbstractController
                 $this->syncImages($product, $request);
                 $this->syncPriceTiers($product, $request->request->all('tiers'), $em);
 
-                $em->flush();
-                $this->addFlash('success', $isNew ? 'Produit créé en brouillon.' : 'Produit mis à jour.');
-                return $this->redirectToRoute('app_admin_product_detail', ['id' => $product->getId()]);
+                try {
+                    $em->flush();
+                    $this->addFlash('success', $isNew ? 'Produit créé en brouillon.' : 'Produit mis à jour.');
+                    return $this->redirectToRoute('app_admin_product_detail', ['id' => $product->getId()]);
+                } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException) {
+                    $errors['variants'] = 'Un SKU est déjà utilisé par un autre produit. Chaque SKU doit être unique globalement.';
+                }
             }
         }
 
