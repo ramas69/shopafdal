@@ -364,17 +364,34 @@
 
                 <div data-company-access-target="list" class="flex-1 overflow-y-auto p-2 space-y-0.5">
                     {% for c in all_companies|default([]) %}
+                        {% set st = c.getAccessStatus(pending_company_ids[c.id]|default(false)) %}
+                        {% set st_class = {
+                            'active':   'text-emerald-700',
+                            'inactive': 'text-[var(--color-secondary)]',
+                            'invited':  'text-blue-700',
+                            'orphan':   'text-amber-700',
+                        }[st.key] %}
                         <label data-company-row
                                data-search-hay="{{ c.name }} {{ c.siret|default('') }}"
                                class="flex items-center gap-3 px-3 py-2 hover:bg-[var(--color-muted)] cursor-pointer rounded-md">
-                            <input type="checkbox" value="{{ c.id }}" data-name="{{ c.name }}"
+                            <input type="checkbox" value="{{ c.id }}"
+                                   data-name="{{ c.name }}"
+                                   data-status-key="{{ st.key }}"
                                    data-action="change->company-access#toggle"
                                    {% if c.id in current_ids %}checked{% endif %}
                                    class="w-4 h-4 rounded border-[var(--color-border)]">
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-medium text-[var(--color-foreground)] truncate">{{ c.name }}</div>
-                                <div class="text-xs text-[var(--color-secondary)]">{{ c.accessStatusLabel }}{% if c.siret %} · {{ c.siret }}{% endif %}</div>
+                                <div class="text-xs {{ st_class }}">{{ st.label }}{% if c.siret %} · <span class="text-[var(--color-secondary)]">{{ c.siret }}</span>{% endif %}</div>
                             </div>
+                            {% if st.key == 'orphan' or st.key == 'invited' %}
+                                <a href="{{ path('app_admin_invitation_new') }}?company={{ c.id }}"
+                                   class="shrink-0 text-xs font-medium px-2 py-1 rounded-md border border-[var(--color-border-soft)] hover:bg-white hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                                   title="Créer une invitation pour cette entreprise"
+                                   onclick="event.stopPropagation()">
+                                    {{ st.key == 'orphan' ? 'Inviter' : 'Relancer' }}
+                                </a>
+                            {% endif %}
                         </label>
                     {% endfor %}
                 </div>
@@ -390,8 +407,13 @@
                         <p data-company-access-target="newError" class="text-xs text-[var(--color-destructive)] mt-1"></p>
                     </details>
 
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-[var(--color-secondary)]"><span data-company-access-target="counter">{{ current_ids|length }}</span> sélectionnée(s)</span>
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div class="text-xs flex items-center gap-2 flex-wrap">
+                            <span class="text-[var(--color-secondary)]"><span data-company-access-target="counter">{{ current_ids|length }}</span> sélectionnée(s)</span>
+                            <span data-company-access-target="orphanWarning" class="hidden text-amber-700 font-medium">
+                                · dont <span data-company-access-target="orphanCount">0</span> sans utilisateur à inviter
+                            </span>
+                        </div>
                         <div class="flex gap-2">
                             <button type="button" data-action="click->company-access#close" class="btn btn-outline text-sm">Annuler</button>
                             <button type="button" data-action="click->company-access#apply" class="btn btn-primary text-sm">Appliquer</button>

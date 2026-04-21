@@ -5,6 +5,12 @@
 {% block content %}
 <a href="{{ path('app_admin_companies') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] mb-4 inline-block">&larr; Toutes les entreprises</a>
 
+{% set badge_class = {
+    'active':   'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+    'inactive': 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+    'invited':  'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+    'orphan':   'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+}[access_status.key] %}
 <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
     <div class="flex items-start gap-4">
         <div class="w-14 h-14 rounded-xl bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center font-display font-bold text-2xl shrink-0">
@@ -12,14 +18,33 @@
         </div>
         <div>
             <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Entreprise cliente</div>
-            <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ company.name }}</h1>
+            <div class="flex items-center gap-2 flex-wrap">
+                <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ company.name }}</h1>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium {{ badge_class }}">{{ access_status.label }}</span>
+            </div>
             <p class="text-sm text-[var(--color-secondary)] mt-1">
                 {% if company.siret %}SIRET {{ company.siret }} · {% endif %}
                 Depuis le {{ company.createdAt|date('d/m/Y') }}
             </p>
         </div>
     </div>
+    {% if access_status.key == 'orphan' or access_status.key == 'invited' %}
+        <a href="{{ path('app_admin_invitation_new') }}?company={{ company.id }}" class="btn {{ access_status.key == 'orphan' ? 'btn-primary' : 'btn-outline' }}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            {{ access_status.key == 'orphan' ? 'Inviter un utilisateur' : 'Relancer / Inviter un autre utilisateur' }}
+        </a>
+    {% endif %}
 </div>
+
+{% if access_status.key == 'orphan' %}
+    <div class="mb-6 p-4 rounded-lg border border-amber-200 bg-amber-50/50 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z"/></svg>
+        <div class="text-sm text-amber-800">
+            <div class="font-medium">Aucun utilisateur ni invitation pour cette entreprise.</div>
+            <div class="text-amber-700/90 text-xs mt-0.5">Prépare le catalogue (tarifs négociés, produits rattachés) puis envoie une invitation pour que le client puisse se connecter.</div>
+        </div>
+    </div>
+{% endif %}
 
 {# Stats #}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

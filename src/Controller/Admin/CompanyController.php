@@ -7,6 +7,7 @@ use App\Entity\CompanyPrice;
 use App\Entity\Product;
 use App\Repository\CompanyPriceRepository;
 use App\Repository\CompanyRepository;
+use App\Repository\InvitationRepository;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,7 +25,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class CompanyController extends AbstractController
 {
     #[Route('', name: 'app_admin_companies')]
-    public function list(Request $request, CompanyRepository $companies, EntityManagerInterface $em): Response
+    public function list(Request $request, CompanyRepository $companies, EntityManagerInterface $em, InvitationRepository $invitations): Response
     {
         $q = trim((string) $request->query->get('q', ''));
         $qb = $companies->createQueryBuilder('c')->orderBy('c.name', 'ASC');
@@ -54,6 +55,7 @@ final class CompanyController extends AbstractController
             'revenues' => $stats,
             'orders_count' => $ordersCount,
             'q' => $q,
+            'pending_company_ids' => $invitations->pendingCompanyIdMap(),
         ]);
     }
 
@@ -64,6 +66,7 @@ final class CompanyController extends AbstractController
         EntityManagerInterface $em,
         CompanyPriceRepository $companyPrices,
         ProductRepository $productsRepo,
+        InvitationRepository $invitations,
     ): Response {
         $companyOrders = $orders->findBy(['company' => $company], ['createdAt' => 'DESC'], 10);
 
@@ -80,6 +83,9 @@ final class CompanyController extends AbstractController
         $negotiated = $companyPrices->findForCompany($company);
         $allProducts = $productsRepo->createQueryBuilder('p')->orderBy('p.name', 'ASC')->getQuery()->getResult();
 
+        $pendingMap = $invitations->pendingCompanyIdMap();
+        $accessStatus = $company->getAccessStatus(isset($pendingMap[$company->getId()]));
+
         return $this->render('admin/company/detail.html.twig', [
             'company' => $company,
             'recent_orders' => $companyOrders,
@@ -90,6 +96,7 @@ final class CompanyController extends AbstractController
             ],
             'negotiated_prices' => $negotiated,
             'all_products' => $allProducts,
+            'access_status' => $accessStatus,
         ]);
     }
 
@@ -145,6 +152,40 @@ final class CompanyController extends AbstractController
         return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
     }
 
+    #[Route('/new', name: 'app_admin_company_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, CompanyRepository $companies): Response
+    {
+        $name = trim((string) $request->request->get('name', ''));
+        $siret = trim((string) $request->request->get('siret', ''));
+        $errors = [];
+
+        if ($request->isMethod('POST')) {
+            if ($name === '') {
+                $errors['name'] = 'Nom requis.';
+            } else {
+                $slug = strtolower((string) $slugger->slug($name));
+                if ($companies->findOneBy(['slug' => $slug])) {
+                    $errors['name'] = 'Une entreprise avec ce nom existe déjà.';
+                }
+            }
+
+            if (empty($errors)) {
+                $company = (new Company())->setName($name)->setSlug($slug)->setSiret($siret ?: null);
+                $em->persist($company);
+                $em->flush();
+                $this->addFlash('success', sprintf('« %s » créée. Prépare son catalogue (tarifs, produits) puis envoie l\'invitation.', $company->getName()));
+                return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+            }
+        }
+
+        $status = $request->isMethod('POST') && !empty($errors) ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK;
+        return $this->render('admin/company/new.html.twig', [
+            'name' => $name,
+            'siret' => $siret,
+            'errors' => $errors,
+        ], new Response(null, $status));
+    }
+
     #[Route('/quick-create', name: 'app_admin_company_quick_create', methods: ['POST'])]
     public function quickCreate(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, CompanyRepository $companies): JsonResponse
     {
@@ -160,12 +201,15 @@ final class CompanyController extends AbstractController
         $company = (new Company())->setName($name)->setSlug($slug)->setSiret($siret);
         $em->persist($company);
         $em->flush();
+        $status = $company->getAccessStatus(false);
         return new JsonResponse([
             'id' => $company->getId(),
             'name' => $company->getName(),
             'siret' => $company->getSiret(),
             'users_count' => 0,
-            'status_label' => 'En attente d\'inscription',
+            'status_key' => $status['key'],
+            'status_label' => $status['label'],
+            'invite_url' => $this->generateUrl('app_admin_invitation_new', ['company' => $company->getId()]),
         ]);
     }
 }

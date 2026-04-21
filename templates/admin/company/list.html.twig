@@ -9,10 +9,16 @@
         <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Entreprises</h1>
         <p class="text-sm text-[var(--color-secondary)] mt-1">{{ companies|length }} entreprise{{ companies|length > 1 ? 's' : '' }} cliente{{ companies|length > 1 ? 's' : '' }}</p>
     </div>
-    <a href="{{ path('app_admin_invitation_new') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Inviter un client
-    </a>
+    <div class="flex gap-2">
+        <a href="{{ path('app_admin_company_new') }}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Nouvelle entreprise
+        </a>
+        <a href="{{ path('app_admin_invitation_new') }}" class="btn btn-primary">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Inviter un client
+        </a>
+    </div>
 </div>
 
 <form method="get" class="card mb-6 p-4 flex flex-wrap items-center gap-3" data-controller="autosubmit">
@@ -40,14 +46,22 @@
                     <tr>
                         <th class="rounded-tl-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Entreprise</th>
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">SIRET</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Accès</th>
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Antennes</th>
-                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Utilisateurs</th>
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Commandes</th>
-                        <th class="rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">CA total HT</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">CA total HT</th>
+                        <th class="rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for company in companies %}
+                        {% set st = company.getAccessStatus(pending_company_ids[company.id]|default(false)) %}
+                        {% set badge_class = {
+                            'active':   'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+                            'inactive': 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+                            'invited':  'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+                            'orphan':   'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+                        }[st.key] %}
                         <tr class="relative border-y border-transparent border-b-[var(--color-border-soft)] hover:bg-[var(--color-background)]">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
@@ -61,10 +75,21 @@
                                 </div>
                             </td>
                             <td class="px-5 py-3 text-xs text-[var(--color-secondary)] font-mono">{{ company.siret ?? '—' }}</td>
+                            <td class="px-5 py-3">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium {{ badge_class }}">{{ st.label }}</span>
+                            </td>
                             <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ company.antennas|length }}</td>
-                            <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ company.users|length }}</td>
                             <td class="px-5 py-3 text-center text-[var(--color-body)]">{{ orders_count[company.id] ?? 0 }}</td>
                             <td class="px-5 py-3 text-right font-display font-semibold text-[var(--color-primary)]">{{ (revenues[company.id] ?? 0)|price }}</td>
+                            <td class="px-5 py-3 text-right">
+                                {% if st.key == 'orphan' or st.key == 'invited' %}
+                                    <a href="{{ path('app_admin_invitation_new') }}?company={{ company.id }}"
+                                       class="relative z-10 inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-md border {{ st.key == 'orphan' ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-blue-300 text-blue-700 hover:bg-blue-50' }}">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                        {{ st.key == 'orphan' ? 'Inviter' : 'Relancer' }}
+                                    </a>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>

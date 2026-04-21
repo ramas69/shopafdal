@@ -1,0 +1,45 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Nouvelle entreprise — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ path('app_admin_companies') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)]">&larr; Retour aux entreprises</a>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)] mt-2">Nouvelle entreprise</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Crée l'entreprise seule, prépare son catalogue (tarifs négociés, produits rattachés), puis envoie l'invitation au bon moment.</p>
+</div>
+
+<form method="post" class="max-w-2xl space-y-5">
+    <div class="card p-6 space-y-4">
+        <label class="block">
+            <span class="form-label">Nom de l'entreprise <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="text" name="name" value="{{ name }}" required autofocus
+                placeholder="Groupe Alpha"
+                class="form-input mt-1.5 {{ errors.name is defined ? '!border-[var(--color-destructive)]' : '' }}">
+            {% if errors.name is defined %}
+                <span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.name }}</span>
+            {% endif %}
+        </label>
+
+        <label class="block">
+            <span class="form-label">SIRET <span class="text-[var(--color-secondary)] font-normal">(optionnel)</span></span>
+            <input type="text" name="siret" value="{{ siret }}"
+                placeholder="12345678900015"
+                class="form-input mt-1.5 font-mono">
+        </label>
+    </div>
+
+    <div class="p-4 rounded-lg border border-blue-200 bg-blue-50/50 text-sm text-blue-800 flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+        <div>
+            <div class="font-medium">Aucun email requis à cette étape.</div>
+            <div class="text-blue-700/90 text-xs mt-0.5">Tu pourras envoyer l'invitation depuis la fiche de l'entreprise, une fois son catalogue préparé.</div>
+        </div>
+    </div>
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">Créer l'entreprise</button>
+        <a href="{{ path('app_admin_companies') }}" class="btn btn-outline">Annuler</a>
+    </div>
+</form>
+{% endblock %}

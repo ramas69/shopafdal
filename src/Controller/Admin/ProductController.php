@@ -72,9 +72,9 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/new', name: 'app_admin_product_new')]
-    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, \App\Repository\InvitationRepository $invitations): Response
     {
-        return $this->handleForm(new Product(), $request, $em, $slugger);
+        return $this->handleForm(new Product(), $request, $em, $slugger, $invitations);
     }
 
     #[Route('/{id}', name: 'app_admin_product_detail', requirements: ['id' => '\d+'])]
@@ -92,9 +92,9 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_admin_product_edit', requirements: ['id' => '\d+'])]
-    public function edit(Product $product, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function edit(Product $product, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, \App\Repository\InvitationRepository $invitations): Response
     {
-        return $this->handleForm($product, $request, $em, $slugger);
+        return $this->handleForm($product, $request, $em, $slugger, $invitations);
     }
 
     #[Route('/{id}/publish', name: 'app_admin_product_publish', methods: ['POST'], requirements: ['id' => '\d+'])]
@@ -132,7 +132,7 @@ final class ProductController extends AbstractController
         return $this->redirectToRoute('app_admin_products');
     }
 
-    private function handleForm(Product $product, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    private function handleForm(Product $product, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, \App\Repository\InvitationRepository $invitations): Response
     {
         $isNew = $product->getId() === null;
         $errors = [];
@@ -195,6 +195,7 @@ final class ProductController extends AbstractController
             'errors' => $errors,
             'tiers' => $isNew ? [] : $em->getRepository(\App\Entity\PriceTier::class)->findBy(['product' => $product], ['minQty' => 'ASC']),
             'all_companies' => $em->getRepository(\App\Entity\Company::class)->findBy([], ['name' => 'ASC']),
+            'pending_company_ids' => $invitations->pendingCompanyIdMap(),
         ], new Response(null, $status));
     }
 

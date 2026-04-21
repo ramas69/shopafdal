@@ -72,17 +72,32 @@ class Company
         return $n;
     }
 
-    public function getAccessStatusLabel(): string
+    /**
+     * Clé symbolique + libellé du statut d'accès.
+     * Le flag $hasPendingInvitation doit être fourni par l'appelant (cf. InvitationRepository::pendingCompanyIdMap).
+     *
+     * @return array{key: 'active'|'inactive'|'invited'|'orphan', label: string}
+     */
+    public function getAccessStatus(bool $hasPendingInvitation = false): array
     {
         $total = $this->users->count();
         $active = $this->countActiveUsers();
-        if ($total === 0) {
-            return "En attente d'inscription";
+
+        if ($active > 0) {
+            return ['key' => 'active', 'label' => $active . ($active > 1 ? ' users actifs' : ' user actif')];
         }
-        if ($active === 0) {
-            return 'Aucun user actif';
+        if ($total > 0) {
+            return ['key' => 'inactive', 'label' => 'Aucun user actif'];
         }
-        return $active . ($active > 1 ? ' users actifs' : ' user actif');
+        if ($hasPendingInvitation) {
+            return ['key' => 'invited', 'label' => 'Invitation envoyée'];
+        }
+        return ['key' => 'orphan', 'label' => 'À inviter'];
+    }
+
+    public function getAccessStatusLabel(bool $hasPendingInvitation = false): string
+    {
+        return $this->getAccessStatus($hasPendingInvitation)['label'];
     }
 
     public function addAntenna(Antenna $antenna): self
