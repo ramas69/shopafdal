@@ -12,6 +12,7 @@
     { route: 'app_admin_invitations', label: 'Invitations', icon: 'mail' },
     { route: 'app_admin_analytics', label: 'Analytics', icon: 'chart' },
     { route: 'app_admin_exports', label: 'Exports', icon: 'download' },
+    { route: 'app_admin_mail_settings', label: 'Email SMTP', icon: 'mail-cog' },
     { route: 'app_settings', label: 'Paramètres', icon: 'cog' },
 ] : [
     { route: 'app_catalogue', label: 'Catalogue', icon: 'grid' },
@@ -56,6 +57,14 @@
         <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
             <path fill="currentColor" fill-opacity=".3" d="M2 7.5A2.5 2.5 0 0 1 4.5 5h15A2.5 2.5 0 0 1 22 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 16.5v-9Z"/>
             <path fill="currentColor" d="m2 7.5 8.9 5.6c.7.4 1.5.4 2.2 0L22 7.5c0-.7-.4-1.3-1-1.8L13.2 11c-.7.4-1.7.4-2.4 0L3 5.7c-.6.5-1 1.1-1 1.8Z"/>
+        </svg>
+    {% elseif name == 'mail-cog' %}
+        {# Config SMTP — envelope + gear #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M2 7.5A2.5 2.5 0 0 1 4.5 5h15A2.5 2.5 0 0 1 22 7.5V13h-8l-4-2.5L2 13V7.5Z"/>
+            <path fill="currentColor" d="m2 7.5 8.9 5.6c.7.4 1.5.4 2.2 0L22 7.5c0-.7-.4-1.3-1-1.8L13.2 11c-.7.4-1.7.4-2.4 0L3 5.7c-.6.5-1 1.1-1 1.8Z"/>
+            <circle cx="17.5" cy="17.5" r="3.5" fill="currentColor"/>
+            <circle cx="17.5" cy="17.5" r="1.25" fill="white"/>
         </svg>
     {% elseif name == 'package' %}
         {# Produits — box duotone #}

@@ -1,0 +1,226 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Configuration email — Admin{% endblock %}
+
+{% set is_connected = settings.lastTestOk and settings.host and settings.fromEmail %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Paramètres</div>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">Configuration email (SMTP)</h1>
+    <p class="text-sm text-[var(--color-secondary)] mt-1">Serveur d'envoi pour les emails sortants d'Afdal.</p>
+</div>
+
+{# ========================== VUE CONNECTÉE ========================== #}
+{% if is_connected %}
+    <div class="max-w-2xl card p-6">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 shrink-0 rounded-full bg-emerald-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Connecté</span>
+                </div>
+                <div class="mt-1">
+                    <div class="font-display text-lg font-semibold text-[var(--color-foreground)] break-all">{{ settings.fromEmail }}</div>
+                    <div class="text-sm text-[var(--color-secondary)] mt-0.5">
+                        via <span class="font-mono text-xs">{{ settings.host }}:{{ settings.port }}</span>
+                        · chiffrement {{ settings.encryption|upper }}
+                    </div>
+                </div>
+                {% set test_age_min = ((date().timestamp - settings.lastTestedAt.timestamp) / 60)|round %}
+                <div class="text-xs text-[var(--color-secondary)] mt-2">
+                    Dernière vérification : {% if test_age_min < 1 %}à l'instant{% elseif test_age_min < 60 %}il y a {{ test_age_min }} min{% else %}le {{ settings.lastTestedAt|date('d/m à H:i') }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Paramètres "notifications" toujours modifiables sans re-tester #}
+        {% if settings.adminNotificationEmail and settings.adminNotificationEmail != settings.fromEmail %}
+            <div class="mt-5 pt-4 border-t border-[var(--color-border-soft)] text-sm">
+                <span class="text-[var(--color-secondary)]">Alertes "nouvelle commande" envoyées à</span>
+                <span class="font-medium text-[var(--color-foreground)]">{{ settings.adminNotificationEmail }}</span>
+            </div>
+        {% endif %}
+
+        {# Bouton déconnexion #}
+        <form method="post" class="mt-6 pt-4 border-t border-[var(--color-border-soft)]"
+              data-controller="confirm submit-loading"
+              data-action="submit->confirm#gate submit->submit-loading#start"
+              data-confirm-title-value="Déconnecter le serveur SMTP ?"
+              data-confirm-message-value="La configuration actuelle ({{ settings.fromEmail }}) sera effacée. Tu pourras en saisir une nouvelle. Les emails retomberont sur le transport par défaut en attendant (aucun envoi en local)."
+              data-confirm-label-value="Déconnecter"
+              data-turbo="false">
+            <input type="hidden" name="action" value="disconnect">
+            <button type="submit" class="btn btn-outline text-sm inline-flex items-center gap-2"
+                    data-loading-text="Déconnexion…">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>
+                Déconnecter / changer de compte
+            </button>
+        </form>
+    </div>
+{% else %}
+{# ========================== VUE FORMULAIRE ========================== #}
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <p class="text-sm text-[var(--color-secondary)]">Renseigne ton serveur SMTP puis teste la connexion avant d'enregistrer.</p>
+
+    {# Badge statut persistant (seulement si test a déjà eu lieu) #}
+    {% if settings.lastTestedAt and not settings.lastTestOk %}
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-sm max-w-xs">
+            <span class="inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+            <div class="min-w-0">
+                <div class="font-semibold text-red-800">Non connecté</div>
+                <div class="text-xs text-red-700/80">Dernier test KO {{ settings.lastTestedAt|date('d/m à H:i') }}</div>
+            </div>
+        </div>
+    {% elseif not settings.lastTestedAt %}
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-muted)]/30 text-sm">
+            <span class="inline-flex rounded-full h-2.5 w-2.5 bg-slate-400"></span>
+            <div class="font-medium text-[var(--color-secondary)]">Jamais testé</div>
+        </div>
+    {% endif %}
+</div>
+
+<form method="post" class="max-w-2xl"
+      data-controller="submit-loading"
+      data-action="submit->submit-loading#start"
+      data-turbo="false"
+      autocomplete="off">
+    {# Champ leurre : les password managers se focalisent sur le PREMIER champ password trouvé.
+       En ajoutant un input password caché hors-flux en début de form, les nav
+       arrêtent de proposer d'enregistrer le vrai champ plus bas. #}
+    <input type="text" name="_decoy_user" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
+    <input type="password" name="_decoy_password" autocomplete="new-password" style="display:none" tabindex="-1" aria-hidden="true">
+    <div class="card p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="block sm:col-span-2">
+                <span class="form-label">Hôte SMTP <span class="text-[var(--color-destructive)]">*</span></span>
+                <input type="text" name="host" value="{{ settings.host }}" required
+                    placeholder="smtp.ionos.fr"
+                    class="form-input mt-1.5 {{ errors.host is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                {% if errors.host is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.host }}</span>{% endif %}
+            </label>
+            <label class="block">
+                <span class="form-label">Port <span class="text-[var(--color-destructive)]">*</span></span>
+                <input type="number" name="port" value="{{ settings.port ?? 587 }}" required min="1" max="65535"
+                    class="form-input mt-1.5 {{ errors.port is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                {% if errors.port is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.port }}</span>{% endif %}
+            </label>
+        </div>
+
+        <label class="block">
+            <span class="form-label">Email & identifiant SMTP <span class="text-[var(--color-destructive)]">*</span></span>
+            <input type="email" name="from_email" value="{{ settings.fromEmail }}" required
+                placeholder="contact@afdal.fr"
+                class="form-input mt-1.5 {{ errors.from_email is defined ? '!border-[var(--color-destructive)]' : '' }}">
+            <span class="text-xs text-[var(--color-secondary)] mt-1 block">C'est l'expéditeur affiché ET le login SMTP (sauf si tu précises un user différent dans les options avancées).</span>
+            {% if errors.from_email is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.from_email }}</span>{% endif %}
+        </label>
+
+        <label class="block">
+            <span class="form-label">
+                Mot de passe {% if not settings.password %}<span class="text-[var(--color-destructive)]">*</span>{% endif %}
+                {% if settings.password %}<span class="text-xs text-[var(--color-secondary)] ml-1 font-normal">(déjà défini — vide pour conserver)</span>{% endif %}
+            </span>
+            <input type="password" name="smtp_password" value=""
+                placeholder="{{ settings.password ? '••••••••' : '' }}"
+                autocomplete="off"
+                data-lpignore="true"
+                data-1p-ignore
+                data-form-type="other"
+                {{ settings.password ? '' : 'required' }}
+                class="form-input mt-1.5">
+        </label>
+
+        {# Options avancées — dépliables #}
+        <details class="pt-2 border-t border-[var(--color-border-soft)]">
+            <summary class="cursor-pointer text-sm font-medium text-[var(--color-secondary)] hover:text-[var(--color-foreground)] py-2">
+                Options avancées
+            </summary>
+            <div class="space-y-4 pt-3">
+                <label class="block">
+                    <span class="form-label">Chiffrement</span>
+                    <select name="encryption" class="form-input mt-1.5">
+                        {% for e in encryptions %}
+                            <option value="{{ e }}" {{ settings.encryption == e ? 'selected' }}>
+                                {% if e == 'tls' %}TLS (STARTTLS, port 587) — recommandé
+                                {% elseif e == 'ssl' %}SSL (port 465)
+                                {% else %}Aucun (non chiffré)
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="block">
+                    <span class="form-label">Identifiant SMTP <span class="text-xs text-[var(--color-secondary)] font-normal">(si différent de l'email)</span></span>
+                    <input type="text" name="username" value="{{ settings.username }}"
+                        placeholder="(par défaut, l'email ci-dessus est utilisé)"
+                        autocomplete="off"
+                        class="form-input mt-1.5">
+                </label>
+
+                <label class="block">
+                    <span class="form-label">Nom affiché</span>
+                    <input type="text" name="from_name" value="{{ settings.fromName }}"
+                        placeholder="Afdal"
+                        class="form-input mt-1.5">
+                </label>
+
+                <label class="block">
+                    <span class="form-label">Adresse pour les alertes "nouvelle commande" <span class="text-xs text-[var(--color-secondary)] font-normal">(si différente de l'email expéditeur)</span></span>
+                    <input type="email" name="admin_notification_email" value="{{ settings.adminNotificationEmail }}"
+                        placeholder="(par défaut, l'email expéditeur reçoit les alertes)"
+                        class="form-input mt-1.5 {{ errors.admin_notification_email is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                    {% if errors.admin_notification_email is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.admin_notification_email }}</span>{% endif %}
+                </label>
+            </div>
+        </details>
+    </div>
+
+    {# Action unique : Tester → enregistre automatiquement si OK #}
+    <div class="mt-5 card p-5">
+        <div class="flex flex-wrap items-end gap-3">
+            <label class="flex-1 min-w-[200px]">
+                <span class="form-label">Envoyer un email de test à</span>
+                <input type="email" name="test_email" value="{{ test_email_value ?: settings.fromEmail }}"
+                    placeholder="rama@hallia.ai"
+                    class="form-input mt-1.5 {{ errors.test_email is defined ? '!border-[var(--color-destructive)]' : '' }}">
+                {% if errors.test_email is defined %}<span class="text-xs text-[var(--color-destructive)] mt-1 block">{{ errors.test_email }}</span>{% endif %}
+            </label>
+            <button type="submit" name="action" value="test" class="btn btn-primary inline-flex items-center gap-2"
+                    data-loading-text="Test en cours…">
+                Tester & enregistrer
+            </button>
+        </div>
+
+        <p class="text-xs text-[var(--color-secondary)] mt-3">
+            Si la connexion réussit, la configuration est enregistrée automatiquement. Sinon, les erreurs s'affichent ici.
+        </p>
+
+        {% if test_result and not test_result.ok %}
+            <div class="mt-4 p-4 rounded-lg border text-sm flex items-start gap-3 border-red-200 bg-red-50">
+                <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                <div class="min-w-0 flex-1 space-y-2">
+                    <div class="font-semibold text-red-800">{{ test_result.error.summary }}</div>
+                    {% if test_result.error.hint %}
+                        <div class="text-red-700/90 leading-relaxed">{{ test_result.error.hint }}</div>
+                    {% endif %}
+                    <details class="text-xs">
+                        <summary class="cursor-pointer text-red-700/80 hover:text-red-800 select-none">Détails techniques</summary>
+                        <pre class="mt-2 p-2 bg-red-100/60 rounded text-red-900/90 whitespace-pre-wrap break-words font-mono text-[11px] leading-snug max-h-48 overflow-y-auto">{{ test_result.error.raw }}</pre>
+                    </details>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</form>
+{% endif %}
+{% endblock %}
