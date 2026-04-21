@@ -142,6 +142,7 @@ final class OrderController extends AbstractController
         EntityManagerInterface $em,
         NotificationService $notifications,
         OrderEventLogger $events,
+        \App\Service\AppMailer $mailer,
     ): RedirectResponse {
         $target = OrderStatus::tryFrom((string) $request->request->get('status', ''));
         $allowed = self::TRANSITIONS[$order->getStatus()->value] ?? [];
@@ -188,6 +189,18 @@ final class OrderController extends AbstractController
             $this->generateUrl('app_order_detail', ['reference' => $order->getReference()]),
             $type,
         );
+
+        if ($target === OrderStatus::CONFIRMED) {
+            $clientEmail = $order->getCreatedBy()->getEmail();
+            $mailer->sendSilently(
+                (new \Symfony\Bridge\Twig\Mime\TemplatedEmail())
+                    ->to($clientEmail)
+                    ->subject(sprintf('Commande %s confirmée — Afdal', $order->getReference()))
+                    ->htmlTemplate('emails/order/confirmed_client.html.twig')
+                    ->context(['order' => $order]),
+                'order_confirmed_client:' . $order->getReference(),
+            );
+        }
 
         $this->addFlash('success', sprintf('Statut mis à jour : %s', $target->label()));
         return $this->redirectToRoute('app_admin_order_detail', ['reference' => $order->getReference()]);

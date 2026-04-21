@@ -1,0 +1,82 @@
+{% set adminUrl = url('app_admin_order_detail', {reference: order.reference}) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nouvelle commande {{ order.reference }}</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #111;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #f3f4f6; padding: 32px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); overflow: hidden;">
+                    {# Header #}
+                    <tr>
+                        <td style="padding: 28px 32px 20px; background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);">
+                            <div style="font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,0.85);">Afdal · Admin</div>
+                            <div style="margin-top: 6px; font-size: 13px; color: rgba(255,255,255,0.95);">Nouvelle commande à traiter</div>
+                        </td>
+                    </tr>
+
+                    {# Body #}
+                    <tr>
+                        <td style="padding: 28px 32px;">
+                            <div style="display: inline-block; padding: 4px 10px; background: #eef2ff; color: #4338ca; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;">Nouvelle commande</div>
+                            <h1 style="margin: 14px 0 6px; font-size: 24px; font-weight: 700; color: #111; letter-spacing: -0.01em;">{{ order.reference }}</h1>
+                            <p style="margin: 0 0 18px; font-size: 14px; color: #6b7280;">
+                                Passée le {{ (order.placedAt ?? order.createdAt)|date('d/m/Y à H:i') }}
+                                par <strong style="color: #111; font-weight: 600;">{{ order.createdBy.fullName }}</strong>
+                                · <a href="mailto:{{ order.createdBy.email }}" style="color: #4338ca; text-decoration: none;">{{ order.createdBy.email }}</a>
+                            </p>
+
+                            {% include 'emails/order/_partial_delivery.html.twig' %}
+
+                            <div style="margin: 24px 0 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280;">Articles commandés</div>
+                            {% include 'emails/order/_partial_items.html.twig' %}
+
+                            {% if order.notes %}
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 16px 0;">
+                                    <tr>
+                                        <td style="padding: 14px 16px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0 6px 6px 0;">
+                                            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #92400e; margin-bottom: 4px;">Note du client</div>
+                                            <div style="font-size: 13px; color: #451a03; line-height: 1.5; white-space: pre-wrap;">{{ order.notes }}</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            {% endif %}
+
+                            {# CTA #}
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0 8px;">
+                                <tr>
+                                    <td style="border-radius: 8px; background: #111;">
+                                        <a href="{{ adminUrl }}" style="display: inline-block; padding: 13px 26px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px;">Ouvrir la commande dans l'admin →</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 18px 0 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">
+                                Confirmer la commande notifiera automatiquement le client par email.
+                            </p>
+                        </td>
+                    </tr>
+
+                    {# Footer #}
+                    <tr>
+                        <td style="padding: 16px 32px 20px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                            <div style="font-size: 11px; color: #9ca3af; text-align: center;">
+                                Afdal — Marquage textile professionnel<br>
+                                Notification automatique envoyée à l'équipe Afdal.
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin-top: 14px; font-size: 11px; color: #9ca3af;">
+                    Tu peux modifier l'adresse de notification dans <em>Paramètres → Email SMTP</em>.
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

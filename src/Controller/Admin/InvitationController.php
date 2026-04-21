@@ -13,8 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
+use App\Service\AppMailer;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
@@ -41,7 +40,7 @@ final class InvitationController extends AbstractController
         EntityManagerInterface $em,
         ValidatorInterface $validator,
         SluggerInterface $slugger,
-        MailerInterface $mailer,
+        AppMailer $mailer,
     ): Response {
         $errors = [];
         $email = (string) $request->request->get('email', '');
@@ -99,18 +98,15 @@ final class InvitationController extends AbstractController
                 $em->persist($invitation);
                 $em->flush();
 
-                $mailSent = false;
-                try {
-                    $mailer->send((new TemplatedEmail())
-                        ->from(new Address('afdal@sora3439.odns.fr', 'Afdal'))
+                // L'expéditeur est laissé à AppMailer (qui applique MailSettings::fromEmail/fromName).
+                $mailSent = $mailer->sendSilently(
+                    (new TemplatedEmail())
                         ->to($email)
                         ->subject('Invitation à rejoindre Afdal')
                         ->htmlTemplate('invitation/email.html.twig')
-                        ->context(['invitation' => $invitation]));
-                    $mailSent = true;
-                } catch (\Throwable) {
-                    // Envoi échoué → on garde l'invitation, l'admin pourra copier le lien
-                }
+                        ->context(['invitation' => $invitation]),
+                    'invitation:' . $invitation->getId(),
+                );
 
                 $msg = $mailSent
                     ? sprintf('%sInvitation envoyée à %s par email.', $createdPrefix, $email)

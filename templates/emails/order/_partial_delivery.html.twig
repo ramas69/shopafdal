@@ -1,0 +1,20 @@
+{# Bloc livraison — entreprise + antenne + adresse complète #}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; background: #f9fafb; border-radius: 8px; margin: 16px 0;">
+    <tr>
+        <td style="padding: 16px 18px;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 6px;">Livraison</div>
+            <div style="font-size: 15px; font-weight: 700; color: #111; margin-bottom: 2px;">{{ order.company.name }}</div>
+            <div style="font-size: 13px; color: #374151; margin-bottom: 2px;">{{ order.antenna.name }}</div>
+            <div style="font-size: 13px; color: #6b7280;">{{ order.antenna.fullAddress }}</div>
+            {% if order.antenna.contactName %}
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+                    <strong style="color: #374151;">Contact :</strong> {{ order.antenna.contactName }}
+                    {% if order.antenna.contactPhone %} · {{ order.antenna.contactPhone }}{% endif %}
+                    {% if order.antenna.contactEmail %} · {{ order.antenna.contactEmail }}{% endif %}
+                </div>
+            {% elseif order.antenna.phone %}
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">Tél : {{ order.antenna.phone }}</div>
+            {% endif %}
+        </td>
+    </tr>
+</table>

@@ -1225,10 +1225,39 @@ Visibilité stricte : chaque produit est lié à 1..N `Company` via la table de 
 
 **Côté admin**, modal de gestion des accès depuis la fiche produit (`templates/admin/product/form.html.twig`) :
 - Bouton "Gérer les accès" avec compteur live
-- Modal centré : search insensible casse/accents, liste cochable avec statut users par entreprise (`Company::getAccessStatusLabel()` : "3 users actifs" / "En attente d'inscription" / "Aucun user actif")
-- Bouton "+ Créer une nouvelle entreprise" (details inline) → endpoint JSON `POST /admin/entreprises/quick-create` → nouvelle ligne cochée auto
+- Modal centré : search insensible casse/accents, liste cochable avec statut d'accès par entreprise (`Company::getAccessStatus(hasPending)` renvoie `{key, label}` — 4 états distincts, color-codés : `active` vert / `inactive` gris / `invited` bleu / `orphan` ambre)
+- Chaque ligne orpheline/invitée expose un lien "Inviter"/"Relancer" → `/admin/invitations/new?company={id}`
+- Footer : compteur `X sélectionnée(s) · dont Y sans utilisateur à inviter` (ambre) quand l'admin coche des entreprises orphelines
+- Badges du résumé : entreprises orphelines affichées en ambre avec suffixe "(à inviter)"
+- Bouton "+ Créer une nouvelle entreprise" (details inline) → endpoint JSON `POST /admin/entreprises/quick-create` → nouvelle ligne cochée auto avec statut `orphan`
 - Sélections synchronisées via `company_access[]` hidden inputs au moment du submit du form produit
 
 **Liste produits admin** : 2 filtres séparés (statut draft/published, accès unassigned/assigned) + nouvelle colonne "Accès" avec badge ambre "Non affecté" ou bleu "Affecté à N".
 
+**Workflow "prépare avant d'inviter"** (2026-04-21) : l'admin Afdal crée une entreprise (quick-create modal ou form plein), rattache des produits et des tarifs négociés, PUIS envoie l'invitation. Support UX :
+- **Liste entreprises** (`/admin/entreprises`) : colonne "Accès" avec badge `active`/`inactive`/`invited`/`orphan` + bouton "Inviter"/"Relancer" par ligne pour les entreprises sans user actif.
+- **Fiche entreprise** (`/admin/entreprises/{id}`) : badge statut à côté du nom + bouton CTA principal "Inviter un utilisateur" en haut à droite quand orphelin/invited + bandeau ambre d'alerte "Aucun utilisateur ni invitation" si orphelin.
+- **Route dédiée `/admin/entreprises/new`** (`app_admin_company_new`) : form léger (nom + SIRET optionnel, pas d'email), redirige sur la fiche pour enchaîner la préparation catalogue. Bouton CTA "Nouvelle entreprise" en haut de la liste, à côté de "Inviter un client".
+- `InvitationRepository::pendingCompanyIdMap()` : map `[companyId => true]` (query unique, DISTINCT), injecté dans templates pour éviter N+1 quand la liste est rendue.
+
 **Smoke test + fixtures** mis à jour pour assigner `allowedCompanies` sur les produits créés, sinon rien ne serait visible côté client.
+
+**Piège AssetMapper résolu** : le dossier `public/assets/` (gitignoré mais présent en local suite à un `asset-map:compile` passé) masquait les controllers Stimulus récents (`company_access`, `color_picker`, `enter_submit`) — Symfony servait les fichiers compilés figés au lieu de la version live. En **dev**, ne jamais compiler : AssetMapper sert les fichiers à la volée depuis `assets/`. Le `compile` n'a sa place qu'en **prod** au moment du déploiement (voir `DEPLOY.md`).
+
+
+### SMTP configurable + emails de commande (2026-04-21)
+
+**Entité `MailSettings`** (singleton, table `mail_settings`, migration `Version20260421193034`) : host, port, username, password, encryption (none/ssl/tls), fromEmail, fromName, adminNotificationEmail. Un seul row en DB (`MailSettingsRepository::getOrCreate()`).
+
+**Service `App\Service\AppMailer`** : injecté à la place du `MailerInterface` direct quand on veut respecter la config admin. Construit un `Mailer` à la volée depuis le DSN généré par `MailSettings::toDsn()` (cache du transport pour la durée de la requête). Fallback automatique sur le `MAILER_DSN` env (`null://null` en dev) si rien n'est configuré ou si le DSN custom échoue. Méthode `sendSilently()` pour les envois best-effort (commandes) qui ne doivent pas faire planter le flow si le SMTP est HS.
+
+**Page admin `/admin/parametres/email`** (`app_admin_mail_settings`, item "Email SMTP" dans la sidebar admin) :
+- Form complet (hôte, port, TLS/SSL/none, user, password masqué avec "(déjà défini — laisser vide pour conserver)" quand password existe)
+- Champ séparé "Email de notification admin" (sert de destinataire des emails "nouvelle commande")
+- Bouton **"Envoyer un email de test"** via POST séparé `/admin/parametres/email/test` → crée un transport à la volée et envoie un mail texte simple avec les infos de config ; remonte l'exception Mailer dans un flash en cas d'échec
+
+**Emails de commande** (templates dans `templates/emails/order/`) :
+- `placed_admin.html.twig` — envoyé au `adminNotificationEmail` quand une commande passe en `PLACED` (dans `CheckoutController::checkout()`). Contient ref, entreprise, antenne, créateur, quantité totale, total HT, note client, CTA admin.
+- `confirmed_client.html.twig` — envoyé à `order.createdBy.email` quand l'admin fait la transition vers `CONFIRMED` (dans `Admin\OrderController::transition()`). CTA "Suivre ma commande".
+
+Les deux envois sont **best-effort via `AppMailer::sendSilently()`** : si le SMTP est mal configuré ou down, on logge l'erreur mais on ne casse pas la commande / la transition. Si `adminNotificationEmail` est vide côté MailSettings, aucun mail admin n'est envoyé (les notifs in-app continuent à fonctionner via `NotificationService`).

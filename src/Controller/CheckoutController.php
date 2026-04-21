@@ -8,9 +8,11 @@ use App\Entity\OrderItem;
 use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Repository\AntennaRepository;
+use App\Service\AppMailer;
 use App\Service\Cart;
 use App\Service\NotificationService;
 use App\Service\OrderEventLogger;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,6 +32,7 @@ final class CheckoutController extends AbstractController
         EntityManagerInterface $em,
         NotificationService $notifications,
         OrderEventLogger $events,
+        AppMailer $mailer,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -152,6 +155,18 @@ final class CheckoutController extends AbstractController
                     $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
                     \App\Entity\Notification::TYPE_SUCCESS,
                 );
+
+                $adminRecipient = $mailer->notificationRecipientAdmin();
+                if ($adminRecipient !== null) {
+                    $mailer->sendSilently(
+                        (new TemplatedEmail())
+                            ->to($adminRecipient)
+                            ->subject(sprintf('Nouvelle commande %s — %s', $order->getReference(), $company->getName()))
+                            ->htmlTemplate('emails/order/placed_admin.html.twig')
+                            ->context(['order' => $order]),
+                        'order_placed_admin:' . $order->getReference(),
+                    );
+                }
 
                 return $this->redirectToRoute('app_checkout_confirmation', ['reference' => $order->getReference()]);
             }
