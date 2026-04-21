@@ -317,6 +317,91 @@
         {% endif %}
     </section>
 
+    {# Accès entreprises #}
+    {% set current_ids = [] %}
+    {% for c in product.allowedCompanies %}{% set current_ids = current_ids|merge([c.id]) %}{% endfor %}
+    <section class="card p-6" data-controller="company-access"
+             data-company-access-quick-create-url-value="{{ path('app_admin_company_quick_create') }}">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="font-display font-semibold text-[var(--color-foreground)]">Entreprises qui ont accès</h2>
+                <p class="text-xs text-[var(--color-secondary)] mt-0.5">Seuls les clients cochés verront ce produit dans leur catalogue. Aucune coche = invisible.</p>
+            </div>
+            <button type="button" data-action="click->company-access#open" class="btn btn-outline text-sm">
+                Gérer les accès
+                <span class="ml-2 inline-flex items-center justify-center min-w-[1.5rem] px-1.5 h-5 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] text-[11px] font-semibold" data-company-access-target="counter">{{ current_ids|length }}</span>
+            </button>
+        </div>
+
+        <div data-company-access-target="summary" class="flex flex-wrap gap-1.5"></div>
+
+        <div data-company-access-target="hiddenInputs">
+            {% for id in current_ids %}
+                <input type="hidden" name="company_access[]" value="{{ id }}">
+            {% endfor %}
+        </div>
+
+        {# Modal #}
+        <div data-company-access-target="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div data-company-access-target="backdrop" data-action="click->company-access#closeOnBackdrop"
+                 class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+                <div class="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+                    <h3 class="font-display font-semibold text-[var(--color-foreground)]">Gérer les accès</h3>
+                    <button type="button" data-action="click->company-access#close" class="w-8 h-8 flex items-center justify-center rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)]">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="p-4 border-b border-[var(--color-border-soft)]">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                        <input type="text" data-company-access-target="search" data-action="input->company-access#filter"
+                               placeholder="Rechercher une entreprise ou un SIRET…"
+                               class="form-input w-full pl-9 text-sm">
+                    </div>
+                </div>
+
+                <div data-company-access-target="list" class="flex-1 overflow-y-auto p-2 space-y-0.5">
+                    {% for c in all_companies|default([]) %}
+                        <label data-company-row
+                               data-search-hay="{{ c.name }} {{ c.siret|default('') }}"
+                               class="flex items-center gap-3 px-3 py-2 hover:bg-[var(--color-muted)] cursor-pointer rounded-md">
+                            <input type="checkbox" value="{{ c.id }}" data-name="{{ c.name }}"
+                                   data-action="change->company-access#toggle"
+                                   {% if c.id in current_ids %}checked{% endif %}
+                                   class="w-4 h-4 rounded border-[var(--color-border)]">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-[var(--color-foreground)] truncate">{{ c.name }}</div>
+                                <div class="text-xs text-[var(--color-secondary)]">{{ c.accessStatusLabel }}{% if c.siret %} · {{ c.siret }}{% endif %}</div>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <div class="p-4 border-t border-[var(--color-border-soft)] bg-[var(--color-muted)]/30">
+                    <details class="mb-3">
+                        <summary class="cursor-pointer text-sm font-medium text-[var(--color-primary)] hover:underline">+ Créer une nouvelle entreprise</summary>
+                        <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="text" data-company-access-target="newName" placeholder="Nom *" class="form-input text-sm sm:col-span-1">
+                            <input type="text" data-company-access-target="newSiret" placeholder="SIRET (optionnel)" class="form-input text-sm sm:col-span-1">
+                            <button type="button" data-action="click->company-access#createNew" class="btn btn-primary text-sm sm:col-span-1">Créer + cocher</button>
+                        </div>
+                        <p data-company-access-target="newError" class="text-xs text-[var(--color-destructive)] mt-1"></p>
+                    </details>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-[var(--color-secondary)]"><span data-company-access-target="counter">{{ current_ids|length }}</span> sélectionnée(s)</span>
+                        <div class="flex gap-2">
+                            <button type="button" data-action="click->company-access#close" class="btn btn-outline text-sm">Annuler</button>
+                            <button type="button" data-action="click->company-access#apply" class="btn btn-primary text-sm">Appliquer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="flex gap-3">
         <button type="submit" class="btn btn-primary">
             {{ is_new ? 'Créer le produit (brouillon)' : 'Enregistrer' }}

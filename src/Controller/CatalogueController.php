@@ -43,9 +43,7 @@ final class CatalogueController extends AbstractController
         $colors = array_filter(array_map('trim', explode(',', (string) $request->query->get('colors', ''))));
         $sizes = array_filter(array_map('trim', explode(',', (string) $request->query->get('sizes', ''))));
 
-        $qb = $products->createQueryBuilder('p')
-            ->andWhere('p.status = :published')
-            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
+        $qb = $products->createCatalogueQueryBuilder($user->getCompany())
             ->orderBy('p.name', 'ASC');
 
         if ($search !== '') {
@@ -68,21 +66,17 @@ final class CatalogueController extends AbstractController
 
         $results = $qb->getQuery()->getResult();
 
-        $categories = $products->createQueryBuilder('p')
+        $categories = $products->createCatalogueQueryBuilder($user->getCompany())
             ->select('DISTINCT p.category')
-            ->andWhere('p.status = :published')
-            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
             ->andWhere('p.category IS NOT NULL')
             ->orderBy('p.category', 'ASC')
             ->getQuery()
             ->getSingleColumnResult();
 
-        // Facets : toutes les couleurs + tailles disponibles sur produits publiés
-        $variantRows = $products->createQueryBuilder('p')
+        // Facets : toutes les couleurs + tailles disponibles sur produits publiés accessibles
+        $variantRows = $products->createCatalogueQueryBuilder($user->getCompany())
             ->select('DISTINCT v.color AS color, v.colorHex AS hex, v.size AS size')
             ->innerJoin('p.variants', 'v')
-            ->andWhere('p.status = :published')
-            ->setParameter('published', \App\Enum\ProductStatus::PUBLISHED)
             ->getQuery()
             ->getArrayResult();
 
@@ -131,7 +125,7 @@ final class CatalogueController extends AbstractController
         $isFavorited = $favorites->findOneByUserAndProduct($user, $product) !== null;
         $tiers = $pricing->publicTiers($product);
         $negotiated = $user->getCompany() ? $companyPrices->findForCompanyAndProduct($user->getCompany(), $product) : null;
-        if (!$product->isPublished()) {
+        if (!$product->isPublished() || !$user->getCompany() || !$product->isAllowedFor($user->getCompany())) {
             throw $this->createNotFoundException();
         }
 
@@ -174,6 +168,11 @@ final class CatalogueController extends AbstractController
     #[Route('/catalogue/{slug}/add', name: 'app_catalogue_add', methods: ['POST'])]
     public function addToCart(Product $product, Request $request, Cart $cart): RedirectResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$product->isPublished() || !$user->getCompany() || !$product->isAllowedFor($user->getCompany())) {
+            throw $this->createNotFoundException();
+        }
         $quantities = $request->request->all('quantities');
         $marking = null;
 

@@ -1209,3 +1209,26 @@ Fichiers ajoutés :
 **Validé** : smoke test 10/10 OK sur MySQL local (MAMP 8.0.44). Aucun opérateur JSON Pg / cast `::type` / type `ARRAY` dans le code → pas d'autre surprise attendue.
 
 **À faire côté prod** : noter la version MySQL/MariaDB o2switch dans `.env.prod.local` (`serverVersion=10.x-MariaDB` ou `8.0.x`).
+
+
+### Accès produit par entreprise (2026-04-21)
+
+Visibilité stricte : chaque produit est lié à 1..N `Company` via la table de jointure `product_company_access` (ManyToMany sur `Product::$allowedCompanies`). Pas de champ "visibility" — un produit sans entreprise assignée est **invisible pour tous les clients**, seul l'admin le voit dans son back-office avec un badge ambre "Non affecté".
+
+**Côté client**, le filtre `ProductRepository::createCatalogueQueryBuilder(Company)` applique systématiquement `INNER JOIN p.allowedCompanies WHERE ac = :company` sur :
+- `/catalogue` (liste + facets couleurs/tailles/catégories)
+- `/catalogue/{slug}` (404 si pas d'accès, même si publié)
+- `/catalogue/{slug}/add` (POST ajout au panier)
+- `/favoris/toggle/{id}`, `/favoris` (filtre aussi les favoris existants qui ont perdu l'accès)
+- Recherche globale
+- Checkout : double-check avant persistance de la commande (accessIssues flash)
+
+**Côté admin**, modal de gestion des accès depuis la fiche produit (`templates/admin/product/form.html.twig`) :
+- Bouton "Gérer les accès" avec compteur live
+- Modal centré : search insensible casse/accents, liste cochable avec statut users par entreprise (`Company::getAccessStatusLabel()` : "3 users actifs" / "En attente d'inscription" / "Aucun user actif")
+- Bouton "+ Créer une nouvelle entreprise" (details inline) → endpoint JSON `POST /admin/entreprises/quick-create` → nouvelle ligne cochée auto
+- Sélections synchronisées via `company_access[]` hidden inputs au moment du submit du form produit
+
+**Liste produits admin** : 2 filtres séparés (statut draft/published, accès unassigned/assigned) + nouvelle colonne "Accès" avec badge ambre "Non affecté" ou bleu "Affecté à N".
+
+**Smoke test + fixtures** mis à jour pour assigner `allowedCompanies` sur les produits créés, sinon rien ne serait visible côté client.

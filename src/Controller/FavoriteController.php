@@ -24,8 +24,13 @@ final class FavoriteController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        $company = $user->getCompany();
+        $visible = array_filter(
+            $favorites->findRecentForUser($user),
+            fn($f) => $company && $f->getProduct()->isAllowedFor($company) && $f->getProduct()->isPublished(),
+        );
         return $this->render('favorite/list.html.twig', [
-            'favorites' => $favorites->findRecentForUser($user),
+            'favorites' => array_values($visible),
         ]);
     }
 
@@ -39,7 +44,7 @@ final class FavoriteController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if (!$product->isPublished()) {
+        if (!$product->isPublished() || !$user->getCompany() || !$product->isAllowedFor($user->getCompany())) {
             throw $this->createNotFoundException();
         }
 

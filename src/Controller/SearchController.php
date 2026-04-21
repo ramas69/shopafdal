@@ -72,7 +72,11 @@ final class SearchController extends AbstractController
             ->orderBy('p.name', 'ASC')
             ->setMaxResults(self::MAX_PER_GROUP);
         if (!$user->isAdmin()) {
-            $productQb->andWhere('p.status = :published')->setParameter('published', ProductStatus::PUBLISHED);
+            $productQb->innerJoin('p.allowedCompanies', 'ac')
+                ->andWhere('p.status = :published')
+                ->andWhere('ac = :company')
+                ->setParameter('published', ProductStatus::PUBLISHED)
+                ->setParameter('company', $user->getCompany());
         }
         $productResults = $productQb->getQuery()->getResult();
         if (!empty($productResults)) {

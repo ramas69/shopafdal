@@ -33,24 +33,40 @@ final class ProductController extends AbstractController
     public function list(Request $request, ProductRepository $products): Response
     {
         $status = (string) $request->query->get('status', '');
+        $access = (string) $request->query->get('access', '');
         $search = trim((string) $request->query->get('q', ''));
 
         $qb = $products->createQueryBuilder('p')->orderBy('p.createdAt', 'DESC');
         if ($status !== '') {
             $qb->andWhere('p.status = :status')->setParameter('status', ProductStatus::from($status));
         }
+        if ($access === 'unassigned') {
+            $qb->andWhere('SIZE(p.allowedCompanies) = 0');
+        } elseif ($access === 'assigned') {
+            $qb->andWhere('SIZE(p.allowedCompanies) > 0');
+        }
         if ($search !== '') {
             $qb->andWhere('LOWER(p.name) LIKE :q')->setParameter('q', '%' . strtolower($search) . '%');
+        }
+
+        $allProducts = $products->findAll();
+        $unassignedCount = 0;
+        foreach ($allProducts as $p) {
+            if ($p->getAllowedCompanies()->count() === 0) {
+                $unassignedCount++;
+            }
         }
 
         return $this->render('admin/product/list.html.twig', [
             'products' => $qb->getQuery()->getResult(),
             'statuses' => ProductStatus::cases(),
             'current_status' => $status,
+            'current_access' => $access,
             'q' => $search,
             'counts' => [
                 'draft' => $products->count(['status' => ProductStatus::DRAFT]),
                 'published' => $products->count(['status' => ProductStatus::PUBLISHED]),
+                'unassigned' => $unassignedCount,
             ],
         ]);
     }
@@ -160,6 +176,7 @@ final class ProductController extends AbstractController
                 $this->syncVariants($product, $variantsInput, $em);
                 $this->syncImages($product, $request);
                 $this->syncPriceTiers($product, $request->request->all('tiers'), $em);
+                $this->syncCompanyAccess($product, $request->request->all('company_access'), $em);
 
                 try {
                     $em->flush();
@@ -177,7 +194,30 @@ final class ProductController extends AbstractController
             'is_new' => $isNew,
             'errors' => $errors,
             'tiers' => $isNew ? [] : $em->getRepository(\App\Entity\PriceTier::class)->findBy(['product' => $product], ['minQty' => 'ASC']),
+            'all_companies' => $em->getRepository(\App\Entity\Company::class)->findBy([], ['name' => 'ASC']),
         ], new Response(null, $status));
+    }
+
+    /** @param array<int|string, mixed> $companyIds */
+    private function syncCompanyAccess(Product $product, array $companyIds, EntityManagerInterface $em): void
+    {
+        $wanted = array_values(array_filter(array_map('intval', $companyIds), static fn($id) => $id > 0));
+        $repo = $em->getRepository(\App\Entity\Company::class);
+        $wantedCompanies = empty($wanted) ? [] : $repo->findBy(['id' => $wanted]);
+        $wantedById = [];
+        foreach ($wantedCompanies as $c) {
+            $wantedById[$c->getId()] = $c;
+        }
+        // Retrait de ceux qui ne sont plus cochés
+        foreach ($product->getAllowedCompanies() as $c) {
+            if (!isset($wantedById[$c->getId()])) {
+                $product->removeAllowedCompany($c);
+            }
+        }
+        // Ajout des nouveaux
+        foreach ($wantedCompanies as $c) {
+            $product->addAllowedCompany($c);
+        }
     }
 
     /** @param array<int, array{id?:string,min_qty:string,price:string}> $tiersInput */

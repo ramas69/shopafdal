@@ -201,6 +201,7 @@ final class SmokeTestCommand extends Command
             ->setCategory('Polo')
             ->setBasePriceCents(1500);
         $product->publish();
+        $product->addAllowedCompany($company);
         $this->em->persist($product);
 
         $variants = [];

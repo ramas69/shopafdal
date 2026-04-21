@@ -32,7 +32,12 @@
             <option value="{{ s.value }}" {{ current_status == s.value ? 'selected' }}>{{ s.label() }}</option>
         {% endfor %}
     </select>
-    {% if q or current_status %}
+    <select name="access" data-action="change->autosubmit#submitNow" data-controller="tom-select" class="form-input !w-auto min-w-[180px]">
+        <option value="">Tous accès</option>
+        <option value="unassigned" {{ current_access == 'unassigned' ? 'selected' }}>Non affectés{% if counts.unassigned %} ({{ counts.unassigned }}){% endif %}</option>
+        <option value="assigned" {{ current_access == 'assigned' ? 'selected' }}>Affectés à ≥1 client</option>
+    </select>
+    {% if q or current_status or current_access %}
         <a href="{{ path('app_admin_products') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
     {% endif %}
 </form>
@@ -53,6 +58,7 @@
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Catégorie</th>
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-center">Variantes</th>
                         <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-right">Prix HT</th>
+                        <th class="bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Accès</th>
                         <th class="rounded-tr-lg bg-slate-200 px-5 py-4 font-semibold uppercase text-[13px] tracking-[0.04em] text-[var(--color-foreground)] text-left">Statut</th>
                     </tr>
                 </thead>
@@ -77,6 +83,20 @@
                             <td class="px-5 py-3 text-[var(--color-body)]">{{ product.category ?? '—' }}</td>
                             <td class="px-5 py-3 text-center text-[var(--color-secondary)]">{{ product.variants|length }}</td>
                             <td class="px-5 py-3 text-right font-display font-semibold text-[var(--color-foreground)]">{{ product.basePriceCents|price }}</td>
+                            <td class="px-5 py-3">
+                                {% set access_count = product.allowedCompanies|length %}
+                                {% if access_count == 0 %}
+                                    <span class="badge border bg-amber-50 text-amber-700 border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        Non affecté
+                                    </span>
+                                {% else %}
+                                    <span class="badge border bg-sky-50 text-sky-700 border-sky-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                        Affecté à {{ access_count }}
+                                    </span>
+                                {% endif %}
+                            </td>
                             <td class="px-5 py-3">
                                 {% if product.status.value == 'published' %}
                                     <span class="badge border bg-emerald-50 text-emerald-700 border-emerald-200">

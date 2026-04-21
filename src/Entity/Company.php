@@ -61,6 +61,30 @@ class Company
     public function getUsers(): Collection { return $this->users; }
     public function getOrders(): Collection { return $this->orders; }
 
+    public function countActiveUsers(): int
+    {
+        $n = 0;
+        foreach ($this->users as $u) {
+            if ($u->isActive()) {
+                $n++;
+            }
+        }
+        return $n;
+    }
+
+    public function getAccessStatusLabel(): string
+    {
+        $total = $this->users->count();
+        $active = $this->countActiveUsers();
+        if ($total === 0) {
+            return "En attente d'inscription";
+        }
+        if ($active === 0) {
+            return 'Aucun user actif';
+        }
+        return $active . ($active > 1 ? ' users actifs' : ' user actif');
+    }
+
     public function addAntenna(Antenna $antenna): self
     {
         if (!$this->antennas->contains($antenna)) {

@@ -87,6 +87,9 @@ class AppFixtures extends Fixture
                 ->setDescription($desc)
                 ->setBasePriceCents($price);
             $product->publish();
+            // Fixtures : tous les produits sont accessibles aux 2 entreprises démo
+            $product->addAllowedCompany($alpha);
+            $product->addAllowedCompany($beta);
 
             $sizes = ($cat === 'Couvre-chef' || $cat === 'Accessoire') ? ['TU'] : ['S', 'M', 'L', 'XL', 'XXL'];
             $colors = [

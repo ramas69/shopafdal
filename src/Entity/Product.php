@@ -52,9 +52,17 @@ class Product
     #[ORM\OneToMany(targetEntity: ProductVariant::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $variants;
 
+    /** @var Collection<int, Company> */
+    #[ORM\ManyToMany(targetEntity: Company::class)]
+    #[ORM\JoinTable(name: 'product_company_access')]
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'company_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection $allowedCompanies;
+
     public function __construct()
     {
         $this->variants = new ArrayCollection();
+        $this->allowedCompanies = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -174,5 +182,27 @@ class Product
             }
         }
         return false;
+    }
+
+    /** @return Collection<int, Company> */
+    public function getAllowedCompanies(): Collection { return $this->allowedCompanies; }
+
+    public function addAllowedCompany(Company $c): self
+    {
+        if (!$this->allowedCompanies->contains($c)) {
+            $this->allowedCompanies->add($c);
+        }
+        return $this;
+    }
+
+    public function removeAllowedCompany(Company $c): self
+    {
+        $this->allowedCompanies->removeElement($c);
+        return $this;
+    }
+
+    public function isAllowedFor(Company $c): bool
+    {
+        return $this->allowedCompanies->contains($c);
     }
 }

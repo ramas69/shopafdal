@@ -11,11 +11,13 @@ use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/admin/entreprises')]
 #[IsGranted('ROLE_ADMIN')]
@@ -141,5 +143,29 @@ final class CompanyController extends AbstractController
         $em->flush();
         $this->addFlash('success', sprintf('Tarif négocié supprimé pour « %s ».', $productName));
         return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/quick-create', name: 'app_admin_company_quick_create', methods: ['POST'])]
+    public function quickCreate(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, CompanyRepository $companies): JsonResponse
+    {
+        $name = trim((string) $request->request->get('name', ''));
+        $siret = trim((string) $request->request->get('siret', '')) ?: null;
+        if ($name === '') {
+            return new JsonResponse(['error' => 'Nom requis.'], 422);
+        }
+        $slug = strtolower((string) $slugger->slug($name));
+        if ($companies->findOneBy(['slug' => $slug])) {
+            return new JsonResponse(['error' => 'Une entreprise avec ce nom existe déjà.'], 422);
+        }
+        $company = (new Company())->setName($name)->setSlug($slug)->setSiret($siret);
+        $em->persist($company);
+        $em->flush();
+        return new JsonResponse([
+            'id' => $company->getId(),
+            'name' => $company->getName(),
+            'siret' => $company->getSiret(),
+            'users_count' => 0,
+            'status_label' => 'En attente d\'inscription',
+        ]);
     }
 }

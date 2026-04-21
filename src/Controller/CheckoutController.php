@@ -70,18 +70,28 @@ final class CheckoutController extends AbstractController
 
             if (empty($errors)) {
                 $stockIssues = [];
+                $accessIssues = [];
                 foreach ($cart->lines() as $line) {
                     $variant = $line['variant'];
+                    $product = $variant->getProduct();
+                    if (!$product->isPublished() || !$product->isAllowedFor($company)) {
+                        $accessIssues[] = $product->getName();
+                        continue;
+                    }
                     $stock = $variant->getStock();
                     if ($stock !== null && $line['quantity'] > $stock) {
                         $stockIssues[] = sprintf('%s · %s · %s : %d demandé(s), %d disponible(s)',
-                            $variant->getProduct()->getName(),
+                            $product->getName(),
                             $variant->getColor(),
                             $variant->getSize(),
                             $line['quantity'],
                             $stock,
                         );
                     }
+                }
+                if (!empty($accessIssues)) {
+                    $this->addFlash('error', 'Produits non accessibles : ' . implode(', ', array_unique($accessIssues)) . '. Retirez-les du panier.');
+                    return $this->redirectToRoute('app_cart');
                 }
                 if (!empty($stockIssues)) {
                     $this->addFlash('error', 'Stock insuffisant — ' . implode(' ; ', $stockIssues));
