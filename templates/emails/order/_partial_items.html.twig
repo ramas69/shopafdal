@@ -1,5 +1,5 @@
 {# Tableau des articles — partagé entre email admin et client #}
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; margin: 20px 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="e-items" style="border-collapse: collapse; margin: 20px 0;">
     <thead>
         <tr>
             <th align="left" style="padding: 10px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; border-bottom: 1px solid #e5e7eb;">Article</th>
@@ -13,7 +13,7 @@
             {% set p = v.product %}
             <tr>
                 <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top;">
-                    <div style="font-weight: 600; color: #111; font-size: 14px;">{{ p.name }}</div>
+                    <div class="e-item-name" style="font-weight: 600; color: #111; font-size: 14px;">{{ p.name }}</div>
                     <div style="margin-top: 4px; font-size: 12px; color: #6b7280;">
                         {% if v.colorHex %}<span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{ v.colorHex }}; border: 1px solid rgba(0,0,0,0.1); vertical-align: middle; margin-right: 4px;"></span>{% endif %}
                         <span style="vertical-align: middle;">{{ v.color }} · Taille {{ v.size }}</span>
