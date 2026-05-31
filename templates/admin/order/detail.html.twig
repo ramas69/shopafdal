@@ -213,6 +213,12 @@
                 <p class="text-[var(--color-body)] whitespace-pre-line">{{ order.notes }}</p>
             </section>
         {% endif %}
+
+        {{ include('order/_documents.html.twig', {
+            order: order,
+            can_delete: false,
+            is_admin: true,
+        }) }}
     </div>
 
     <aside class="space-y-6">
