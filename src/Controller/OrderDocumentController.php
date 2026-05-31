@@ -7,10 +7,12 @@ use App\Entity\Order;
 use App\Entity\OrderDocument;
 use App\Entity\User;
 use App\Enum\OrderStatus;
+use App\Service\AppMailer;
 use App\Service\NotificationService;
 use App\Service\OrderEventLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -43,6 +45,7 @@ final class OrderDocumentController extends AbstractController
         EntityManagerInterface $em,
         NotificationService $notifications,
         OrderEventLogger $events,
+        AppMailer $mailer,
     ): RedirectResponse {
         $this->assertClientOwns($order);
 
@@ -113,6 +116,18 @@ final class OrderDocumentController extends AbstractController
             );
         } catch (\Throwable) {
             // notification best-effort, ne bloque pas le dépôt
+        }
+
+        $adminRecipient = $mailer->notificationRecipientAdmin();
+        if ($adminRecipient !== null) {
+            $mailer->sendSilently(
+                (new TemplatedEmail())
+                    ->to($adminRecipient)
+                    ->subject(sprintf('Document reçu · Commande %s — %s', $order->getReference(), $order->getCompany()->getName()))
+                    ->htmlTemplate('emails/order/document_uploaded_admin.html.twig')
+                    ->context(['order' => $order, 'document' => $document]),
+                'order_doc_uploaded:' . $order->getReference(),
+            );
         }
 
         $this->addFlash('success', sprintf('Document « %s » envoyé à Afdal.', $originalName));
