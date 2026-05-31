@@ -1,0 +1,51 @@
+{# @param order, can_delete (bool: commande non traitée), is_admin (bool) #}
+<section class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+    <h2 class="text-base font-semibold text-[var(--color-foreground)] mb-3">Documents partagés</h2>
+
+    {% if order.documents|length > 0 %}
+        <ul class="divide-y divide-[var(--color-border)] mb-4">
+            {% for doc in order.documents %}
+                <li class="flex items-center gap-3 py-2.5">
+                    <span class="shrink-0 w-9 h-9 rounded-md bg-[var(--color-muted)] flex items-center justify-center text-xs font-semibold text-[var(--color-secondary)]">
+                        {{ doc.isPdf ? 'PDF' : 'IMG' }}
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <a href="{{ path('app_order_doc_download', {document: doc.id}) }}"
+                           class="text-sm font-medium text-[var(--color-primary)] hover:underline truncate block">
+                            {{ doc.originalName }}
+                        </a>
+                        <div class="text-xs text-[var(--color-secondary)]">
+                            {{ (doc.sizeBytes / 1024)|round }} Ko · {{ doc.createdAt|date('d/m/Y') }}
+                            {% if is_admin %} · déposé par {{ doc.uploadedBy.fullName }}{% endif %}
+                        </div>
+                    </div>
+                    {% if not is_admin and can_delete and doc.uploadedBy.id == app.user.id %}
+                        <form method="post" action="{{ path('app_order_doc_delete', {document: doc.id}) }}">
+                            <button type="submit"
+                                    class="shrink-0 text-xs font-medium text-[var(--color-destructive)] hover:underline">
+                                Supprimer
+                            </button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-sm text-[var(--color-secondary)] mb-4">Aucun document pour le moment.</p>
+    {% endif %}
+
+    {% if not is_admin %}
+        <form method="post" enctype="multipart/form-data"
+              action="{{ path('app_order_doc_upload', {reference: order.reference}) }}"
+              class="flex items-center gap-3">
+            <input type="file" name="document" required
+                   accept="application/pdf,image/jpeg,image/png,image/webp"
+                   class="text-sm text-[var(--color-body)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white">
+            <button type="submit"
+                    class="rounded-md bg-[var(--color-primary)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--color-primary-focus)]">
+                Déposer
+            </button>
+        </form>
+        <p class="mt-2 text-xs text-[var(--color-secondary)]">PDF ou image (JPG, PNG, WebP) · max 10 Mo.</p>
+    {% endif %}
+</section>

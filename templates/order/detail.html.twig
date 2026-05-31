@@ -242,6 +242,12 @@
             </div>
         </section>
 
+        {{ include('order/_documents.html.twig', {
+            order: order,
+            can_delete: order.status.value in ['draft', 'placed'],
+            is_admin: false,
+        }) }}
+
         {% if order.notes %}
             <section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
                 <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-2">Vos notes</h2>
