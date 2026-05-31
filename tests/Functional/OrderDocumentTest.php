@@ -261,4 +261,15 @@ final class OrderDocumentTest extends WebTestCase
         $repo = static::getContainer()->get(OrderDocumentRepository::class);
         self::assertGreaterThanOrEqual(2, count($repo->findAllRecent()));
     }
+
+    public function testAdminWithoutCompanyForbiddenOnClientDocuments(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin');
+
+        $client->loginUser($admin);
+        $client->request('GET', '/documents');
+
+        self::assertResponseStatusCodeSame(403);
+    }
 }
