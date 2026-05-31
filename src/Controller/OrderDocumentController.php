@@ -54,7 +54,8 @@ final class OrderDocumentController extends AbstractController
                 UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => sprintf('Fichier trop volumineux (max %s).', ini_get('upload_max_filesize') ?: '?'),
                 UPLOAD_ERR_PARTIAL => 'Téléversement interrompu, réessayez.',
                 UPLOAD_ERR_NO_FILE => 'Aucun fichier sélectionné.',
-                default => 'Erreur serveur lors de la réception du fichier.',
+                UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE, UPLOAD_ERR_EXTENSION => 'Erreur serveur lors de la réception du fichier.',
+                default => 'Fichier invalide.',
             };
             $this->addFlash('error', $msg);
             return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
@@ -91,14 +92,24 @@ final class OrderDocumentController extends AbstractController
         );
         $em->persist($document);
         $events->logDocumentUploaded($order, $originalName);
-        $em->flush();
+        try {
+            $em->flush();
+        } catch (\Throwable) {
+            @unlink($this->uploadDir . '/' . $filename);
+            $this->addFlash('error', "Échec de l'enregistrement du document.");
+            return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+        }
 
-        $notifications->notifyAdmins(
-            sprintf('Document reçu · Commande %s', $order->getReference()),
-            $originalName,
-            $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
-            Notification::TYPE_INFO,
-        );
+        try {
+            $notifications->notifyAdmins(
+                sprintf('Document reçu · Commande %s', $order->getReference()),
+                $originalName,
+                $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+                Notification::TYPE_INFO,
+            );
+        } catch (\Throwable) {
+            // notification best-effort, ne bloque pas le dépôt
+        }
 
         $this->addFlash('success', sprintf('Document « %s » envoyé à Afdal.', $originalName));
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);

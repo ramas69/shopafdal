@@ -15,7 +15,7 @@ final class OrderDocumentTest extends WebTestCase
 
     private function createOrder(\App\Entity\Company $company, \App\Entity\Antenna $antenna, \App\Entity\User $createdBy, OrderStatus $status = OrderStatus::DRAFT): Order
     {
-        $suffix = random_int(1000, 9999);
+        $suffix = random_int(100000, 999999);
         $order = (new Order())
             ->setReference("CMD-2026-$suffix")
             ->setCompany($company)
@@ -50,7 +50,7 @@ final class OrderDocumentTest extends WebTestCase
             ['document' => $pdf],
         );
 
-        self::assertResponseRedirects();
+        self::assertResponseRedirects('/commandes/' . $order->getReference());
         $docs = $this->em()->getRepository(OrderDocument::class)->findBy(['order' => $order]);
         self::assertCount(1, $docs);
         self::assertSame('devis.pdf', $docs[0]->getOriginalName());
