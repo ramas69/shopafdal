@@ -221,6 +221,33 @@ final class OrderDocumentTest extends WebTestCase
         self::assertStringNotContainsString('beta-doc.pdf', $client->getResponse()->getContent());
     }
 
+    public function testAdminDocumentsPageListsAll(): void
+    {
+        $client = static::createClient();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $admin = $this->createUser('admin');
+        $this->persistDocument($this->createOrder($companyA, $antennaA, $ownerA), $ownerA, 'alpha-doc.pdf');
+
+        $client->loginUser($admin);
+        $client->request('GET', '/admin/documents');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('alpha-doc.pdf', $client->getResponse()->getContent());
+    }
+
+    public function testClientCannotAccessAdminDocuments(): void
+    {
+        $client = static::createClient();
+        [$company] = $this->createCompanyWithAntenna();
+        $user = $this->createUser('client', $company, CompanyRole::OWNER);
+
+        $client->loginUser($user);
+        $client->request('GET', '/admin/documents');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     public function testFindAllRecentReturnsEveryDocument(): void
     {
         self::bootKernel();
