@@ -763,6 +763,13 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - Convention : pas de CSRF explicite (cohérent avec le reste du projet, ex. `BatController`).
 - Tests : `tests/Functional/OrderDocumentTest.php` (upload OK, rejet MIME/taille, download admin + nom original, 403 cross-company, suppression auteur/statut/non-auteur).
 
+**Page Documents + UX upload** (2026-05-31) :
+- Page liste tous les documents liés aux commandes : `/documents` (client, scopé à sa company via `OrderDocumentRepository::findForCompany`) et `/admin/documents` (admin, `findAllRecent`). Tableau à plat trié récent→ancien (nom, commande + statut, déposé par, date, taille, télécharger). Partial partagé `templates/order/_documents_table.html.twig` (param `order_route`, inclus avec `with_context = false`).
+- Téléchargement réutilise `app_order_doc_download` (garde admin OU même company). Pas de suppression depuis cette page.
+- Nav : entrée « Documents » (icône `file` duotone) ajoutée aux deux menus du shell `dashboard/_shell.html.twig`.
+- Page commande : bloc documents déplacé dans l'aside, directement sous la conversation.
+- UX upload : aperçu (icône/vignette) du fichier choisi + spinner au dépôt, via réutilisation des controllers Stimulus `bat-upload` et `submit-loading` (aucun nouveau JS).
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
