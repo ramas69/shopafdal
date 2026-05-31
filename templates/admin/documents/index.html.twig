@@ -9,5 +9,5 @@
     <p class="text-[var(--color-secondary)] text-sm mt-1">tous les documents déposés par les clients</p>
 </div>
 
-{{ include('order/_documents_table.html.twig', {documents: documents, order_route: 'app_admin_order_detail'}, with_context = false) }}
+{{ include('order/_documents_table.html.twig', {documents: documents, order_route: 'app_admin_order_detail', show_client: true}, with_context = false) }}
 {% endblock %}
