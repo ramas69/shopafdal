@@ -1,4 +1,6 @@
-{# @param documents (OrderDocument[]), order_route (string: route name to the order detail) #}
+{# @param documents (OrderDocument[])
+   @param order_route (string) route name for the order detail link
+   @note download uses app_order_doc_download which already authorizes both client (same company) and admin #}
 {% if documents is empty %}
     <div class="card p-10 text-center">
         <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucun document</h2>
@@ -25,8 +27,7 @@
                                 <span class="shrink-0 w-9 h-9 rounded-md bg-[var(--color-muted)] flex items-center justify-center text-xs font-semibold text-[var(--color-secondary)]">
                                     {{ doc.isPdf ? 'PDF' : 'IMG' }}
                                 </span>
-                                <a href="{{ path('app_order_doc_download', {document: doc.id}) }}"
-                                   class="font-medium text-[var(--color-primary)] hover:underline truncate">{{ doc.originalName }}</a>
+                                <span class="font-medium text-[var(--color-foreground)] truncate">{{ doc.originalName }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-3">

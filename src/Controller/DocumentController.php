@@ -18,9 +18,13 @@ final class DocumentController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        $company = $user->getCompany();
+        if ($company === null) {
+            throw $this->createAccessDeniedException();
+        }
 
         return $this->render('documents/index.html.twig', [
-            'documents' => $documents->findForCompany($user->getCompany()),
+            'documents' => $documents->findForCompany($company),
         ]);
     }
 }

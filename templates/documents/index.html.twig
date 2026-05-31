@@ -9,5 +9,5 @@
     <p class="text-[var(--color-secondary)] text-sm mt-1">déposés sur les commandes de {{ app.user.company.name }}</p>
 </div>
 
-{{ include('order/_documents_table.html.twig', {documents: documents, order_route: 'app_order_detail'}) }}
+{{ include('order/_documents_table.html.twig', {documents: documents, order_route: 'app_order_detail'}, with_context = false) }}
 {% endblock %}
