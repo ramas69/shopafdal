@@ -87,4 +87,51 @@ final class OrderDocumentTest extends WebTestCase
         self::assertResponseRedirects();
         self::assertCount(0, $this->em()->getRepository(OrderDocument::class)->findBy(['order' => $order]));
     }
+
+    private function persistDocument(Order $order, \App\Entity\User $uploader, string $originalName = 'devis.pdf'): OrderDocument
+    {
+        $publicDir = static::getContainer()->getParameter('kernel.project_dir') . '/public/uploads/order-docs';
+        if (!is_dir($publicDir)) {
+            mkdir($publicDir, 0775, true);
+        }
+        $stored = bin2hex(random_bytes(8)) . '.pdf';
+        file_put_contents($publicDir . '/' . $stored, "%PDF-1.4\n%%EOF");
+        $doc = new OrderDocument($order, $uploader, '/uploads/order-docs/' . $stored, $originalName, 'application/pdf', 12);
+        $this->em()->persist($doc);
+        $this->em()->flush();
+        return $doc;
+    }
+
+    public function testAdminDownloadsDocumentWithOriginalName(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $admin = $this->createUser('admin');
+        $order = $this->createOrder($company, $antenna, $owner);
+        $doc = $this->persistDocument($order, $owner, 'bon-commande.pdf');
+
+        $client->loginUser($admin);
+        $client->request('GET', '/commandes/documents/' . $doc->getId() . '/download');
+
+        self::assertResponseIsSuccessful();
+        $disposition = $client->getResponse()->headers->get('Content-Disposition');
+        self::assertStringContainsString('bon-commande.pdf', (string) $disposition);
+    }
+
+    public function testCrossCompanyDownloadIsForbidden(): void
+    {
+        $client = static::createClient();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        [$companyB] = $this->createCompanyWithAntenna('Beta');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $outsiderB = $this->createUser('client', $companyB, CompanyRole::OWNER);
+        $order = $this->createOrder($companyA, $antennaA, $ownerA);
+        $doc = $this->persistDocument($order, $ownerA);
+
+        $client->loginUser($outsiderB);
+        $client->request('GET', '/commandes/documents/' . $doc->getId() . '/download');
+
+        self::assertResponseStatusCodeSame(403);
+    }
 }

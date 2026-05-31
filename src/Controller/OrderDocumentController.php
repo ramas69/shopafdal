@@ -12,10 +12,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -113,6 +116,26 @@ final class OrderDocumentController extends AbstractController
 
         $this->addFlash('success', sprintf('Document « %s » envoyé à Afdal.', $originalName));
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+    }
+
+    #[Route('/documents/{document}/download', name: 'app_order_doc_download', methods: ['GET'], requirements: ['document' => '\d+'])]
+    public function download(
+        #[MapEntity(mapping: ['document' => 'id'])] OrderDocument $document,
+        #[Autowire('%kernel.project_dir%/public')] string $publicDir,
+    ): Response {
+        $this->assertClientOwns($document->getOrder());
+
+        $absolute = $publicDir . $document->getPath();
+        if (!is_file($absolute)) {
+            throw $this->createNotFoundException('Fichier introuvable.');
+        }
+
+        $response = new BinaryFileResponse($absolute);
+        $response->setContentDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $document->getOriginalName(),
+        );
+        return $response;
     }
 
     private function assertClientOwns(Order $order): void
