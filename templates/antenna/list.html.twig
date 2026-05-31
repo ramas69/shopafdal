@@ -32,7 +32,7 @@
         ] %}
         {% for antenna in antennas %}
             {% set palette = antenna_palettes[loop.index0 % 5] %}
-            <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-white p-6 pl-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]" style="box-shadow: 0 1px 3px rgba(0,0,0,0.06); min-height: 340px;">
+            <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-white p-5 pl-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]" style="box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
                 <span class="absolute left-0 top-0 bottom-0 w-1.5" style="background: linear-gradient(180deg, {{ palette.from }} 0%, {{ palette.to }} 100%);" aria-hidden="true"></span>
 
                 <a href="{{ path('app_antenna_detail', {id: antenna.id}) }}"
@@ -55,8 +55,8 @@
                     </form>
                 </div>
 
-                <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-white" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }}); box-shadow: 0 6px 16px -4px {{ palette.from }}66;">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl text-white" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }}); box-shadow: 0 6px 16px -4px {{ palette.from }}66;">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
                 </div>
 
                 <h2 class="font-display text-lg font-bold text-[var(--color-foreground)] mb-1 group-hover:text-[var(--color-primary)] transition-colors">{{ antenna.name }}</h2>
@@ -70,14 +70,14 @@
                     </span>
                 {% endif %}
 
-                <div class="mt-auto pt-6 flex items-center justify-between">
+                <div class="mt-auto pt-4 flex items-center justify-between">
                     <div class="flex -space-x-2">
                         {% if antenna.contactName %}
                             {% set initials = antenna.contactName|split(' ')|slice(0, 2)|map(w => w|first)|join('')|upper %}
-                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-sm font-bold text-white shadow-sm" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }});" title="{{ antenna.contactName }}">{{ initials }}</span>
+                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-sm font-bold text-white shadow-sm" style="background: linear-gradient(135deg, {{ palette.from }}, {{ palette.to }});" title="{{ antenna.contactName }}">{{ initials }}</span>
                         {% endif %}
                     </div>
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-muted)] text-[var(--color-foreground)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors" aria-hidden="true">
+                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-muted)] text-[var(--color-foreground)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors" aria-hidden="true">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
                     </span>
                 </div>
