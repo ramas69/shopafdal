@@ -78,9 +78,14 @@ class Order
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $items;
 
+    /** @var Collection<int, OrderDocument> */
+    #[ORM\OneToMany(targetEntity: OrderDocument::class, mappedBy: 'order', cascade: ['remove'], orphanRemoval: true)]
+    private Collection $documents;
+
     public function __construct()
     {
         $this->items = new ArrayCollection();
+        $this->documents = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -162,6 +167,9 @@ class Order
     }
 
     public function getItems(): Collection { return $this->items; }
+
+    /** @return Collection<int, OrderDocument> */
+    public function getDocuments(): Collection { return $this->documents; }
 
     public function addItem(OrderItem $item): self
     {
