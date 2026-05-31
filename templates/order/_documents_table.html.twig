@@ -11,6 +11,7 @@
     <div data-controller="table-filter">
         <div class="mb-4">
             <input type="search"
+                   aria-label="Rechercher un document"
                    placeholder="Rechercher (commande, filiale{% if show_client %}, client{% endif %}, date, montant…)"
                    data-action="input->table-filter#filter"
                    class="form-input w-full max-w-md">
