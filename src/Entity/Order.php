@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\OrderDocument;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -79,7 +80,7 @@ class Order
     private Collection $items;
 
     /** @var Collection<int, OrderDocument> */
-    #[ORM\OneToMany(targetEntity: OrderDocument::class, mappedBy: 'order', cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: OrderDocument::class, mappedBy: 'order')]
     private Collection $documents;
 
     public function __construct()
