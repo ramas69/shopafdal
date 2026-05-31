@@ -122,10 +122,14 @@ final class CatalogueController extends AbstractController
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
+        $isAdminPreview = $this->isGranted('ROLE_ADMIN') && !$user->getCompany();
         $isFavorited = $favorites->findOneByUserAndProduct($user, $product) !== null;
         $tiers = $pricing->publicTiers($product);
         $negotiated = $user->getCompany() ? $companyPrices->findForCompanyAndProduct($user->getCompany(), $product) : null;
-        if (!$product->isPublished() || !$user->getCompany() || !$product->isAllowedFor($user->getCompany())) {
+        if (!$product->isPublished()) {
+            throw $this->createNotFoundException();
+        }
+        if (!$isAdminPreview && (!$user->getCompany() || !$product->isAllowedFor($user->getCompany()))) {
             throw $this->createNotFoundException();
         }
 
@@ -162,6 +166,7 @@ final class CatalogueController extends AbstractController
             'is_favorited' => $isFavorited,
             'price_tiers' => $tiers,
             'negotiated_price_cents' => $negotiated?->getUnitPriceCents(),
+            'is_admin_preview' => $isAdminPreview,
         ]);
     }
 

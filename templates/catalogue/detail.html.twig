@@ -16,6 +16,13 @@
     {% endif %}
 </nav>
 
+{% if is_admin_preview|default(false) %}
+    <div class="mb-6 flex items-center gap-2.5 rounded-xl bg-amber-50 ring-1 ring-amber-200 px-4 py-3 text-sm text-amber-800">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        <span><span class="font-semibold">Aperçu admin</span> — vue client du produit. Tarifs publics affichés (pas de prix négocié), commande désactivée.</span>
+    </div>
+{% endif %}
+
 <form method="post" enctype="multipart/form-data" action="{{ path('app_catalogue_add', {slug: product.slug}) }}"
       class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14"
       data-controller="quantities gallery"
@@ -279,10 +286,16 @@
                     + <span data-quantities-target="nextTierDelta" class="font-semibold">0</span> pc → <span data-quantities-target="nextTierPrice" class="font-semibold">—</span>/pc
                 </div>
             </div>
-            <button type="submit" class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-[var(--color-primary)] font-medium text-sm cursor-pointer transition-all duration-200 hover:bg-[var(--color-primary-focus)] hover:text-white">
-                Ajouter au panier
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-            </button>
+            {% if is_admin_preview|default(false) %}
+                <span class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/30 text-white/70 font-medium text-sm cursor-not-allowed select-none" aria-disabled="true">
+                    Commande désactivée (aperçu)
+                </span>
+            {% else %}
+                <button type="submit" class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-[var(--color-primary)] font-medium text-sm cursor-pointer transition-all duration-200 hover:bg-[var(--color-primary-focus)] hover:text-white">
+                    Ajouter au panier
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </button>
+            {% endif %}
         </div>
 
     </div>
