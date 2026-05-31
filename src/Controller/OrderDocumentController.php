@@ -150,7 +150,8 @@ final class OrderDocumentController extends AbstractController
         $user = $this->getUser();
 
         $deletable = in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true);
-        if ($document->getUploadedBy()->getId() !== $user->getId() || !$deletable) {
+        $sameCompany = !$user->isAdmin() && $order->getCompany()->getId() === $user->getCompany()?->getId();
+        if (!$sameCompany || !$deletable) {
             throw $this->createAccessDeniedException();
         }
 

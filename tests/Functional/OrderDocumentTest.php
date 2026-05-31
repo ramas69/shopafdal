@@ -168,7 +168,7 @@ final class OrderDocumentTest extends WebTestCase
         self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
     }
 
-    public function testNonAuthorCannotDelete(): void
+    public function testCompanyMemberCanDeleteUntilConfirmed(): void
     {
         $client = static::createClient();
         [$company, $antenna] = $this->createCompanyWithAntenna();
@@ -176,8 +176,43 @@ final class OrderDocumentTest extends WebTestCase
         $other = $this->createUser('client', $company, CompanyRole::MEMBER);
         $order = $this->createOrder($company, $antenna, $owner, OrderStatus::DRAFT);
         $doc = $this->persistDocument($order, $owner);
+        $docId = $doc->getId();
 
         $client->loginUser($other);
+        $client->request('POST', '/commandes/documents/' . $docId . '/delete');
+
+        self::assertResponseRedirects();
+        $this->em()->clear();
+        self::assertNull($this->em()->getRepository(OrderDocument::class)->find($docId));
+    }
+
+    public function testCrossCompanyMemberCannotDelete(): void
+    {
+        $client = static::createClient();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        [$companyB] = $this->createCompanyWithAntenna('Beta');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $outsiderB = $this->createUser('client', $companyB, CompanyRole::OWNER);
+        $order = $this->createOrder($companyA, $antennaA, $ownerA, OrderStatus::DRAFT);
+        $doc = $this->persistDocument($order, $ownerA);
+
+        $client->loginUser($outsiderB);
+        $client->request('POST', '/commandes/documents/' . $doc->getId() . '/delete');
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
+    }
+
+    public function testAdminCannotDeleteDocument(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $admin = $this->createUser('admin');
+        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::DRAFT);
+        $doc = $this->persistDocument($order, $owner);
+
+        $client->loginUser($admin);
         $client->request('POST', '/commandes/documents/' . $doc->getId() . '/delete');
 
         self::assertResponseStatusCodeSame(403);

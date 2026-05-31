@@ -19,7 +19,7 @@
                             {% if is_admin %} · déposé par {{ doc.uploadedBy.fullName }}{% endif %}
                         </div>
                     </div>
-                    {% if not is_admin and can_delete and doc.uploadedBy.id == app.user.id %}
+                    {% if not is_admin and can_delete %}
                         <form method="post" action="{{ path('app_order_doc_delete', {document: doc.id}) }}">
                             <button type="submit"
                                     class="shrink-0 text-xs font-medium text-[var(--color-destructive)] hover:underline">
