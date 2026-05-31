@@ -1,6 +1,6 @@
 {# @param order, can_delete (bool: commande non traitée), is_admin (bool) #}
-<section class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-    <h2 class="text-base font-semibold text-[var(--color-foreground)] mb-3">Documents partagés</h2>
+<section class="bg-white rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+    <h2 class="text-sm font-semibold text-[var(--color-primary)] mb-3">Documents partagés</h2>
 
     {% if order.documents|length > 0 %}
         <ul class="divide-y divide-[var(--color-border)] mb-4">
