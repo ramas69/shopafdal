@@ -144,6 +144,16 @@ final class OrderEventLogger
         );
     }
 
+    public function logDocumentUploaded(Order $order, string $fileName): void
+    {
+        $this->log(
+            $order,
+            OrderEvent::TYPE_DOCUMENT_UPLOADED,
+            sprintf('Document déposé · %s', $fileName),
+            ['file' => $fileName],
+        );
+    }
+
     public function logAdminNote(Order $order, string $note): void
     {
         $this->log(

@@ -21,6 +21,7 @@ class OrderEvent
     public const TYPE_BAT_APPROVED = 'bat_approved';
     public const TYPE_BAT_REJECTED = 'bat_rejected';
     public const TYPE_SHIPPING_UPDATED = 'shipping_updated';
+    public const TYPE_DOCUMENT_UPLOADED = 'document_uploaded';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
