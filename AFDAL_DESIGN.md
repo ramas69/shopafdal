@@ -752,6 +752,17 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 
 *Corrections et ajouts appliqués après la validation des phases D→I.*
 
+**Documents commande (client → admin)** (2026-05-31) :
+- Besoin : le client dépose des documents (PDF/images) sur une commande, l'admin les consulte/télécharge.
+- Modèle : entité `OrderDocument` (ManyToOne → `Order`, FK `onDelete: CASCADE`), champs `path`, `originalName`, `mimeType`, `sizeBytes`, `uploadedBy`, `createdAt`. Pas de versioning ni de workflow review (≠ `MarkingAsset`). Relation inverse `Order::getDocuments()`. Migration `Version20260531092808`.
+- Upload : `OrderDocumentController`, calqué sur `BatController` (move() natif, validation MIME + taille **10 Mo**). MIME autorisés : PDF, JPEG, PNG, WebP. Stockage `public/uploads/order-docs/` (nom `bin2hex(random_bytes(12))`). Rollback du fichier disque si `flush()` échoue ; notif admin best-effort (try/catch).
+- Routes : `app_order_doc_upload` (POST `/commandes/{ref}/documents`), `app_order_doc_download` (GET, `BinaryFileResponse` + `Content-Disposition` du nom original), `app_order_doc_delete` (POST).
+- Sécurité : appartenance commande à la Company (admin = accès global) via `assertClientOwns`. Suppression réservée à l'auteur (`uploadedBy`) **et** uniquement si statut `DRAFT`/`PLACED`. Pas de faille cross-company (l'invariant `uploadedBy` ⇒ membre de la company suffit).
+- UI : partial partagé `templates/order/_documents.html.twig` (param `is_admin`/`can_delete`), inclus dans `order/detail.html.twig` (client : liste + upload + supprimer) et `admin/order/detail.html.twig` (lecture seule + "déposé par"). Suppression = action directe (l'élément disparaît au clic).
+- Journal : event `document_uploaded` (`OrderEventLogger::logDocumentUploaded`) affiché dans la timeline.
+- Convention : pas de CSRF explicite (cohérent avec le reste du projet, ex. `BatController`).
+- Tests : `tests/Functional/OrderDocumentTest.php` (upload OK, rejet MIME/taille, download admin + nom original, 403 cross-company, suppression auteur/statut/non-auteur).
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
