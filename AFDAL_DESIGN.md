@@ -1,6 +1,8 @@
 # Afdal — Mémoire projet
 
-Plateforme B2B commandes textile · Symfony 7 + PostgreSQL (o2switch)
+Plateforme B2B commandes textile · Symfony 7 + MySQL/MariaDB (o2switch)
+
+> Note DB : initialement développé sous PostgreSQL, basculé sur MySQL/MariaDB le 2026-04-20 pour le déploiement mutualisé o2switch (voir « Bascule PostgreSQL → MySQL » plus bas). Les mentions PostgreSQL dans les logs Phase 1/2 sont historiques.
 
 ---
 
