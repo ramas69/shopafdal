@@ -770,6 +770,11 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - Page commande : bloc documents déplacé dans l'aside, directement sous la conversation.
 - UX upload : aperçu (icône/vignette) du fichier choisi + spinner au dépôt, via réutilisation des controllers Stimulus `bat-upload` et `submit-loading` (aucun nouveau JS).
 
+**Documents : auto-submit, suppression équipe, recherche** (2026-05-31) :
+- Upload : auto-submit à la sélection du fichier (controller Stimulus `auto-upload`, spinner dans la dropzone) — plus de bouton « Déposer ». Remplace `bat-upload`/`submit-loading` sur ce form (supersède le point « UX upload » ci-dessus).
+- Suppression : élargie à **tout membre de la company** (plus seulement l'auteur) tant que la commande est `DRAFT`/`PLACED`. Garde `delete()` durcie : `!isAdmin && order.company === user.company && deletable` (ferme une faille cross-company et exclut l'admin).
+- Recherche : barre de recherche client-side sur la page Documents (controller `table-filter`, filtrage sur `data-filter-text` : n° commande, filiale, client [admin], déposant, fichier, date, montant). Colonnes ajoutées : Montant, filiale en sous-ligne, et Client (admin via param `show_client`).
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
