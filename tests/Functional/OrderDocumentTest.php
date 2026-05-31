@@ -6,6 +6,7 @@ use App\Entity\Order;
 use App\Entity\OrderDocument;
 use App\Enum\CompanyRole;
 use App\Enum\OrderStatus;
+use App\Repository\OrderDocumentRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -181,5 +182,38 @@ final class OrderDocumentTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
         self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
+    }
+
+    public function testFindForCompanyScopesAndOrders(): void
+    {
+        self::bootKernel();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        [$companyB, $antennaB] = $this->createCompanyWithAntenna('Beta');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $ownerB = $this->createUser('client', $companyB, CompanyRole::OWNER);
+        $orderA = $this->createOrder($companyA, $antennaA, $ownerA);
+        $orderB = $this->createOrder($companyB, $antennaB, $ownerB);
+        $this->persistDocument($orderA, $ownerA, 'alpha-1.pdf');
+        $this->persistDocument($orderB, $ownerB, 'beta-1.pdf');
+
+        $repo = static::getContainer()->get(OrderDocumentRepository::class);
+        $docsA = $repo->findForCompany($companyA);
+
+        self::assertCount(1, $docsA);
+        self::assertSame('alpha-1.pdf', $docsA[0]->getOriginalName());
+    }
+
+    public function testFindAllRecentReturnsEveryDocument(): void
+    {
+        self::bootKernel();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        [$companyB, $antennaB] = $this->createCompanyWithAntenna('Beta');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $ownerB = $this->createUser('client', $companyB, CompanyRole::OWNER);
+        $this->persistDocument($this->createOrder($companyA, $antennaA, $ownerA), $ownerA, 'a.pdf');
+        $this->persistDocument($this->createOrder($companyB, $antennaB, $ownerB), $ownerB, 'b.pdf');
+
+        $repo = static::getContainer()->get(OrderDocumentRepository::class);
+        self::assertGreaterThanOrEqual(2, count($repo->findAllRecent()));
     }
 }
