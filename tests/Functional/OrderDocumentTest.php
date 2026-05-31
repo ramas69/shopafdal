@@ -203,6 +203,24 @@ final class OrderDocumentTest extends WebTestCase
         self::assertSame('alpha-1.pdf', $docsA[0]->getOriginalName());
     }
 
+    public function testClientDocumentsPageShowsOwnCompanyOnly(): void
+    {
+        $client = static::createClient();
+        [$companyA, $antennaA] = $this->createCompanyWithAntenna('Alpha');
+        [$companyB, $antennaB] = $this->createCompanyWithAntenna('Beta');
+        $ownerA = $this->createUser('client', $companyA, CompanyRole::OWNER);
+        $ownerB = $this->createUser('client', $companyB, CompanyRole::OWNER);
+        $this->persistDocument($this->createOrder($companyA, $antennaA, $ownerA), $ownerA, 'alpha-doc.pdf');
+        $this->persistDocument($this->createOrder($companyB, $antennaB, $ownerB), $ownerB, 'beta-doc.pdf');
+
+        $client->loginUser($ownerA);
+        $client->request('GET', '/documents');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('alpha-doc.pdf', $client->getResponse()->getContent());
+        self::assertStringNotContainsString('beta-doc.pdf', $client->getResponse()->getContent());
+    }
+
     public function testFindAllRecentReturnsEveryDocument(): void
     {
         self::bootKernel();

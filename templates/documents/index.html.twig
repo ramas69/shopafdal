@@ -1,0 +1,13 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Documents — Afdal{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="text-xs font-medium text-[var(--color-secondary)] uppercase tracking-wide mb-1">Documents</div>
+    <h1 class="font-display text-2xl font-semibold text-[var(--color-foreground)]">{{ documents|length }} document{{ documents|length > 1 ? 's' : '' }}</h1>
+    <p class="text-[var(--color-secondary)] text-sm mt-1">déposés sur les commandes de {{ app.user.company.name }}</p>
+</div>
+
+{{ include('order/_documents_table.html.twig', {documents: documents, order_route: 'app_order_detail'}) }}
+{% endblock %}
