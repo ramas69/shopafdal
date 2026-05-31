@@ -6,6 +6,7 @@ use App\Entity\Notification;
 use App\Entity\Order;
 use App\Entity\OrderDocument;
 use App\Entity\User;
+use App\Enum\OrderStatus;
 use App\Service\NotificationService;
 use App\Service\OrderEventLogger;
 use Doctrine\ORM\EntityManagerInterface;
@@ -136,6 +137,32 @@ final class OrderDocumentController extends AbstractController
             $document->getOriginalName(),
         );
         return $response;
+    }
+
+    #[Route('/documents/{document}/delete', name: 'app_order_doc_delete', methods: ['POST'], requirements: ['document' => '\d+'])]
+    public function delete(
+        #[MapEntity(mapping: ['document' => 'id'])] OrderDocument $document,
+        EntityManagerInterface $em,
+        #[Autowire('%kernel.project_dir%/public')] string $publicDir,
+    ): RedirectResponse {
+        $order = $document->getOrder();
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $deletable = in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true);
+        if ($document->getUploadedBy()->getId() !== $user->getId() || !$deletable) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $absolute = $publicDir . $document->getPath();
+        if (is_file($absolute)) {
+            @unlink($absolute);
+        }
+        $em->remove($document);
+        $em->flush();
+
+        $this->addFlash('success', 'Document supprimé.');
+        return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
     }
 
     private function assertClientOwns(Order $order): void

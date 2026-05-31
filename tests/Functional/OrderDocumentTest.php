@@ -134,4 +134,52 @@ final class OrderDocumentTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    public function testAuthorDeletesDocumentOnDraftOrder(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::DRAFT);
+        $doc = $this->persistDocument($order, $owner);
+        $docId = $doc->getId();
+
+        $client->loginUser($owner);
+        $client->request('POST', '/commandes/documents/' . $docId . '/delete');
+
+        self::assertResponseRedirects();
+        $this->em()->clear();
+        self::assertNull($this->em()->getRepository(OrderDocument::class)->find($docId));
+    }
+
+    public function testDeleteForbiddenOnConfirmedOrder(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::CONFIRMED);
+        $doc = $this->persistDocument($order, $owner);
+
+        $client->loginUser($owner);
+        $client->request('POST', '/commandes/documents/' . $doc->getId() . '/delete');
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
+    }
+
+    public function testNonAuthorCannotDelete(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $other = $this->createUser('client', $company, CompanyRole::MEMBER);
+        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::DRAFT);
+        $doc = $this->persistDocument($order, $owner);
+
+        $client->loginUser($other);
+        $client->request('POST', '/commandes/documents/' . $doc->getId() . '/delete');
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
+    }
 }
