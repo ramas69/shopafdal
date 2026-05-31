@@ -7,6 +7,7 @@
 {% set nav_items = is_admin ? [
     { route: 'app_admin', label: 'Dashboard', icon: 'grid' },
     { route: 'app_admin_orders', label: 'Commandes', icon: 'list' },
+    { route: 'app_admin_documents', label: 'Documents', icon: 'file' },
     { route: 'app_admin_products', label: 'Produits', icon: 'package' },
     { route: 'app_admin_companies', label: 'Entreprises', icon: 'building' },
     { route: 'app_admin_invitations', label: 'Invitations', icon: 'mail' },
@@ -18,6 +19,7 @@
     { route: 'app_catalogue', label: 'Catalogue', icon: 'grid' },
     { route: 'app_favorites', label: 'Favoris', icon: 'heart' },
     { route: 'app_orders', label: 'Mes commandes', icon: 'list' },
+    { route: 'app_documents', label: 'Documents', icon: 'file' },
     { route: 'app_antennas', label: 'Mes antennes', icon: 'pin' },
     { route: 'app_client_analytics', label: 'Analytics', icon: 'chart' },
     { route: 'app_settings', label: 'Paramètres', icon: 'cog' },
@@ -99,6 +101,14 @@
             <rect x="7" y="11" width="3" height="3" rx=".3" fill="currentColor"/>
             <rect x="14" y="11" width="3" height="3" rx=".3" fill="currentColor"/>
             <rect x="10" y="16" width="4" height="5" rx=".3" fill="currentColor"/>
+        </svg>
+    {% elseif name == 'file' %}
+        {# Documents — document duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6V2Z"/>
+            <path fill="currentColor" d="M13 2l5 5h-5V2Z"/>
+            <rect x="8.5" y="11" width="7" height="1.5" rx=".4" fill="currentColor"/>
+            <rect x="8.5" y="14.5" width="7" height="1.5" rx=".4" fill="currentColor"/>
         </svg>
     {% endif %}
 {% endmacro %}
