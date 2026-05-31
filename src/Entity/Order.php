@@ -81,6 +81,7 @@ class Order
 
     /** @var Collection<int, OrderDocument> */
     #[ORM\OneToMany(targetEntity: OrderDocument::class, mappedBy: 'order')]
+    #[ORM\OrderBy(['createdAt' => 'DESC'])]
     private Collection $documents;
 
     public function __construct()
