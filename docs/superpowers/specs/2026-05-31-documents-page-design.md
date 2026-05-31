@@ -10,6 +10,9 @@ Dépend de : feature « Dépôt de documents sur commande » (entité `OrderDocu
    accessible côté client (scopé à sa company) et côté admin (toutes les commandes).
 2. **Déplacement UI** : sur la page détail commande, déplacer le bloc « Documents partagés »
    dans la colonne de droite (`aside`), directement sous la conversation.
+3. **UX upload** : à la sélection d'un fichier, afficher son icône/vignette (aperçu) ; au dépôt,
+   afficher un état de chargement (spinner) sur le bouton. Réutilise les controllers Stimulus
+   existants `bat-upload` et `submit-loading` (aucun nouveau JS).
 
 ## Périmètre
 
@@ -148,6 +151,78 @@ Dans `templates/order/detail.html.twig` :
 > Note : ce partial (`_documents.html.twig`, bloc d'une commande) reste distinct du nouveau
 > partial table (`_documents_table.html.twig`, liste multi-commandes). Deux responsabilités, deux fichiers.
 
+### 6. UX upload — loading + icône du fichier déposé
+
+Le bloc upload de `templates/order/_documents.html.twig` (actuellement `input[type=file]` + bouton
+simples, soumission synchrone) passe au pattern dropzone de `_bat_upload_form.html.twig`, en réutilisant
+**deux controllers Stimulus existants, sans nouveau JS** :
+
+- `bat-upload` (`assets/controllers/bat_upload_controller.js`) : dès qu'un fichier est choisi,
+  affiche un aperçu avec **icône/vignette du fichier** (vignette `<img>` pour une image,
+  badge « PDF » pour un PDF — déjà géré par le controller), le nom et la taille ; n'active le
+  bouton submit qu'une fois un fichier sélectionné ; bouton « Retirer » pour réinitialiser.
+- `submit-loading` (`assets/controllers/submit_loading_controller.js`) : au submit, remplace le
+  contenu du bouton par un spinner + texte (`data-loading-text`) et désactive les submits le temps
+  du POST/redirect.
+
+Le bloc upload (uniquement quand `not is_admin`) devient, calqué sur `_bat_upload_form.html.twig` :
+
+```twig
+<form method="post" enctype="multipart/form-data"
+      action="{{ path('app_order_doc_upload', {reference: order.reference}) }}"
+      class="space-y-3"
+      data-controller="bat-upload submit-loading"
+      data-action="submit->submit-loading#start">
+    <input type="file" name="document" required
+           accept="application/pdf,image/jpeg,image/png,image/webp"
+           data-bat-upload-target="input"
+           data-action="change->bat-upload#select"
+           class="sr-only">
+
+    <button type="button"
+            data-bat-upload-target="dropzone"
+            data-action="click->bat-upload#pick"
+            class="w-full flex flex-col items-center justify-center gap-2 p-5 rounded-lg border-2 border-dashed border-[var(--color-border)] bg-white hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-colors cursor-pointer">
+        <svg class="w-7 h-7 text-[var(--color-secondary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+        <span class="text-sm font-medium text-[var(--color-foreground)]">Choisir un fichier</span>
+        <span class="text-[10px] text-[var(--color-secondary)]">PDF · JPG · PNG · WebP · max 10 Mo</span>
+    </button>
+
+    <div data-bat-upload-target="preview" class="hidden rounded-lg border border-[var(--color-border)] bg-white p-3">
+        <div class="flex items-start gap-3">
+            <div data-bat-upload-target="thumb" class="w-20 h-20 shrink-0 rounded-md overflow-hidden border border-[var(--color-border-soft)] bg-[var(--color-muted)] flex items-center justify-center"></div>
+            <div class="flex-1 min-w-0">
+                <div class="text-xs uppercase tracking-wide text-[var(--color-primary)] font-semibold mb-0.5">Aperçu · pas encore envoyé</div>
+                <div data-bat-upload-target="filename" class="text-sm font-medium text-[var(--color-foreground)] truncate"></div>
+                <div data-bat-upload-target="filesize" class="text-xs text-[var(--color-secondary)]"></div>
+            </div>
+            <button type="button" data-action="click->bat-upload#clear"
+                    class="shrink-0 w-8 h-8 rounded-md text-[var(--color-secondary)] hover:bg-[var(--color-muted)] hover:text-[var(--color-destructive)] flex items-center justify-center"
+                    aria-label="Retirer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit"
+                data-bat-upload-target="submit"
+                data-loading-text="Envoi…"
+                class="btn btn-primary text-xs !py-1.5 !px-4 disabled:opacity-40 disabled:cursor-not-allowed">
+            Déposer
+        </button>
+    </div>
+</form>
+```
+
+Notes :
+- Le champ garde `name="document"` (attendu par `OrderDocumentController::upload`).
+- `accept` limité à PDF + images (≠ BAT qui accepte SVG) — cohérent avec `ALLOWED_MIME` du controller.
+- `bat-upload` désactive le submit à `connect()` puis le réactive au choix d'un fichier : OK car ce form
+  exige toujours un fichier. Aucune régression sur le POST (le name du fichier est inchangé).
+- La liste des documents déjà déposés (au-dessus du form) reste identique ; seul le bloc d'upload change.
+- Aucun fichier JS créé/modifié — réutilisation pure des controllers existants.
+
 ## Sécurité
 
 - `/documents` : firewall `^/` → `ROLE_CLIENT_MANAGER` requis. Le repo `findForCompany` ne renvoie
@@ -167,6 +242,9 @@ Ajouter à `OrderDocumentTest` (ou un nouveau `DocumentPageTest`) :
 - `GET /admin/documents` → 200 pour un admin ; **403** pour un client.
 - Le lien de téléchargement (`app_order_doc_download`) répond bien (déjà couvert par les tests existants ;
   un smoke suffit ici).
+- Upload inchangé après refonte du markup : le test existant `testClientUploadsPdfDocument` doit rester vert
+  (le champ `name="document"` ne change pas ; les controllers Stimulus n'affectent pas le POST côté test).
+  `lint:twig` sur `_documents.html.twig` doit passer.
 
 ## Documentation
 
