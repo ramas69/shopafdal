@@ -240,6 +240,9 @@
                 <span class="text-[var(--color-secondary)]">Total HT</span>
                 <span class="text-xl font-semibold text-[var(--color-primary)]">{{ order.totalCents|price }}</span>
             </div>
+            <div class="px-4 pb-4">
+                {{ include('order/_shipping_note.html.twig', {order: order}, with_context = false) }}
+            </div>
         </section>
 
         {% if order.notes %}

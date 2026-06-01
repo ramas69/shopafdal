@@ -1,0 +1,9 @@
+{# @param order #}
+{% if order.company.freeShipping %}
+    <div class="flex items-center gap-2 text-sm">
+        <span class="inline-flex items-center rounded-full bg-[var(--color-success)] px-2 py-0.5 text-[10px] font-semibold text-white">Port offert</span>
+        <span class="font-medium text-[var(--color-success)]">Frais de port gratuits</span>
+    </div>
+{% else %}
+    <div class="text-sm text-[var(--color-secondary)]">Frais de port non compris</div>
+{% endif %}
