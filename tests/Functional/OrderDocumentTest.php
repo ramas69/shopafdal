@@ -308,6 +308,25 @@ final class OrderDocumentTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testAdminUploadsDocument(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $admin = $this->createUser('admin');
+        $order = $this->createOrder($company, $antenna, $owner);
+
+        $client->loginUser($admin);
+        $pdf = $this->tmpFile('facture.pdf', "%PDF-1.4\n%%EOF", 'application/pdf');
+        $client->request('POST', '/commandes/' . $order->getReference() . '/documents', [], ['document' => $pdf]);
+
+        self::assertResponseRedirects();
+        $docs = $this->em()->getRepository(OrderDocument::class)->findBy(['order' => $order]);
+        self::assertCount(1, $docs);
+        self::assertSame($admin->getId(), $docs[0]->getUploadedBy()->getId());
+        self::assertTrue($docs[0]->isFromAdmin());
+    }
+
     public function testIsFromAdminReflectsUploader(): void
     {
         self::bootKernel();

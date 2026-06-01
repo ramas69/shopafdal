@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -107,28 +108,7 @@ final class OrderDocumentController extends AbstractController
             return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
         }
 
-        try {
-            $notifications->notifyAdmins(
-                sprintf('Document reçu · Commande %s', $order->getReference()),
-                $originalName,
-                $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
-                Notification::TYPE_INFO,
-            );
-        } catch (\Throwable) {
-            // notification best-effort, ne bloque pas le dépôt
-        }
-
-        $adminRecipient = $mailer->notificationRecipientAdmin();
-        if ($adminRecipient !== null) {
-            $mailer->sendSilently(
-                (new TemplatedEmail())
-                    ->to($adminRecipient)
-                    ->subject(sprintf('Document reçu · Commande %s — %s', $order->getReference(), $order->getCompany()->getName()))
-                    ->htmlTemplate('emails/order/document_uploaded_admin.html.twig')
-                    ->context(['order' => $order, 'document' => $document]),
-                'order_doc_uploaded:' . $order->getReference(),
-            );
-        }
+        $this->notifyOfUpload($order, $document, $user, $notifications, $mailer);
 
         $this->addFlash('success', sprintf('Document « %s » envoyé à Afdal.', $originalName));
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
@@ -179,6 +159,83 @@ final class OrderDocumentController extends AbstractController
 
         $this->addFlash('success', 'Document supprimé.');
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+    }
+
+    /**
+     * Notifie la contrepartie du dépôt (best-effort).
+     * Client → admins ; Admin → membres de la company + email au créateur.
+     */
+    private function notifyOfUpload(
+        Order $order,
+        OrderDocument $document,
+        User $uploader,
+        NotificationService $notifications,
+        AppMailer $mailer,
+    ): void {
+        if ($uploader->isAdmin()) {
+            $this->notifyClientOfAdminUpload($order, $document, $notifications, $mailer);
+        } else {
+            $this->notifyAdminsOfClientUpload($order, $document, $notifications, $mailer);
+        }
+    }
+
+    private function notifyAdminsOfClientUpload(
+        Order $order,
+        OrderDocument $document,
+        NotificationService $notifications,
+        AppMailer $mailer,
+    ): void {
+        try {
+            $notifications->notifyAdmins(
+                sprintf('Document reçu · Commande %s', $order->getReference()),
+                $document->getOriginalName(),
+                $this->generateUrl('app_admin_order_detail', ['reference' => $order->getReference()]),
+                Notification::TYPE_INFO,
+            );
+        } catch (\Throwable) {
+            // best-effort
+        }
+
+        $adminRecipient = $mailer->notificationRecipientAdmin();
+        if ($adminRecipient !== null) {
+            $mailer->sendSilently(
+                (new TemplatedEmail())
+                    ->to($adminRecipient)
+                    ->subject(sprintf('Document reçu · Commande %s — %s', $order->getReference(), $order->getCompany()->getName()))
+                    ->htmlTemplate('emails/order/document_uploaded_admin.html.twig')
+                    ->context(['order' => $order, 'document' => $document]),
+                'order_doc_uploaded:' . $order->getReference(),
+            );
+        }
+    }
+
+    private function notifyClientOfAdminUpload(
+        Order $order,
+        OrderDocument $document,
+        NotificationService $notifications,
+        AppMailer $mailer,
+    ): void {
+        try {
+            $notifications->notifyCompany(
+                $order->getCompany(),
+                sprintf('Document ajouté · Commande %s', $order->getReference()),
+                $document->getOriginalName(),
+                $this->generateUrl('app_order_detail', ['reference' => $order->getReference()]),
+                Notification::TYPE_INFO,
+            );
+        } catch (\Throwable) {
+            // best-effort
+        }
+
+        $client = $order->getCreatedBy();
+        $mailer->sendSilently(
+            (new TemplatedEmail())
+                ->to(new Address($client->getEmail(), $client->getFullName()))
+                ->subject(sprintf('Document ajouté à votre commande %s', $order->getReference()))
+                ->htmlTemplate('emails/order/document_uploaded_client.html.twig')
+                ->context(['order' => $order, 'document' => $document]),
+            'order_doc_uploaded_client:' . $order->getReference(),
+        );
     }
 
     private function assertClientOwns(Order $order): void
