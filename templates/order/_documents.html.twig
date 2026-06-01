@@ -15,7 +15,7 @@
                             {{ doc.originalName }}
                         </a>
                         {% if doc.isFromAdmin %}
-                            <span class="ml-1.5 inline-flex items-center rounded-full bg-[#D1FAE5] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-success)]">Afdal</span>
+                            <span class="ml-1.5 inline-flex items-center rounded-full bg-[var(--color-success)] px-2 py-0.5 text-[10px] font-semibold text-white">Afdal</span>
                         {% endif %}
                         <div class="text-xs text-[var(--color-secondary)]">
                             {{ (doc.sizeBytes / 1024)|round }} Ko · {{ doc.createdAt|date('d/m/Y') }}
