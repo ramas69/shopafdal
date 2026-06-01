@@ -28,13 +28,18 @@ final class CompanyController extends AbstractController
     public function list(Request $request, CompanyRepository $companies, EntityManagerInterface $em, InvitationRepository $invitations): Response
     {
         $q = trim((string) $request->query->get('q', ''));
+        $showArchived = $request->query->getBoolean('archived');
         $qb = $companies->createQueryBuilder('c')->orderBy('c.name', 'ASC');
+        $qb->andWhere($showArchived ? 'c.archivedAt IS NOT NULL' : 'c.archivedAt IS NULL');
         if ($q !== '') {
             $qb->andWhere('LOWER(c.name) LIKE :q OR c.siret LIKE :siret')
                 ->setParameter('q', '%' . strtolower($q) . '%')
                 ->setParameter('siret', '%' . $q . '%');
         }
         $list = $qb->getQuery()->getResult();
+        $archivedCount = (int) $companies->createQueryBuilder('c')
+            ->select('COUNT(c.id)')->where('c.archivedAt IS NOT NULL')
+            ->getQuery()->getSingleScalarResult();
 
         // Enrich each company with aggregated stats via SQL
         $conn = $em->getConnection();
@@ -56,6 +61,8 @@ final class CompanyController extends AbstractController
             'orders_count' => $ordersCount,
             'q' => $q,
             'pending_company_ids' => $invitations->pendingCompanyIdMap(),
+            'show_archived' => $showArchived,
+            'archived_count' => $archivedCount,
         ]);
     }
 
@@ -150,6 +157,68 @@ final class CompanyController extends AbstractController
         $em->flush();
         $this->addFlash('success', sprintf('Tarif négocié supprimé pour « %s ».', $productName));
         return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/{id}/archive', name: 'app_admin_company_archive', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function archive(Company $company, EntityManagerInterface $em): RedirectResponse
+    {
+        if (!$company->isArchived()) {
+            $company->archive();
+            $em->flush();
+            $this->addFlash('success', sprintf('« %s » archivée. Ses utilisateurs ne peuvent plus se connecter.', $company->getName()));
+        }
+        return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/{id}/unarchive', name: 'app_admin_company_unarchive', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function unarchive(Company $company, EntityManagerInterface $em): RedirectResponse
+    {
+        if ($company->isArchived()) {
+            $company->unarchive();
+            $em->flush();
+            $this->addFlash('success', sprintf('« %s » désarchivée.', $company->getName()));
+        }
+        return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/{id}/frais-port', name: 'app_admin_company_shipping_toggle', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function toggleShipping(Company $company, EntityManagerInterface $em): RedirectResponse
+    {
+        $company->setFreeShipping(!$company->isFreeShipping());
+        $em->flush();
+        $this->addFlash('success', $company->isFreeShipping()
+            ? sprintf('Frais de port gratuits activés pour « %s ».', $company->getName())
+            : sprintf('Frais de port désactivés pour « %s ».', $company->getName()));
+        return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+    }
+
+    #[Route('/{id}/delete', name: 'app_admin_company_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function delete(Company $company, EntityManagerInterface $em): RedirectResponse
+    {
+        if ($company->getOrders()->count() > 0) {
+            $this->addFlash('error', sprintf('« %s » a des commandes : suppression impossible. Archivez-la à la place.', $company->getName()));
+            return $this->redirectToRoute('app_admin_company_detail', ['id' => $company->getId()]);
+        }
+
+        $name = $company->getName();
+        $userIds = array_map(static fn ($u) => $u->getId(), $company->getUsers()->toArray());
+
+        if ($userIds !== []) {
+            // Purge des lignes pointant vers ces users (aucune cascade ORM côté User)
+            foreach (['App\Entity\Favorite' => 'user', 'App\Entity\Notification' => 'recipient', 'App\Entity\ResetPasswordRequest' => 'user'] as $class => $field) {
+                $em->createQuery(sprintf('DELETE FROM %s e WHERE e.%s IN (:ids)', $class, $field))
+                    ->setParameter('ids', $userIds)
+                    ->execute();
+            }
+        }
+        foreach ($company->getUsers()->toArray() as $u) {
+            $em->remove($u);
+        }
+        $em->remove($company); // antennes supprimées en cascade ORM
+        $em->flush();
+
+        $this->addFlash('success', sprintf('« %s » supprimée définitivement.', $name));
+        return $this->redirectToRoute('app_admin_companies');
     }
 
     #[Route('/new', name: 'app_admin_company_new', methods: ['GET', 'POST'])]
