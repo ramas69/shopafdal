@@ -110,6 +110,10 @@ final class OrderDocumentController extends AbstractController
 
         $this->notifyOfUpload($order, $document, $user, $notifications, $mailer);
 
+        if ($user->isAdmin()) {
+            $this->addFlash('success', sprintf('Document « %s » ajouté à la commande.', $originalName));
+            return $this->redirectToRoute('app_admin_order_detail', ['reference' => $order->getReference()]);
+        }
         $this->addFlash('success', sprintf('Document « %s » envoyé à Afdal.', $originalName));
         return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
     }

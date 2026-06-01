@@ -320,7 +320,7 @@ final class OrderDocumentTest extends WebTestCase
         $pdf = $this->tmpFile('facture.pdf', "%PDF-1.4\n%%EOF", 'application/pdf');
         $client->request('POST', '/commandes/' . $order->getReference() . '/documents', [], ['document' => $pdf]);
 
-        self::assertResponseRedirects();
+        self::assertResponseRedirects('/admin/commandes/' . $order->getReference());
         $docs = $this->em()->getRepository(OrderDocument::class)->findBy(['order' => $order]);
         self::assertCount(1, $docs);
         self::assertSame($admin->getId(), $docs[0]->getUploadedBy()->getId());
