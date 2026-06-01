@@ -11,15 +11,18 @@
                     </span>
                     <div class="min-w-0 flex-1">
                         <a href="{{ path('app_order_doc_download', {document: doc.id}) }}"
-                           class="text-sm font-medium text-[var(--color-primary)] hover:underline truncate block">
+                           class="text-sm font-medium text-[var(--color-primary)] hover:underline truncate">
                             {{ doc.originalName }}
                         </a>
+                        {% if doc.isFromAdmin %}
+                            <span class="ml-1.5 inline-flex items-center rounded-full bg-[var(--color-primary-light)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)]">Afdal</span>
+                        {% endif %}
                         <div class="text-xs text-[var(--color-secondary)]">
                             {{ (doc.sizeBytes / 1024)|round }} Ko · {{ doc.createdAt|date('d/m/Y') }}
                             {% if is_admin %} · déposé par {{ doc.uploadedBy.fullName }}{% endif %}
                         </div>
                     </div>
-                    {% if not is_admin and can_delete %}
+                    {% if is_admin or can_delete %}
                         <form method="post" action="{{ path('app_order_doc_delete', {document: doc.id}) }}">
                             <button type="submit"
                                     class="shrink-0 text-xs font-medium text-[var(--color-destructive)] hover:underline">
@@ -34,10 +37,9 @@
         <p class="text-sm text-[var(--color-secondary)] mb-4">Aucun document pour le moment.</p>
     {% endif %}
 
-    {% if not is_admin %}
-        <form method="post" enctype="multipart/form-data"
-              action="{{ path('app_order_doc_upload', {reference: order.reference}) }}"
-              data-controller="auto-upload">
+    <form method="post" enctype="multipart/form-data"
+          action="{{ path('app_order_doc_upload', {reference: order.reference}) }}"
+          data-controller="auto-upload">
             <input type="file" name="document" required
                    accept="application/pdf,image/jpeg,image/png,image/webp"
                    data-auto-upload-target="input"
@@ -52,5 +54,4 @@
                 <span class="text-[10px] text-[var(--color-secondary)]">PDF · JPG · PNG · WebP · max 10 Mo</span>
             </button>
         </form>
-    {% endif %}
 </section>
