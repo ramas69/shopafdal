@@ -60,4 +60,9 @@ class OrderDocument
 
     public function isPdf(): bool { return $this->mimeType === 'application/pdf'; }
     public function isImage(): bool { return str_starts_with($this->mimeType, 'image/'); }
+
+    public function isFromAdmin(): bool
+    {
+        return $this->uploadedBy->isAdmin();
+    }
 }

@@ -307,4 +307,19 @@ final class OrderDocumentTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    public function testIsFromAdminReflectsUploader(): void
+    {
+        self::bootKernel();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $client = $this->createUser('client', $company, CompanyRole::OWNER);
+        $admin = $this->createUser('admin');
+        $order = $this->createOrder($company, $antenna, $client);
+
+        $clientDoc = $this->persistDocument($order, $client, 'client.pdf');
+        $adminDoc = $this->persistDocument($order, $admin, 'afdal.pdf');
+
+        self::assertFalse($clientDoc->isFromAdmin());
+        self::assertTrue($adminDoc->isFromAdmin());
+    }
 }
