@@ -42,6 +42,11 @@ final class CheckoutController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        if ($company->isArchived()) {
+            $this->addFlash('error', 'Votre entreprise est archivée. Commande impossible, contactez Afdal.');
+            return $this->redirectToRoute('app_cart');
+        }
+
         if ($cart->isEmpty()) {
             $this->addFlash('error', 'Votre panier est vide.');
             return $this->redirectToRoute('app_cart');

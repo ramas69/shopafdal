@@ -138,4 +138,18 @@ final class InvitationController extends AbstractController
         }
         return $this->redirectToRoute('app_admin_invitations');
     }
+
+    #[Route('/{id}/delete', name: 'app_admin_invitation_delete', methods: ['POST'])]
+    public function delete(Invitation $invitation, EntityManagerInterface $em): RedirectResponse
+    {
+        if ($invitation->isPending()) {
+            $this->addFlash('error', 'Invitation encore active : révoquez-la avant de la supprimer.');
+            return $this->redirectToRoute('app_admin_invitations');
+        }
+        $email = $invitation->getEmail();
+        $em->remove($invitation);
+        $em->flush();
+        $this->addFlash('success', sprintf('Invitation de %s supprimée.', $email));
+        return $this->redirectToRoute('app_admin_invitations');
+    }
 }

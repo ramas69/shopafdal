@@ -29,14 +29,24 @@
             class="form-input pl-9">
     </div>
     {% if q %}
-        <a href="{{ path('app_admin_companies') }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
+        <a href="{{ path('app_admin_companies', show_archived ? {archived: 1} : {}) }}" class="text-sm text-[var(--color-secondary)] hover:text-[var(--color-foreground)] px-2">Réinitialiser</a>
     {% endif %}
 </form>
 
+<div class="mb-6 flex items-center gap-1.5">
+    <a href="{{ path('app_admin_companies', q ? {q: q} : {}) }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ not show_archived ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-secondary)] hover:bg-[var(--color-muted)]' }}">Actives</a>
+    <a href="{{ path('app_admin_companies', q ? {q: q, archived: 1} : {archived: 1}) }}"
+       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium {{ show_archived ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-secondary)] hover:bg-[var(--color-muted)]' }}">
+        Archivées
+        {% if archived_count > 0 %}<span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold {{ show_archived ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-600' }}">{{ archived_count }}</span>{% endif %}
+    </a>
+</div>
+
 {% if companies is empty %}
     <div class="card p-12 text-center">
-        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">Aucune entreprise</h2>
-        <p class="text-sm text-[var(--color-secondary)]">Les entreprises apparaîtront ici quand vous créerez des invitations.</p>
+        <h2 class="font-display text-lg font-semibold text-[var(--color-foreground)] mb-1">{{ show_archived ? 'Aucune entreprise archivée' : 'Aucune entreprise' }}</h2>
+        <p class="text-sm text-[var(--color-secondary)]">{{ show_archived ? 'Les entreprises que vous archivez apparaîtront ici.' : 'Les entreprises apparaîtront ici quand vous créerez des invitations.' }}</p>
     </div>
 {% else %}
     <div class="card overflow-hidden">
