@@ -49,4 +49,38 @@ final class CompanyShippingTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    private function createOrder(\App\Entity\Company $company, \App\Entity\Antenna $antenna, \App\Entity\User $createdBy): \App\Entity\Order
+    {
+        $order = (new \App\Entity\Order())
+            ->setReference('CMD-2026-' . random_int(100000, 999999))
+            ->setCompany($company)
+            ->setAntenna($antenna)
+            ->setCreatedBy($createdBy)
+            ->setStatus(\App\Enum\OrderStatus::PLACED);
+        $this->em()->persist($order);
+        $this->em()->flush();
+        return $order;
+    }
+
+    public function testOrderDetailShowsShippingNote(): void
+    {
+        $client = static::createClient();
+        [$company, $antenna] = $this->createCompanyWithAntenna();
+        $owner = $this->createUser('client', $company, CompanyRole::OWNER);
+        $order = $this->createOrder($company, $antenna, $owner);
+
+        $client->loginUser($owner);
+
+        // Off → "non compris"
+        $client->request('GET', '/commandes/' . $order->getReference());
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Frais de port non compris', $client->getResponse()->getContent());
+
+        // On → "gratuits"
+        $company->setFreeShipping(true);
+        $this->em()->flush();
+        $client->request('GET', '/commandes/' . $order->getReference());
+        self::assertStringContainsString('Frais de port gratuits', $client->getResponse()->getContent());
+    }
 }
