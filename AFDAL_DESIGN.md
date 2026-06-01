@@ -781,6 +781,11 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - Badge « Afdal » sur les documents déposés par un admin (`OrderDocument::isFromAdmin()`), visible côté client et admin.
 - Suppression : l'admin supprime n'importe quel document quel que soit le statut (garde `delete()` : branche `if (!$user->isAdmin())` qui encapsule les checks client). Règle client inchangée (membre company + DRAFT/PLACED). Redirect selon le rôle.
 
+**Frais de port par entreprise** (2026-06-01) :
+- Flag `Company::freeShipping` (bool, défaut false), basculé par l'admin via un interrupteur dans la fiche entreprise (`POST /admin/entreprises/{id}/frais-port`, action directe `autosubmit`, bascule comme l'archivage). Migration `Version20260601100051`.
+- Affichage live sur le détail commande (client + admin) via le partial `order/_shipping_note.html.twig` : « Frais de port gratuits » (vert) si activé, « Frais de port non compris » (gris) sinon. Lit `order.company.freeShipping` au rendu — pas de snapshot, changer le flag affecte toutes les commandes de l'entreprise.
+- Purement indicatif : aucun impact sur `totalCents`.
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
