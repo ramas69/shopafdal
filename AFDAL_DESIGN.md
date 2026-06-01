@@ -775,6 +775,12 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - Suppression : élargie à **tout membre de la company** (plus seulement l'auteur) tant que la commande est `DRAFT`/`PLACED`. Garde `delete()` durcie : `!isAdmin && order.company === user.company && deletable` (ferme une faille cross-company et exclut l'admin).
 - Recherche : barre de recherche client-side sur la page Documents (controller `table-filter`, filtrage sur `data-filter-text` : n° commande, filiale, client [admin], déposant, fichier, date, montant). Colonnes ajoutées : Montant, filiale en sous-ligne, et Client (admin via param `show_client`).
 
+**Dépôt de documents par l'admin** (2026-06-01) :
+- L'admin dépose des documents sur une commande client (même route `app_order_doc_upload` ; `assertClientOwns` autorise déjà l'admin). Form d'upload affiché aussi en mode admin. Après dépôt, l'admin est redirigé vers la vue admin (flash « ajouté à la commande »), le client vers la vue client (flash « envoyé à Afdal »).
+- Notification selon le déposant : client → admins (cloche + email, inchangé) ; admin → membres de la company (cloche via `notifyCompany`) + email au créateur de la commande (`document_uploaded_client.html.twig`). Logique extraite dans `notifyOfUpload()` / `notifyAdminsOfClientUpload()` / `notifyClientOfAdminUpload()`.
+- Badge « Afdal » sur les documents déposés par un admin (`OrderDocument::isFromAdmin()`), visible côté client et admin.
+- Suppression : l'admin supprime n'importe quel document quel que soit le statut (garde `delete()` : branche `if (!$user->isAdmin())` qui encapsule les checks client). Règle client inchangée (membre company + DRAFT/PLACED). Redirect selon le rôle.
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
