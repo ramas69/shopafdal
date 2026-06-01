@@ -203,20 +203,23 @@ final class OrderDocumentTest extends WebTestCase
         self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
     }
 
-    public function testAdminCannotDeleteDocument(): void
+    public function testAdminCanDeleteAnyDocumentAnyStatus(): void
     {
         $client = static::createClient();
         [$company, $antenna] = $this->createCompanyWithAntenna();
         $owner = $this->createUser('client', $company, CompanyRole::OWNER);
         $admin = $this->createUser('admin');
-        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::DRAFT);
+        // Commande CONFIRMED + document déposé par le client : l'admin doit pouvoir le supprimer.
+        $order = $this->createOrder($company, $antenna, $owner, OrderStatus::CONFIRMED);
         $doc = $this->persistDocument($order, $owner);
+        $docId = $doc->getId();
 
         $client->loginUser($admin);
-        $client->request('POST', '/commandes/documents/' . $doc->getId() . '/delete');
+        $client->request('POST', '/commandes/documents/' . $docId . '/delete');
 
-        self::assertResponseStatusCodeSame(403);
-        self::assertNotNull($this->em()->getRepository(OrderDocument::class)->find($doc->getId()));
+        self::assertResponseRedirects();
+        $this->em()->clear();
+        self::assertNull($this->em()->getRepository(OrderDocument::class)->find($docId));
     }
 
     public function testFindForCompanyScopesAndOrders(): void

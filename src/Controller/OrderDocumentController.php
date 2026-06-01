@@ -148,11 +148,14 @@ final class OrderDocumentController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        $deletable = in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true);
-        $sameCompany = !$user->isAdmin() && $order->getCompany()->getId() === $user->getCompany()?->getId();
-        if (!$sameCompany || !$deletable) {
-            throw $this->createAccessDeniedException();
+        if (!$user->isAdmin()) {
+            $deletable = in_array($order->getStatus(), [OrderStatus::DRAFT, OrderStatus::PLACED], true);
+            $sameCompany = $order->getCompany()->getId() === $user->getCompany()?->getId();
+            if (!$sameCompany || !$deletable) {
+                throw $this->createAccessDeniedException();
+            }
         }
+        // admin : aucune restriction (tout document, tout statut)
 
         $absolute = $publicDir . $document->getPath();
         if (is_file($absolute)) {
@@ -162,7 +165,8 @@ final class OrderDocumentController extends AbstractController
         $em->flush();
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_order_detail', ['reference' => $order->getReference()]);
+        $route = $user->isAdmin() ? 'app_admin_order_detail' : 'app_order_detail';
+        return $this->redirectToRoute($route, ['reference' => $order->getReference()]);
     }
 
     /**
