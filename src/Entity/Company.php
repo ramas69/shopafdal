@@ -29,6 +29,12 @@ class Company
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $archivedAt = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $freeShipping = false;
+
     /** @var Collection<int, Antenna> */
     #[ORM\OneToMany(targetEntity: Antenna::class, mappedBy: 'company', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $antennas;
@@ -56,7 +62,13 @@ class Company
     public function setSlug(string $slug): self { $this->slug = $slug; return $this; }
     public function getSiret(): ?string { return $this->siret; }
     public function setSiret(?string $siret): self { $this->siret = $siret; return $this; }
+    public function isFreeShipping(): bool { return $this->freeShipping; }
+    public function setFreeShipping(bool $v): self { $this->freeShipping = $v; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getArchivedAt(): ?\DateTimeImmutable { return $this->archivedAt; }
+    public function isArchived(): bool { return $this->archivedAt !== null; }
+    public function archive(): self { $this->archivedAt ??= new \DateTimeImmutable(); return $this; }
+    public function unarchive(): self { $this->archivedAt = null; return $this; }
     public function getAntennas(): Collection { return $this->antennas; }
     public function getUsers(): Collection { return $this->users; }
     public function getOrders(): Collection { return $this->orders; }
