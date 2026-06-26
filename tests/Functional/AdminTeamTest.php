@@ -84,4 +84,17 @@ final class AdminTeamTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    public function testAdminSeesStaffOnTeamPage(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin');
+        $staff = $this->createUser('client');
+
+        $client->loginUser($admin);
+        $crawler = $client->request('GET', '/admin/equipe');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString($staff->getFullName(), $crawler->html());
+    }
 }
