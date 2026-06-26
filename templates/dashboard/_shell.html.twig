@@ -11,6 +11,7 @@
     { route: 'app_admin_products', label: 'Produits', icon: 'package' },
     { route: 'app_admin_companies', label: 'Entreprises', icon: 'building' },
     { route: 'app_admin_invitations', label: 'Invitations', icon: 'mail' },
+    { route: 'app_admin_team', label: 'Équipe', icon: 'users' },
     { route: 'app_admin_analytics', label: 'Analytics', icon: 'chart' },
     { route: 'app_admin_exports', label: 'Exports', icon: 'download' },
     { route: 'app_admin_mail_settings', label: 'Email SMTP', icon: 'mail-cog' },
@@ -109,6 +110,15 @@
             <path fill="currentColor" d="M13 2l5 5h-5V2Z"/>
             <rect x="8.5" y="11" width="7" height="1.5" rx=".4" fill="currentColor"/>
             <rect x="8.5" y="14.5" width="7" height="1.5" rx=".4" fill="currentColor"/>
+        </svg>
+    {% elseif name == 'users' %}
+        {# Équipe — groupe de personnes duotone #}
+        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none">
+            <path fill="currentColor" fill-opacity=".3" d="M17 20c0-2.761-2.239-5-5-5s-5 2.239-5 5h10Z"/>
+            <circle cx="12" cy="8" r="3.25" fill="currentColor"/>
+            <circle cx="5" cy="9.5" r="2.25" fill="currentColor" fill-opacity=".6"/>
+            <circle cx="19" cy="9.5" r="2.25" fill="currentColor" fill-opacity=".6"/>
+            <path fill="currentColor" fill-opacity=".3" d="M5 13c-2 0-3.5 1.5-3.5 3.5h4.2A6.97 6.97 0 0 1 7 13.4 4.5 4.5 0 0 0 5 13Zm14 0c-.74 0-1.43.18-2 .4.8.9 1.3 2 1.3 3.1h4.2C22.5 14.5 21 13 19 13Z"/>
         </svg>
     {% endif %}
 {% endmacro %}

@@ -1,0 +1,67 @@
+{% extends 'dashboard/_shell.html.twig' %}
+
+{% block title %}Équipe — Admin{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-semibold text-[var(--color-primary)] mb-2">Équipe Afdal</h1>
+    <p class="text-[var(--color-secondary)]">Gérez les administrateurs et membres de l'équipe Afdal.</p>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="mb-4 p-3 rounded-md bg-emerald-50 border border-emerald-200 text-sm text-emerald-800" role="status">{{ message }}</div>
+{% endfor %}
+{% for message in app.flashes('error') %}
+    <div class="mb-4 p-3 rounded-md bg-[var(--color-accent-light)] border border-[var(--color-accent)]/30 text-sm text-[var(--color-accent-focus)]" role="alert">{{ message }}</div>
+{% endfor %}
+
+{% if members is empty %}
+    <div class="card p-10 text-center">
+        <p class="text-sm text-[var(--color-secondary)]">Aucun membre d'équipe.</p>
+    </div>
+{% else %}
+    <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-wide text-[var(--color-secondary)]">
+                    <th class="px-4 py-3 font-medium">Membre</th>
+                    <th class="px-4 py-3 font-medium">Rôle</th>
+                    <th class="px-4 py-3 font-medium">Dernière connexion</th>
+                    <th class="px-4 py-3 font-medium text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                    <tr class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-muted)]/40">
+                        <td class="px-4 py-3">
+                            <div class="font-medium text-[var(--color-foreground)]">{{ member.fullName }}</div>
+                            <div class="text-xs text-[var(--color-secondary)]">{{ member.email }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if member.isAdmin %}
+                                <span class="inline-flex items-center rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Admin</span>
+                            {% else %}
+                                <span class="inline-flex items-center rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-secondary)]">Membre</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-[var(--color-secondary)]">{{ member.lastLoginAt ? member.lastLoginAt|date('d/m/Y') : '—' }}</td>
+                        <td class="px-4 py-3 text-right">
+                            {% if member.id == app.user.id %}
+                                <span class="text-xs text-[var(--color-secondary)]">Vous</span>
+                            {% else %}
+                                <form method="post" action="{{ path('app_admin_team_toggle_role', {id: member.id}) }}">
+                                    {% if member.isAdmin %}
+                                        <button type="submit" class="text-xs font-medium text-[var(--color-destructive)] hover:underline">Rétrograder</button>
+                                    {% else %}
+                                        <button type="submit" class="text-xs font-medium text-[var(--color-primary)] hover:underline">Promouvoir admin</button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
