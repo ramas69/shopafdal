@@ -786,6 +786,12 @@ Le dossier `lineone-html/` reste dans le projet comme référence visuelle (giti
 - Affichage live sur le détail commande (client + admin) via le partial `order/_shipping_note.html.twig` : « Frais de port gratuits » (vert) si activé, « Frais de port non compris » (gris) sinon. Lit `order.company.freeShipping` au rendu — pas de snapshot, changer le flag affecte toutes les commandes de l'entreprise.
 - Purement indicatif : aucun impact sur `totalCents`.
 
+**Gestion équipe Afdal** (2026-06-09) :
+- Page `/admin/equipe` (`app_admin_team`, `TeamController`) listant les employés Afdal (users sans entreprise, via `UserRepository::findAfdalStaff` = `company IS NULL`).
+- Bascule de rôle admin ↔ client_manager : `POST /admin/equipe/{id}/role`. Garde-fous : un admin ne peut pas changer son propre rôle (anti-verrouillage), et seuls les users sans entreprise sont basculables (un user avec company → 403).
+- Entrée nav « Équipe » (icône `users` duotone). L'invitation directe en admin (`Invitation::targetRole=ADMIN`) reste inchangée ; cette feature ajoute la promotion après inscription.
+- Limite connue (hors scope) : pas de garde « dernier admin » — un admin peut être rétrogradé par un autre.
+
 **Admin — UI tarifs négociés** (manquait, complétée) :
 - `/admin/entreprises/{id}` : nouvelle section "Tarifs négociés" (après les statistiques)
 - Liste les `CompanyPrice` existants avec bouton "Retirer" (confirmation)
