@@ -33,4 +33,15 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->findOneBy(['email' => strtolower($email)]);
     }
+
+    /** @return User[] Employés Afdal (sans entreprise), triés par rôle puis nom */
+    public function findAfdalStaff(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.company IS NULL')
+            ->orderBy('u.role', 'ASC')
+            ->addOrderBy('u.fullName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
